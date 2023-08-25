@@ -1,0 +1,697 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Index</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+
+    <link rel='stylesheet' type='text/css' href="/src/css/bootstrap.css">
+    <link rel='stylesheet' type='text/css' href="/src/css/style.css">
+    <link rel='stylesheet' type='text/css' href="/src/css/d3tip.css">
+    <link rel="stylesheet" type='text/css' href="/src/css/layui.css">
+
+    <script src="/src/js/jquery.min.js"></script>
+    <script src="/src/js/bootstrap.js"></script>
+    <script src="/src/js/d3.min.js"></script>
+    <script src="/src/js/d3-tip.js"></script>
+    <script src="/src/js/d3-hsv.min.js"></script>
+    <script src="/src/js/layui.js" charset="utf-8"></script>
+
+    <script src="/src/js/d3-ForceEdgeBundling.js"></script>
+    <script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script src="/src/js/function.js"></script>
+
+</head>
+<style>
+    .topic-slider {
+        input[type="range"]::-webkit-slider-thumb{
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 100px;
+            height: 100px;
+            background-color: #ccc;
+            border-radius: 50%;
+        }
+    }
+</style>
+
+<body>
+    <div class="container-fluid" style="min-height: 100vh; padding-left: 0px; padding-right: 0px; background-color: #cedfe6;">
+        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 2%; margin-bottom: -2%; display:flex; align-items: center; justify-content:center;">
+            <div class="logo">
+                <!--h1 style="color: #FFFFFF;"><span style="color: #FFFFFF">G</span>eneticFlow</h1-->
+                <img src="/src/image/logo-index.jpg" width="288" height="64">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px;">
+            <form id="update-info">
+                {% csrf_token %}
+                <ul class="address" style="padding-top: 0px;">
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 3%; float: left; height: 15px;"></li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px;">remove surveys</li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">remove isolated node</li>
+                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 1.5%;">filter by core paper</li>
+                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 0.5%;">filter by extend-type</li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">node outline color</li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -0.5%;">node outline thickness</li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 1.8%;">node fill color</li>
+                            <li style="width: 12%; color: #777; float: left; height: 15px;">paper topic hierarchy</li>
+                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 0.7%;">node max width</li>
+                            <li style="width: 0%; float: right; height: 15px;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 3.4%; float: left;"></li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                                <select id="remove-survey" class="form-select" name="removeSurvey" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                                <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="0">Yes</option>
+                                    <option value="1">No</option>
+                                </select>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777;">
+                                <input style="display: inline-block; width: 60%;" id="range-node" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1">
+                                <span id="node-value" style="display: inline-block; color: #333;">>=0.5</span>
+                                <script type='text/javascript'>
+                                    $("#range-node").change(function () {
+                                        var value = $("#range-node").val();
+                                        $("#node-value").text(">=" + value);
+                                    })
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-left: 1.5%;">
+                                <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.3" min="0" max="1" step="0.1">
+                                <span id="edge-value" style="display: inline-block; color: #333;">>=0.3</span>
+                                <script type='text/javascript'>
+                                    $("#range-edge").change(function () {
+                                        var value = $("#range-edge").val();
+                                        $("#edge-value").text(">=" + value);
+                                    })
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.7%;">
+                                <select id="outline-color" class="form-select" name="outlineColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="2">paper citation</option>
+                                    <option value="1">core paper prob</option>
+                                    <option value="0">none</option>
+                                </select>
+                                <script type="text/javascript">
+                                    $("#outline-color").change(outline_color_change);
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
+                                <select id="outline-thickness" class="form-select" name="outlineThickness" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="2">paper citation</option>
+                                    <option value="1">core paper prob</option>
+                                    <option value="0">none</option>
+                                </select>
+                                <script type="text/javascript">
+                                    $("#outline-thickness").change(outline_thickness_change);
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                                <select id="fill-color" class="form-select" name="fillColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="1">paper topic</option>
+                                    <option value="0">none</option>
+                                </select>
+                                <script type="text/javascript">
+                                    $("#fill-color").change(fill_color_change);
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                                <select id="field-level" class="form-select" name="fieldThreshold" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="2" selected>2</option>
+                                    <option value="1">1</option>
+                                </select>
+                                <script>
+                                    $("#field-level").change(field_level_change);
+                                </script>
+                            </li>
+                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                                <select id="node-width" class="form-select" name="nodeWidth" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="0">None</option>
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="15">15</option>
+                                    <option value="20">20</option>
+                                </select>
+                            </li>
+                            <li style="width: 1%; float: right;"></li>
+                        </ul>
+                    </li>
+                </ul>
+            </form>
+            <div class="clearfix"></div>
+        </div>
+        <div class="banner-info" style="background-color: #cedfe6; padding-bottom: 4%;">
+            <div id="self-info" class="col-md-2" style="background-color: #cedfe6; padding-left: 1%; padding-right: 1%; padding-top: 2%; border-top-right-radius: 18px;">
+                <ul id="basic-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 10%; border-radius: 10px;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 100%; font-size: 18px; margin-top: 5%; margin-bottom: 3%;">
+                                <p style="color: #FFFFFF; margin-left: 10%;">Basic Info</p>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 10%;">author rank</b></li>
+                            <li style="color: #333" id="authorRank">{{ authorRank }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 12%;">name</b></li>
+                            <li style="color: #333; margin-right: 2%;" id="name">{{ name }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 10%;">paper count</b></li>
+                            <li style="color: #333">{{ paperCount }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 8%;">citation count</b></li>
+                            <li style="color: #333">{{ citationCount }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 10%;">h-index</b></li>
+                            <li style="color: #333">{{ hIndex }}</li>
+                        </ul>
+                    </li>
+                </ul>
+                <br />
+                <br />
+                <ul id="graph-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 25%; border-radius: 10px;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 100%; font-size: 18px; margin-top: 5%; margin-bottom: 3%;">
+                                <p style="color: #FFFFFF; margin-left: 10%;">Graph Info</p>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 45%"><b style="color: #777; margin-left: 10%;">nodes</b></li>
+                            <li id="node-num" style="color: #333;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 45%"><b style="color: #777; margin-left: 10%;">edges</b></li>
+                            <li id="edge-num" style="color: #333;"></li>
+                        </ul>
+                    </li>
+                    <li><ul class="address-text"><li></li></ul></li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 100%; margin-left: 5%;">
+                                <a id="download" style="cursor: pointer;">download graph as picture</a>
+                            </li>
+                        </ul>
+                        <script type="text/javascript">
+                            function dataURLtoBlob(dataurl) {
+                                var arr = dataurl.split(','),
+                                    mime = arr[0].match(/:(.*?);/)[1],
+                                    bstr = atob(arr[1]),
+                                    n = bstr.length,
+                                    u8arr = new Uint8Array(n);
+                                while(n--) {
+                                    u8arr[n] = bstr.charCodeAt(n);
+                                }
+                                return new Blob([u8arr], {
+                                    type: mime
+                                });
+                            }
+                            function downloadFile(fileName, blob) { //创建文件内容
+                                var aLink = document.createElement('a');
+                                var evt = document.createEvent("MouseEvents");
+                                evt.initEvent("click", false, false);
+                                aLink.download = fileName; //下载文件名
+                                aLink.href = URL.createObjectURL(blob); //根据二进制文件生成对象
+                                aLink.dispatchEvent(evt); //触发点击
+                            }
+                            function svgDownloadAll(svg, zoomClassName) {
+                                //得到svg的真实大小
+                                var box = svg.getBBox(),
+                                    x = box.x,
+                                    y = box.y,
+                                    width = box.width,
+                                    height = box.height;
+
+                                if(zoomClassName) {
+                                    //查找zoomObj
+                                    var zoomObj = svg.getElementsByClassName(zoomClassName.replace(/\./g, ''))[0];
+                                    if(!zoomObj) {
+                                        alert('zoomObj不存在');
+                                        return false;
+                                    }
+                                    /*------这里是处理svg缩放的--------*/
+                                    var transformMath = zoomObj.getAttribute('transform'),
+                                        scaleMath = zoomObj.getAttribute('transform');
+                                    if(transformMath || scaleMath) {
+                                        var transformObj = transformMath.match(/translate\(([^,]*),([^,)]*)\)/),
+                                            scaleObj = scaleMath.match(/scale\((.*)\)/);
+                                        if(transformObj || scaleObj) { //匹配到缩放
+                                            var translateX = transformObj[1],
+                                                translateY = transformObj[2],
+                                                scale = scaleObj[1];
+                                            x = (x - translateX) / scale;
+                                            y = (y - translateY) / scale;
+                                            width = width / scale;
+                                            height = height / scale;
+                                        }
+                                    }
+                                }
+                                //克隆svg
+                                var node = svg.cloneNode(true);
+                                //重新设置svg的width,height,viewbox
+                                node.setAttribute('width', width);
+                                node.setAttribute('height', height);
+                                node.setAttribute('viewBox', [x, y, width, height]);
+                                if(zoomClassName) {
+                                    var zoomObj = node.getElementsByClassName(zoomClassName.replace(/\./g, ''))[0];
+                                    /*-------------清楚缩放元素的缩放-------------*/
+                                    zoomObj.setAttribute('transform', 'translate(0,0) scale(1)');
+                                }
+                                downloadSvgFn(node);
+                            }
+                            var downloadSvgFn = function(svg) {
+                                var serializer = new XMLSerializer()
+                                var source = '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg)
+
+                                var image = new Image()
+                                image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source)
+
+                                image.onload = function() {
+                                    var width = this.naturalWidth,
+                                        height = this.naturalHeight;
+                                    var canvas = document.createElement('canvas')
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    var context = canvas.getContext('2d');
+                                    context.rect(0, 0, width, height);
+                                    context.fillStyle = '#fff';
+                                    context.fill();
+                                    context.drawImage(image, 0, 0);
+                                    var imgSrc = canvas.toDataURL("image/jpg", 1);
+                                    var blob = dataURLtoBlob(imgSrc);
+                                    var mode_value = $("#mode").val();
+                                    var range_node_value = $("#range-node").val();
+                                    var range_edge_value = $("#range-edge").val();
+                                    var field_level_value = $("#field-level").val();
+                                    var filename = {{ authorRank }} + '_' + mode_value + '_' + range_node_value + '_' + range_edge_value + '_' + field_level_value + '.jpg'
+                                    downloadFile(filename, blob);
+                                }
+                            }
+                            $("#download").click(function () {
+                                /*var html = d3.select("svg")
+                                .attr("version", 1.1)
+                                .attr("xmlns", "http://www.w3.org/2000/svg")
+                                .node().parentNode.innerHTML;
+
+                                var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+
+                                var canvas = document.querySelector("canvas"),
+                                context = canvas.getContext("2d");
+
+                                var image = new Image;
+                                image.src = imgsrc;
+                                image.onload = function() {
+                                    context.drawImage(image, 0, 0);
+
+                                    var a = document.createElement("a");
+                                    a.download = "graph.png";
+                                    a.href = canvas.toDataURL("image/png");
+
+                                    a.click();
+                                };*/
+                                /*//get svg element.
+                                var svg = document.getElementById("mainsvg");
+                                //get svg source.
+                                var serializer = new XMLSerializer();
+                                var source = serializer.serializeToString(svg);
+                                //add name spaces.
+                                if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+                                    source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                                }
+                                if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+                                    source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+                                }
+                                //add xml declaration
+                                source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+                                //convert svg source to URI data scheme.
+                                var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+                                var downloadLink = document.createElement("a");
+                                downloadLink.href = url;
+                                downloadLink.download = "graph.svg";
+                                document.body.appendChild(downloadLink);
+                                downloadLink.click();
+                                document.body.removeChild(downloadLink);*/
+                                svgDownloadAll(d3.select('#mainsvg').node(), '.all_g');
+                            })
+                        </script>
+                    </li>
+                </ul>
+            </div>
+            <div id="graph" class="col-md-7 header-left" style="background-color: #FFFFFF; padding-left: 18px; padding-right: 18px; padding-top: 0px;">
+                <br />
+                <!--img src="data:image/png;base64,">
+                <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
+                <div id="svg">
+                    <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="850" height="560" viewBox="0 0 0 0"></svg>
+                </div>
+                <canvas width="850" height="560" style="display:none"></canvas-->
+            </div>
+            <div id="detailed-info" class="col-md-3" style="padding-left: 1.5%; padding-right: 1.5%; padding-top: 0.5%;">
+                <ul id="topic-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; border-radius: 10px;">
+                    <li>
+                        <ul id="topic-graph-extra" class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px; height: 50%;">
+                            <li style="width: 49%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
+                                <button id="paper-topic-button" style="background-color: #054863; color: #FFFFFF; border-style: none; margin-left: 10%;">Topic Map-Paper</button>
+                            </li>
+                            <li style="width: 49%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
+                                <button id="overall-topic-button" style="background-color: #054863; color: #FFFFFF; border-style: none; margin-left: 0%;">Topic Map-Overall</button>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div id="topic-graph" style="position: relative">
+                            <div id="paper-topic-map" style="display: flex;">
+                                <div id="paper-topic-list" style="flex: 3;"></div>
+                                <div id="topic-width" style="flex: 7;">
+                                    <div id="paper-topic-distribution"></div>
+                                    <!-- <ul class="address"><li>
+                                    <ul class="address-text">
+                                        <li>topic size -->
+                                    <div id="hidden-slider" style="display: flex;">
+                                        <span style="flex: 2; margin-top: -5%; margin-left: 10%; color: #333;">topic size</span>
+                                        <!-- </li>
+                                        <li> -->
+                                        <input style="flex: 8; --thumb-size: 2px; height: 3px; margin-top: 2%; margin-left: 0%; color: #777" id="paper-slider" class="topic-slider" type="range" value="0.5" min="0" max="1" step="0.1">
+                                    </div>
+                                        <!-- </li>
+                                    </ul>
+                                    </li></ul> -->
+                                    <script>
+                                        $("#paper-slider").change(function () {
+                                            var topic_r = $("#paper-slider").val();
+                                            d3.selectAll(".paper-topic")
+                                                .attr("r", d => Math.sqrt(d.num) * 4 * topic_r);
+                                        })
+                                    </script>
+                                </div>
+                            </div>
+                            <div id="overall-topic-map" style="display: flex;">
+                                <div id="overall-topic-list" style="flex: 3;"></div>
+                                <div id="topic-width" style="flex: 7;">
+                                    <div id="overall-topic-distribution"></div>
+                                    <div style="display: flex;">
+                                        <span style="flex: 2; margin-top: -5%; margin-left: 10%; color: #333;">topic size</span>
+                                        <input style="flex: 8; --thumb-size: 2px; height: 3px; margin-top: 2%; margin-left: 0%; color: #777" id="overall-slider" class="topic-slider" type="range" value="0.5" min="0" max="1" step="0.1">
+                                    </div>
+                                    <script>
+                                        $("#overall-slider").change(function () {
+                                            var topic_r = $("#overall-slider").val();
+                                            d3.selectAll(".overall-topic")
+                                                .attr("r", d => Math.sqrt(d[1]) / 4 * topic_r);
+                                        })
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <script>
+                        $("#overall-topic-button").click(function() {
+                            $("#paper-topic-map").hide();
+                            $("#overall-topic-map").show();
+                        });
+                        $("#paper-topic-button").click(function() {
+                            $("#overall-topic-map").hide();
+                            $("#paper-topic-map").show();
+                        })
+                    </script>
+                </ul>
+                <br />
+                
+                <ul id="papers-list" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 5%; border-radius: 10px;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 100%; font-size: 18px; margin-top: 4%; margin-bottom: 3%;">
+                                <p style="color: #FFFFFF; margin-left: 10%;">Paper List</p>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li id="timeline" style="overflow: auto; width: 90%; height: 150px; background-color: white; color: #333; margin-top: 7%; margin-left: 8%;"></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul id="selector" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; border-radius: 10px;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 35%; font-size: 16px; margin-top: 5%; margin-bottom: 5%; padding-left: 5%;">
+                                <button id="paper-info" style="background-color: #054863; color: #FFFFFF; border-style: none; margin-left: 10%;">Paper Info</button>
+                            </li>
+                            <script>
+                                $("#paper-info").click(function () {
+                                    $("#edge-info").hide();
+                                    $("#up-line").hide();
+                                    $("#down-line").hide();
+                                    $("#node-info").show();
+                                });
+                            </script>
+                            <li style="width: 28%; font-size: 16px; margin-top: 5%; margin-bottom: 5%; padding-left: 0%;">
+                                <button id="references" style="background-color: #054863; color: #FFFFFF; border-style: none; margin-left: 10%;">References</button>
+                            </li>
+                            <li style="width: 28%; font-size: 16px; margin-top: 5%; margin-bottom: 5%; padding-left: 5%;">
+                                <button id="citations" style="background-color: #054863; color: #FFFFFF; border-style: none; margin-left: 10%;">Citations</button>
+                            </li>
+                            <script>
+                                $("#references").click(function () {
+                                    $("#edge-info").hide();
+                                    $("#node-info").hide();
+                                    $("#up-line").show();
+                                    $("#down-line").hide();
+                                    let left_sider_height = $("#self-info").height();
+                                    $("#cited-papers").height(left_sider_height / 1.2);
+                                });
+                                $("#citations").click(function () {
+                                    $("#edge-info").hide();
+                                    $("#node-info").hide();
+                                    $("#up-line").hide();
+                                    $("#down-line").show();
+                                    let left_sider_height = $("#self-info").height();
+                                    $("#citing-papers").height(left_sider_height / 1.2);
+                                });
+                            </script>
+                        </ul>
+                    </li>
+                </ul>
+                <ul id="node-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 10%;">
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%; margin-top: 3%;"><b style="color: #777; margin-left: 25.5%;">paperID</b></li>
+                            <li id="paper-id" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%; margin-top: 3%;"><b style="color: #777; margin-top: 10%; margin-left: 25.5%;">title</b></li>
+                            <li id="paper-name" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%; margin-top: 3%;"><b style="color: #777; margin-left: 25.5%;">year</b></li>
+                            <li id="paper-year" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%; margin-top: 3%;"><b style="color: #777; margin-left: 25.5%;">topic</b></li>
+                            <li id="paper-field" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%; margin-top: 3%;"><b style="color: #777; margin-left: 25.5%;">abstract</b></li>
+                            <li id="abstract" style="overflow: auto; width: 85%; height: 150px; background-color: white; color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul id="up-line" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-style: none; padding-top: 10px; padding-bottom: 0%;">
+                    <div id="cited-papers" class="demo-tree demo-tree-box" style="width: 100%; overflow: scroll; padding-left: 6%;"></div>
+                </ul>
+                <ul id="down-line" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-style: none; padding-top: 10px; padding-bottom: 0%;">
+                    <div id="citing-papers" class="demo-tree demo-tree-box" style="width: 100%; overflow: scroll; padding-left: 6%;"></div>
+                </ul>
+
+                <ul id="edge-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 10%; border-radius: 10px;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 80%; font-size: 18px; margin-top: 5%; margin-bottom: 5%; padding-left: 5%;">
+                                <b style="color: #FFFFFF; margin-left: 6%;">Citation Relationship</b>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%"><b style="color: #777; margin-left: 25.5%;">cited paper</b></li>
+                            <li id="source-paper" style="color: #333; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 40%"><b style="color: #777; margin-left: 25.5%;">citing paper</b></li>
+                            <li id="target-paper" style="color: #333; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%"><b style="color: #777; margin-left: 20%;">citation context</b></li>
+                            <li id="citation-context" style="overflow: auto; width: 85%; background-color: white; color: #333; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <!--div id="papers-list" class="col-md-3" style="background-color: #FFFFFF; height: 580px; padding-left: 40px; overflow: auto;">
+                <ul id="timeline" class="timeline"></ul>
+            </div-->
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
+    
+
+    <!--初始js-->
+    <script type="text/javascript">
+        // text1 paperLabel; text2 paperCount; text3 year; text4 field
+        $(function () {
+            $("#selector").hide();
+            $("#node-info").hide();
+            $("#up-line").hide();
+            $("#down-line").hide();
+            $("#edge-info").hide();
+            const authorRank = {{ authorRank|safe }};
+            const name = '{{ name }}';
+            const fields = {{ fields|safe }};
+            field_roots = fields[0];
+            field_leaves = fields[1];
+            // console.log(field_roots);
+            // console.log(field_leaves);
+            current_topic_div = 1;
+            const filename = '/src/json/' + String(authorRank) + '_0_0.5_0.3_10_1.json';
+            d3.json(filename).then( data => {
+                years = data[1];      //年份节点
+                nodes = data[2];      //论文节点
+                edges = data[3];      //path
+                polygon = data[4];    //箭头
+                const params = data[0];
+                const viewBox = params[0];
+                const transform = params[1];
+                for (let i = 0; i < nodes.length; i++) {
+                    nodes[i]['flag'] = 0;
+                }
+                for (let i = 0; i < edges.length; i++) {
+                    edges[i]['flag'] = 0;
+                }
+                for (let i = 0; i < field_roots.length; i++) {
+                    field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
+                }
+                for (let i = 0; i < field_leaves.length; i++) {
+                    field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
+                }
+
+                update_sider(name);
+                init_graph(viewBox, transform);
+                update_nodes();
+                var paper_field = update_fields();
+                visual_topics(paper_field);
+                visual_graph(polygon);
+                $("#overall-topic-map").hide();
+                $("#paper-topic-map").show();
+                outline_color_change();
+                outline_thickness_change();
+                // sugiyama(years, nodes, edges);
+            });
+        })
+    </script>
+
+    <!--ajax提交表单-->
+    <script type="text/javascript">
+        $("#mode, #range-node, #range-edge, #node-width, #remove-survey").change(function() {
+            var paramData = {};
+            var formData = $("#update-info").serialize();
+            formData = formData.split("&");
+            for (let i = 1; i < formData.length; i++) {
+                const temp = formData[i].split('=');
+                paramData[temp[0]] = temp[1]
+            }
+            paramData.authorRank = $("#authorRank").text();
+            paramData.name = $("#name").text();
+            $.ajax({
+                headers: {"X-CSRFToken": getCookie("csrftoken")},
+                type: "POST",
+                dataType: "json",
+                url: "/update/",
+                data: paramData,
+                success: function (param) {
+                    $("#mainsvg").remove();
+                    d3.tip().destroy();
+                    $("#abstract").empty();
+                    $("#citation-context").empty();
+                    $("#selector").hide();
+                    $("#node-info").hide();
+                    $("#up-line").hide();
+                    $("#down-line").hide();
+                    $("#edge-info").hide();
+                    $("#timeline").empty();
+                    var detail = param['detail'];
+                    var filename = '/src/json/' + detail + '.json';
+                    d3.json(filename).then( data => {
+                        years = data[1];
+                        nodes = data[2];
+                        edges = data[3];
+                        const polygon = data[4];
+                        const params = data[0];
+                        const viewBox = params[0];
+                        const transform = params[1];
+                        for (let i = 0; i < nodes.length; i++) {
+                            nodes[i]['flag'] = 0;
+                        }
+
+                        update_sider(name);
+                        init_graph(viewBox, transform);
+                        update_nodes();
+                        var fieldCount = update_fields();
+                        visual_graph(polygon);
+                        visual_topics(fieldCount);
+                        outline_color_change();
+                        outline_thickness_change();
+                    });
+                },
+            });
+        });
+    </script>
+
+</body>
+</html>

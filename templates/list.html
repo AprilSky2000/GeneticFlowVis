@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>List</title>
+    <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/src/css/bootstrap.css" rel='stylesheet' type='text/css' />
+    <link href="/src/css/bootstrap-table.css" rel="stylesheet">
+    <link href="/src/css/style.css" rel='stylesheet' type='text/css' />
+
+    <script src="/src/js/jquery.min.js"></script>
+    <script src="/src/js/bootstrap.js"></script>
+    <script src="/src/js/bootstrap.bundle.js"></script>
+    <script src="/src/js/bootstrap-table.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid" style="min-height: 100vh; background-color: #cedfe6">
+        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); margin-right: -1%; margin-left: -1%; padding-bottom: 2%; padding-top: 2%;">
+            <div class="logo" style="margin-left: 8%;">
+                <!--h1><span>G</span>eneticFlow</h1-->
+                <img src="/src/image/logo-index.jpg" width="324" height="72">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="banner-info" style="margin-left: 8%; margin-right: 4%;">
+            <div style="float: left; width: 7%;">
+                <table class="table table-sm" data-toggle="table" style="background-color: #dddddd;">
+                    <thead>
+                        <tr>
+                            <th>Sequence</th>
+                        </tr>
+                    </thead>
+                    <tbody class="seq"></tbody>
+                    <script>
+                        let data = {{ scholarList | safe }};
+                        for (let i = 1; i <= data.length; i++) {
+                            $(".seq").append("<tr><td>"+i+"</td></tr>");
+                        }
+                    </script>
+                </table>
+            </div>
+            <div style="float: left; width: 91%;">
+                <table id="table" class="table table-sm" style="background-color: #dddddd;" data-toggle="table" data-custom-sort="authorSort">
+                    <thead>
+                        <tr>
+                            <th data-sortable="true">Author Rank</th>
+                            <th data-sortable="true">Author Name</th>
+                            <th data-sortable="true">Paper Count</th>
+                            <th data-sortable="true">Citation Count</th>
+                            <th data-sortable="true">h-index</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for scholar in scholarList %}
+                        <tr>
+                            <td>{{ scholar.authorRank }}</td>
+                            <td>{{ scholar.name }}</td>
+                            <td>{{ scholar.paperCount }}</td>
+                            <td>{{ scholar.citationCount }}</td>
+                            <td>{{ scholar.hIndex }}</td>
+                            <td>
+                                <a class="btn-sm btn-primary" href="/idx/{{ scholar.authorRank }}" style="font-size: 14px;">
+                                    Visualize
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+    <script>
+        function authorSort(sortName, sortOrder, data) {
+            //sortName为列的序号；sortOrder为'asc'或'desc'；data即为table里的数据
+            var order = sortOrder === 'desc' ? 1 : -1;  //1从小到大排；-1从大到小排
+            data.sort(function (a, b) {
+                if (sortName == 1) {
+                    if (a[sortName] < b[sortName]) {
+                        return order * -1;
+                    }
+                    if (a[sortName] > b[sortName]) {
+                        return order;
+                    }
+                    return 0;
+                }
+                var aa = +((a[sortName] + '').replace(/[^\d]/g, ''));
+                var bb = +((b[sortName] + '').replace(/[^\d]/g, ''));
+                if (aa < bb) {
+                    return order * -1;
+                }
+                if (aa > bb) {
+                    return order;
+                }
+                return 0;
+            })
+        }
+    </script>
+</body>
+</html>

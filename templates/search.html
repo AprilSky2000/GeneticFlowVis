@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Search</title>
+        <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+		<!-- Bootstrap core CSS -->
+		<link href="/src/css/bootstrap.min.css" rel="stylesheet">
+		<!-- Custom styles for this template -->
+		<link href="/src/css/signin.css" rel="stylesheet">
+	</head>
+
+	<body class="text-center">
+		<form class="form-signin" action="/index/" method="post">
+            {%csrf_token%}
+			<img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="288" height="108">
+			<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
+            <br />
+            <br />
+            <div style="float: left; margin-right: 0px; width: 90%; margin-left: -105%; margin-bottom: 10%;">
+                <select name="field">
+                    <option value="vis">Visualization</option>
+                </select>
+            </div>
+            <div style="float: right; width: 200%; margin-left: 0px; margin-right: -85%; margin-bottom: 10%;">
+                <input name="author" type="text" class="form-control" placeholder="Please enter the author's name" required="" autofocus="" style="height: 38px; border-left: none;">
+            </div>
+            <div style="margin-left: -20%; margin-right: -20%; margin-bottom: 10%;">
+				<label>
+                    <input type="checkbox" value="1" name="partial_match" checked> partial match
+                </label>
+                <a href="/showlist/" style="margin-left: 5%;">the ranked scholar list in visualization</a>
+			</div>
+			<button class="btn btn-lg btn-primary btn-block" type="submit">Search</button>
+			<p class="mt-5 mb-3 text-muted">© 2022-2023</p>
+		</form>
+	</body>
+</html>
