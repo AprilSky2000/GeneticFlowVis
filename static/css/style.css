@@ -171,7 +171,7 @@ ul.address {
     text-transform: uppercase;
 }
 ul.address {
-    margin-top: 2em;
+    /* margin-top: 2em; */
     border-top: 1px solid #AFAFAF;
     padding-top: 0.5em;
 }
@@ -1978,3 +1978,41 @@ span.border.two:after {
 		padding: 6px 0;
 	}
 }
+/* html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+} */
+  
+.container-fluid {
+	display: flex;
+	flex-direction: column;
+}
+  
+.banner-info {
+	flex-grow: 1;
+	display: flex;
+	height: 100%;
+}
+
+.navigation {
+	box-shadow:
+		5px 5px 5px rgba(0, 0, 0, 0.5),
+		-5px 5px 5px rgba(0, 0, 0, 0.5);
+} 
+
+#navigation {
+	z-index: 3;
+}
+
+#toolbar {
+	z-index: 2;
+}
+
+#graph {
+	z-index: 3;
+	box-shadow:
+		5px 5px 5px rgba(0, 0, 0, 0.5),
+		-5px 5px 5px rgba(0, 0, 0, 0.5);
+}
+

@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>Index</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
@@ -38,14 +39,14 @@
 
 <body>
     <div class="container-fluid" style="min-height: 100vh; padding-left: 0px; padding-right: 0px; background-color: #cedfe6;">
-        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 2%; margin-bottom: -2%; display:flex; align-items: center; justify-content:center;">
+        <div id="navigation" class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
                 <!--h1 style="color: #FFFFFF;"><span style="color: #FFFFFF">G</span>eneticFlow</h1-->
                 <img src="/src/image/logo-index.jpg" width="288" height="64">
             </div>
             <div class="clearfix"></div>
         </div>
-        <div class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px;">
+        <div id="toolbar" class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
             <form id="update-info">
                 {% csrf_token %}
                 <ul class="address" style="padding-top: 0px;">
@@ -153,7 +154,7 @@
             </form>
             <div class="clearfix"></div>
         </div>
-        <div class="banner-info" style="background-color: #cedfe6; padding-bottom: 4%;">
+        <div class="banner-info" style="background-color: #cedfe6; padding-bottom: 0%;">
             <div id="self-info" class="col-md-2" style="background-color: #cedfe6; padding-left: 1%; padding-right: 1%; padding-top: 2%; border-top-right-radius: 18px;">
                 <ul id="basic-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; padding-bottom: 10%; border-radius: 10px;">
                     <li>
@@ -368,7 +369,7 @@
                     </li>
                 </ul>
             </div>
-            <div id="graph" class="col-md-7 header-left" style="background-color: #FFFFFF; padding-left: 18px; padding-right: 18px; padding-top: 0px;">
+            <div id="graph" class="col-md-7 header-left" style="background-color: #ffffff; padding-left: 18px; padding-right: 18px; padding-top: 0px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
                 <br />
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
@@ -625,6 +626,7 @@
                 init_graph(viewBox, transform);
                 update_nodes();
                 var paper_field = update_fields();
+                draw_tag_cloud(paper_field);
                 visual_topics(paper_field);
                 visual_graph(polygon);
                 $("#overall-topic-map").hide();

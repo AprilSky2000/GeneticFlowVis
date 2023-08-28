@@ -33,14 +33,173 @@ function update_sider (name) {
     $("#papers-list").show();
 }
 
+// Function to convert HSV to RGB
+function hsvToRgb(h, s, v) {
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+    let r, g, b;
+
+    if (h >= 0 && h < 60) {
+        [r, g, b] = [c, x, 0];
+    } else if (h >= 60 && h < 120) {
+        [r, g, b] = [x, c, 0];
+    } else if (h >= 120 && h < 180) {
+        [r, g, b] = [0, c, x];
+    } else if (h >= 180 && h < 240) {
+        [r, g, b] = [0, x, c];
+    } else if (h >= 240 && h < 300) {
+        [r, g, b] = [x, 0, c];
+    } else {
+        [r, g, b] = [c, 0, x];
+    }
+
+    const rgbColor = [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+    return rgbColor;
+}
+
+function textSize(text, size) {
+    let container = d3.select('body').append('svg');
+    container.append('text')
+  
+      .style("font-size", size + "px")      // todo: these need to be passed to the function or a css style
+      .style("font-family", "sans-serif")
+      .text(text);
+  
+    let sel = container.selectAll('text').node()
+    let width = sel.getComputedTextLength()
+    let height = sel.getExtentOfChar(0).height
+    container.remove()
+    return {width, height}
+}
+
+function draw_tag_cloud(data) {
+    let svgWidth = $("#graph").width();
+    let svgHeight = $("#graph").height() * 0.25;
+    console.log('svgWidth: ', svgWidth);
+    console.log('svgHeight: ', svgHeight);
+
+    const svg = d3.select("#graph").append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("id", "tagcloud");
+
+    const sortedData = data.sort((a, b) => b.num - a.num);
+    const maxNum = sortedData[0].num;
+
+    const wordCloud = svg.append("g")
+        .attr("transform", "translate(10, 10)");
+
+    const lineHeight = 60;
+    const maxFontSize = 50;
+    const emptySpace = 10;
+
+    const wordPosition = [];
+    let currentLine = [];
+    let currentLineWidth = 0;
+    let currentLineHeight = 0;
+
+    sortedData.forEach(d => {
+        let ratio = Math.sqrt(d.num / maxNum);
+        let size = ratio * maxFontSize;
+        let height = ratio * lineHeight;
+        let opacity = ratio * 0.6 + 0.2;
+        let shortName = d.name.split(" ").slice(0, 2).join(' ');
+        // let width = size * shortName.length * 0.5;
+        let width = textSize(shortName, size).width;
+        
+        if (currentLineWidth + width > svgWidth) {
+            currentLineHeight += currentLine[0].height + emptySpace;
+            wordPosition.push(currentLine);
+            currentLine = [];
+            currentLineWidth = 0;
+        }
+        currentLine.push({
+            id: d.id,
+            size: size,
+            width: width,
+            height: height,
+            name: d.name,
+            ratio: ratio,
+            shortName: shortName,
+            color: hsvToRgb(d.color[0], d.color[1], d.color[2]),
+            opacity: opacity,
+            x: currentLineWidth,
+            y: currentLineHeight
+        });
+        currentLineWidth += width + emptySpace;
+    });
+
+    wordPosition.push(currentLine);
+
+    console.log('wordPosition: ', wordPosition);
+
+    const words = wordCloud.selectAll("g")
+        .data(wordPosition)
+        .enter()
+        .append("g")
+        .attr("transform", (d, i) => `translate(0, ${d[0].y})`);
+
+    const topic_tip = d3.tip()
+        .attr("class", "overall-topic-tip")
+        .html(d => d.name);
+    svg.call(topic_tip);
+
+    words.selectAll("rect")
+        .data(d => d)
+        .enter()
+        .append("rect")
+        .attr("x", d => d.x)
+        .attr("y", d => 0)
+        .attr("width", d => d.width)
+        .attr("height", d => d.height)
+        .attr("rx", d => emptySpace * d.ratio)
+        .attr("ry", d => emptySpace * d.ratio)
+        .attr("fill", d => `rgba(9, 62, 86, ${d.opacity})`)
+        .on('mouseover', function (d) {
+            d3.select(this).attr('cursor', 'pointer');
+            topic_tip.show(d);
+            console.log('fieldColor: ', d.color, d.id);
+            highlight_field(d.id, d.color);
+        })
+        .on('mouseout', function (d) {
+            topic_tip.hide(d);
+            reset_field();
+        });
+
+    words.selectAll("text")
+        .data(d => d)
+        .enter()
+        .append("text")
+        .text(d => d.shortName)
+        .attr("x", d => d.x + d.width * 0.04)
+        .attr("y", d => d.height / 2)
+        .attr("dy", "0.35em")
+        .attr("id", d => d.id)
+        .attr("font-size", d => d.size + "px")
+        .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`)
+        .on('mouseover', function (d) {
+            d3.select(this).attr('cursor', 'pointer');
+            topic_tip.show(d);
+            console.log('fieldColor: ', d.color, d.id);
+            highlight_field(d.id, d.color);
+        })
+        .on('mouseout', function (d) {
+            topic_tip.hide(d);
+            reset_field();
+        });
+
+    
+}
+
 function init_graph (viewBox, transform) {
 
-    let left_sider_height = $("#self-info").height();
-    $("#graph").height(left_sider_height * 1.2);
+    // let left_sider_height = $("#self-info").height();
+    // $("#graph").height(left_sider_height * 1.2);
 
     const svg = d3.select("#graph").append("svg")
         .attr("width", $("#graph").width())
-        .attr("height", $("#graph").height())
+        .attr("height", $("#graph").height() * 0.75)
         .attr("viewBox", viewBox)
         .attr("id", "mainsvg");
 
@@ -159,6 +318,77 @@ function update_fields() {
     return overall_field;
 }
 
+function highlight_field(fieldId, fieldColor) {
+    g.selectAll(".year-topic")
+        .attr("fill", d => {
+            if (fieldId != d.id.slice(4))
+                return d3.rgb(200, 200, 200);
+            else
+                return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
+        });
+
+    var papersId = [];
+    let fieldLevelVal = $("#field-level").val();
+    for (let i = 0; i < nodes.length; i++) {
+        let topic = parseInt(nodes[i].topic);
+        topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
+        if (topic == fieldId) {
+            papersId.push(nodes[i].id);
+        }
+    }
+    g.selectAll(".paper").data(nodes)
+        .attr('fill', d => {
+            if (papersId.indexOf(d.id) == -1)
+                return d3.rgb(250, 250, 250);
+            else
+                return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
+        })
+        .attr('stroke', d3.rgb(200, 200, 200));
+
+    g.selectAll('.reference').data(edges)
+        .attr('stroke', d => {
+            if (papersId.indexOf(d.source) != -1 || papersId.indexOf(d.target) != -1)
+                return 'black';
+            else
+                return d3.rgb(200, 200, 200);
+        });
+    d3.selectAll(".year")
+        .attr("fill", d3.rgb(250, 250, 250))
+        .attr('stroke', d3.rgb(200, 200, 200));
+
+    $("#mainsvg").attr("style", "background-color: #FAFAFA;");
+}
+
+function reset_field() {
+    d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
+    g.selectAll(".paper").data(nodes)
+        .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
+        .attr('stroke', d => {
+            let outlineColorVal = $("#outline-color").val();
+            if (outlineColorVal == 0)
+                return 'black';
+            else if (outlineColorVal == 1) {
+                if (d.isKeyPaper == 1)
+                    return 'red';
+                else if (d.isKeyPaper >= 0.5)
+                    return 'pink';
+                else
+                    return 'black';
+            }
+            else if (outlineColorVal == 2) {
+                if (d.citationCount < 10)
+                    return 'black';
+                else if (d.citationCount < 50)
+                    return 'pink';
+                else
+                    return 'red';
+            }
+        });
+    g.selectAll(".reference").attr('stroke', 'black');
+    d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
+    $("#mainsvg").attr("style", "background-color: white;");
+}
+
 function visual_topics(overall_field) {
     $("#overall-slider").val(0.5);
     $("#paper-slider").val(0.5);
@@ -217,74 +447,12 @@ function visual_topics(overall_field) {
         overall_topic_tip.show(d);
 
         let fieldId = d3.select(this).attr("id");
-        g.selectAll(".year-topic")
-            .attr("fill", d => {
-                if (fieldId != d.id.slice(4))
-                    return d3.rgb(200, 200, 200);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            });
-
-        var papersId = [];
-        let fieldLevelVal = $("#field-level").val();
-        for (let i = 0; i < nodes.length; i++) {
-            let topic = parseInt(nodes[i].topic);
-            topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-            if (topic == fieldId) {
-                papersId.push(nodes[i].id);
-            }
-        }
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => {
-                if (papersId.indexOf(d.id) == -1)
-                    return d3.rgb(250, 250, 250);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            })
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        g.selectAll('.reference').data(edges)
-            .attr('stroke', d => {
-                if (papersId.indexOf(d.source) != -1 || papersId.indexOf(d.target) != -1)
-                    return 'black';
-                else
-                    return d3.rgb(200, 200, 200);
-            });
-        d3.selectAll(".year")
-            .attr("fill", d3.rgb(250, 250, 250))
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        $("#mainsvg").attr("style", "background-color: #FAFAFA;");
+        console.log('fieldColor: ', fieldColor, fieldId);
+        highlight_field(fieldId, fieldColor);
     })
     .on('mouseout', function (d) {
-        d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
         overall_topic_tip.hide(d);
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-            .attr('stroke', d => {
-                let outlineColorVal = $("#outline-color").val();
-                if (outlineColorVal == 0)
-                    return 'black';
-                else if (outlineColorVal == 1) {
-                    if (d.isKeyPaper == 1)
-                        return 'red';
-                    else if (d.isKeyPaper >= 0.5)
-                        return 'pink';
-                    else
-                        return 'black';
-                }
-                else if (outlineColorVal == 2) {
-                    if (d.citationCount < 10)
-                        return 'black';
-                    else if (d.citationCount < 50)
-                        return 'pink';
-                    else
-                        return 'red';
-                }
-            });
-        g.selectAll(".reference").attr('stroke', 'black');
-        d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
-        $("#mainsvg").attr("style", "background-color: white;");
+        reset_field();
     });
 
 
@@ -327,74 +495,11 @@ function visual_topics(overall_field) {
         paper_topic_tip.show(d);
 
         let fieldId = d3.select(this).attr("id");
-        g.selectAll(".year-topic")
-            .attr("fill", d => {
-                if (fieldId != d.id.slice(4))
-                    return d3.rgb(200, 200, 200);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            });
-
-        var papersId = [];
-        let fieldLevelVal = $("#field-level").val();
-        for (let i = 0; i < nodes.length; i++) {
-            let topic = parseInt(nodes[i].topic);
-            topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-            if (topic == fieldId) {
-                papersId.push(nodes[i].id);
-            }
-        }
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => {
-                if (papersId.indexOf(d.id) == -1)
-                    return d3.rgb(250, 250, 250);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            })
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        g.selectAll('.reference').data(edges)
-            .attr('stroke', d => {
-                if (papersId.indexOf(d.source) != -1 || papersId.indexOf(d.target) != -1)
-                    return 'black';
-                else
-                    return d3.rgb(200, 200, 200);
-            });
-        d3.selectAll(".year")
-            .attr("fill", d3.rgb(250, 250, 250))
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        $("#mainsvg").attr("style", "background-color: #FAFAFA;");
+        highlight_field(fieldId, fieldColor);
     })
     .on('mouseout', function (d) {
-        d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
         paper_topic_tip.hide(d);
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-            .attr('stroke', d => {
-                let outlineColorVal = $("#outline-color").val();
-                if (outlineColorVal == 0)
-                    return 'black';
-                else if (outlineColorVal == 1) {
-                    if (d.isKeyPaper == 1)
-                        return 'red';
-                    else if (d.isKeyPaper >= 0.5)
-                        return 'pink';
-                    else
-                        return 'black';
-                }
-                else if (outlineColorVal == 2) {
-                    if (d.citationCount < 10)
-                        return 'black';
-                    else if (d.citationCount < 50)
-                        return 'pink';
-                    else
-                        return 'red';
-                }
-            });
-        g.selectAll(".reference").attr('stroke', 'black');
-        d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
-        $("#mainsvg").attr("style", "background-color: white;");
+        reset_field();
     });
 
     // paper_topic_svg.append("rect")
