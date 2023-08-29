@@ -13,8 +13,12 @@ function op(key){
 
 function update_sider (name) {
     const screenHeight = $(window).height();
-    $("#topic-info").css("height", screenHeight / 3);
-    // $("#papers-list").css("height", screenHeight / 3);
+    $("#topic-info").css("height", screenHeight / 4);
+    var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
+    $("#timeline").css("height", left_height);
+    $("#cited-papers").css("height", left_height * 1.03);
+    $("#citing-papers").css("height", left_height * 1.03);
+    // $("abstract").css("height", screenHeight / 3.4);
 
     const nodesNum = nodes.length;
     const edgesNum = edges.length - years.length + 1;
@@ -27,26 +31,25 @@ function update_sider (name) {
         var paperFirstAuthor = String(nodes[i].firstName);
         if (paperFirstAuthor == "") 
             paperFirstAuthor = name;
-        var content = "<div style=\"float: left;\"><i style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #00a78e; display: inline-block;\"></i></div>" + "<div style=\"margin-left: 7%;\"><b style=\"color: #777; font-size: 14px;\">" + paperName + "</b></div>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #777777;\">" + paperFirstAuthor + "</p>";
+        var content = "<div style=\"float: left;\"><i style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #00a78e; display: inline-block;\"></i></div>" + "<div style=\"margin-left: 7%;\"><b style=\"margin-left: 0%;\">" + paperName + "</b></div>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;\">" + paperFirstAuthor + "</p>";
         $("#timeline").append(content);
     }
-    $("#papers-list").show();
+    $("#paper-list").show();
 }
 
 function init_graph (viewBox, transform) {
+    // let left_sider_height = $(".left-column").height();
+    // $(".middle-column").height(left_sider_height * 1.2);
 
-    let left_sider_height = $("#self-info").height();
-    $("#graph").height(left_sider_height * 1.2);
-
-    const svg = d3.select("#graph").append("svg")
-        .attr("width", $("#graph").width())
-        .attr("height", $("#graph").height())
+    const svg = d3.select(".middle-column").append("svg")
+        .attr("width", $(".middle-column").width())
+        .attr("height", $(".middle-column").height())
         .attr("viewBox", viewBox)
         .attr("id", "mainsvg");
 
     zoom = d3.zoom()
         .scaleExtent([0.05, 10])
-        .on("zoom", _ => g.attr("transform", d3.event.transform));
+        .on("zoom", _ => g.attr("transform", d3.event.transform + transform));
 
     tip = d3.tip()
         .attr("class", "d3-tip")
@@ -56,9 +59,8 @@ function init_graph (viewBox, transform) {
     svg.call(tip);
 
     g = svg.append('g')
-    .attr('transform', transform)
-    .attr('id', 'maingroup')
-    .attr('class', 'all_g');
+        .attr('transform', transform)
+        .attr('id', 'maingroup');
 
 }
 
@@ -160,135 +162,18 @@ function update_fields() {
 }
 
 function visual_topics(overall_field) {
-    $("#overall-slider").val(0.5);
-    $("#paper-slider").val(0.5);
-    $("#hidden-slider").show();
+    $("#topic-slider").val(0.5);
+    $("#topic-slider").show();
 
     let fieldLevelVal = $("#field-level").val();
     let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
 
-    let topic_width = $("#topic-graph").width() * 0.7;
-    let topic_height = $("#topic-info").height() - $("#topic-graph-extra").height();
+    let topic_width = $("#topic-map-graph").width();
+    let topic_height = $("#topic-info").height() - $("#topic-map-banner").height();
     const topic_margin1 = 35;
     const topic_margin2 = 15;
 
-    var xScale = d3.scaleLinear()
-        .domain([d3.min(fields, field => field[3]), d3.max(fields, field => field[3])])
-        .range([0, topic_width - 2 * topic_margin1]);
-
-    var yScale = d3.scaleLinear()
-        .domain([d3.min(fields, field => field[4]), d3.max(fields, field => field[4])])
-        .range([topic_height * 0.85 - 2 * topic_margin2, 0]);
-
-    d3.selectAll("#overall-topic-svg").remove();
-
-    const overall_topic_svg = d3.select("#overall-topic-distribution").append("svg")
-        .attr("width", topic_width)
-        .attr("height", topic_height * 0.85)
-        .attr("id", "overall-topic-svg");
-    
-    const overall_topic_g = d3.select("#overall-topic-svg").append('g')
-        .attr("transform", `translate(${topic_margin1}, ${topic_margin2})`);
-
-    // const d3line = d3.line().x(d => d.x).y(d => d.y);
-    // var lineData1 = [{'x': -topic_margin1, 'y': topic_height / 2 - topic_margin2}, {'x': topic_width - topic_margin1, 'y': topic_height / 2 - topic_margin2}];
-    // var lineData2 = [{'x': topic_width / 2 - topic_margin1, 'y': -topic_margin2}, {'x': topic_width / 2 - topic_margin1, 'y': topic_height - topic_margin2}];
-    // overall_topic_g.append("path").attr("stroke", "grey").attr('stroke-width', 1).attr("fill", "none").attr("d", d3line(lineData1));
-    // overall_topic_g.append("path").attr("stroke", "grey").attr('stroke-width', 1).attr("fill", "none").attr("d", d3line(lineData2));
-    
-    const overall_topics = overall_topic_g.selectAll(".overall-topic").data(fields).enter().append("circle")
-        .attr("cx", d => xScale(d[3]))
-        .attr("cy", d => yScale(d[4]))
-        .attr("r", d => Math.sqrt(d[1]) / 8)
-        .attr("fill", d => d3.hsv(d[5], d[6] * 0.5 + 0.5, d[7]))
-        .attr("id", d => d[0])
-        .attr("class", "overall-topic");
-
-    const overall_topic_tip = d3.tip()
-        .attr("class", "overall-topic-tip")
-        .html(d => d[2]);
-    overall_topic_svg.call(overall_topic_tip);
-
-    overall_topics
-    .on('mouseover', function (d) {
-        let fieldColor = d3.select(this).attr("fill");
-        fieldColor = fieldColor.slice(4, -1).split(', ');
-        d3.select(this).attr('cursor', 'pointer');
-        overall_topic_tip.show(d);
-
-        let fieldId = d3.select(this).attr("id");
-        g.selectAll(".year-topic")
-            .attr("fill", d => {
-                if (fieldId != d.id.slice(4))
-                    return d3.rgb(200, 200, 200);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            });
-
-        var papersId = [];
-        let fieldLevelVal = $("#field-level").val();
-        for (let i = 0; i < nodes.length; i++) {
-            let topic = parseInt(nodes[i].topic);
-            topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-            if (topic == fieldId) {
-                papersId.push(nodes[i].id);
-            }
-        }
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => {
-                if (papersId.indexOf(d.id) == -1)
-                    return d3.rgb(250, 250, 250);
-                else
-                    return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
-            })
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        g.selectAll('.reference').data(edges)
-            .attr('stroke', d => {
-                if (papersId.indexOf(d.source) != -1 || papersId.indexOf(d.target) != -1)
-                    return 'black';
-                else
-                    return d3.rgb(200, 200, 200);
-            });
-        d3.selectAll(".year")
-            .attr("fill", d3.rgb(250, 250, 250))
-            .attr('stroke', d3.rgb(200, 200, 200));
-
-        $("#mainsvg").attr("style", "background-color: #FAFAFA;");
-    })
-    .on('mouseout', function (d) {
-        d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
-        overall_topic_tip.hide(d);
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-            .attr('stroke', d => {
-                let outlineColorVal = $("#outline-color").val();
-                if (outlineColorVal == 0)
-                    return 'black';
-                else if (outlineColorVal == 1) {
-                    if (d.isKeyPaper == 1)
-                        return 'red';
-                    else if (d.isKeyPaper >= 0.5)
-                        return 'pink';
-                    else
-                        return 'black';
-                }
-                else if (outlineColorVal == 2) {
-                    if (d.citationCount < 10)
-                        return 'black';
-                    else if (d.citationCount < 50)
-                        return 'pink';
-                    else
-                        return 'red';
-                }
-            });
-        g.selectAll(".reference").attr('stroke', 'black');
-        d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
-        $("#mainsvg").attr("style", "background-color: white;");
-    });
-
-
-    d3.selectAll("#paper-topic-svg").remove();
+    d3.selectAll("#topic-map-svg").remove();
 
     var xScale = d3.scaleLinear()
         .domain([d3.min(overall_field, d => d.cx), d3.max(overall_field, d => d.cx)])
@@ -298,33 +183,35 @@ function visual_topics(overall_field) {
         .domain([d3.min(overall_field, d => d.cy), d3.max(overall_field, d => d.cy)])
         .range([topic_height * 0.85 - 2 * topic_margin2, 0]);
 
-    const paper_topic_svg = d3.select("#paper-topic-distribution").append("svg")
+    const topic_map_svg = d3.select("#topic-distribution").append("svg")
         .attr("width", topic_width)
         .attr("height", topic_height * 0.85)
-        .attr("id", "paper-topic-svg");
+        .attr("id", "topic-map-svg");
     
-    const paper_topic_g = paper_topic_svg.append('g')
+    const topic_map_g = topic_map_svg.append('g')
         .attr("transform", `translate(${topic_margin1}, ${topic_margin2})`);
     
-    const paper_topics = paper_topic_g.selectAll(".paper-topic").data(overall_field).enter().append("circle")
+    const topics = topic_map_g.selectAll(".topic-map").data(overall_field).enter().append("circle")
         .attr("cx", d => xScale(d.cx))
         .attr("cy", d => yScale(d.cy))
-        .attr("r", d => Math.sqrt(d.num) * 2)
+        .attr("r", d => Math.sqrt(d.num) * 5)
         .attr("fill", d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
+        .attr("stroke", "black")
+        .attr("stroke-width", 0.2)
         .attr("id", d => d.id)
-        .attr("class", "paper-topic");
+        .attr("class", "topic-map");
 
-    const paper_topic_tip = d3.tip()
-        .attr("class", "paper-topic-tip")
+    const topic_map_tip = d3.tip()
+        .attr("class", "topic-map-tip")
         .html(d => d.name);
-    paper_topic_svg.call(paper_topic_tip);
+    topic_map_svg.call(topic_map_tip);
 
-    paper_topics
+    topics
     .on('mouseover', function (d) {
         let fieldColor = d3.select(this).attr("fill");
         fieldColor = fieldColor.slice(4, -1).split(', ');
         d3.select(this).attr('cursor', 'pointer');
-        paper_topic_tip.show(d);
+        topic_map_tip.show(d);
 
         let fieldId = d3.select(this).attr("id");
         g.selectAll(".year-topic")
@@ -368,7 +255,7 @@ function visual_topics(overall_field) {
     })
     .on('mouseout', function (d) {
         d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
-        paper_topic_tip.hide(d);
+        topic_map_tip.hide(d);
         g.selectAll(".paper").data(nodes)
             .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
             .attr('stroke', d => {
@@ -396,138 +283,9 @@ function visual_topics(overall_field) {
         d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
         $("#mainsvg").attr("style", "background-color: white;");
     });
-
-    // paper_topic_svg.append("rect")
-    //     .attr("x", topic_margin1)
-    //     .attr("y", topic_height - topic_margin2)
-    //     .attr("width", topic_width - 2 * topic_margin1)
-    //     .attr("height", 3)
-    //     .attr("fill", "#ccc");
-    // const slider = paper_topic_svg.append("circle")
-    //     .attr("cx", topic_margin1)
-    //     .attr("cy", topic_height - topic_margin2 + 1.5)     //需要为上面的rect的height的一半
-    //     .attr("r", 4)
-    //     .attr("fill", "#000");
-    // $("#paper-slider").slider();
-
-    topic_list_width = $("#topic-graph").width() * 0.3;
-    var topic_list_background = [];
-    for (let i = 0; i < 10; i++) {
-        let dic = {};
-        dic.x = 0;
-        dic.y = -1 + i * 20;
-        topic_list_background.push(dic);
-    }
-
-    d3.selectAll("#overall-topic-list-svg").remove();
-
-    d3.select("#overall-topic-list").append("svg")
-        .attr("width", topic_list_width)
-        .attr("height", topic_height)
-        .attr("id", "overall-topic-list-svg");
     
-    const overall_topic_list_g = d3.select("#overall-topic-list-svg").append('g');
-    
-    var topic_list_overall = [];
-    var init_y = 15;
-    for (let i = 0; i < fields.length; i++) {
-        let dic = {};
-        let text_arr = fields[i][2].split(' ');
-        if (text_arr.length == 1) {
-            dic.text = text_arr[0];
-        }
-        else {
-            dic.text = text_arr[0] + ' ' + text_arr[1];
-        }
-        dic.x = 10;
-        dic.y = init_y + i * 20;
-        dic.color = [fields[i][5], fields[i][6], fields[i][7]];
-        topic_list_overall.push(dic);
-    }
-
-    overall_topic_list_g.selectAll("rect").data(topic_list_background).enter().append("rect")
-        .attr("x", 0)
-        .attr("y", d => d.y)
-        .attr("width", topic_list_width)
-        .attr("height", 20)
-        .attr("fill", d => {
-            if (((d.y + 1) / 20) % 2 == 1) {
-                return d3.rgb(230, 230, 230);
-                return "#f8f8f8";
-            }
-            else {
-                return "#f8f8f8";
-            }
-        });
-
-    overall_topic_list_g.selectAll("text").data(topic_list_overall).enter().append("text")
-        .attr("x", d => d.x)
-        .attr("y", d => d.y)
-        .text(d => d.text)
-        .attr("fill", d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-        .attr("textLength", d => {
-            if (d.text.length >= 15) return topic_list_width * 0.85;
-            else    return topic_list_width * 0.9 * d.text.length / 15;
-        })
-        .attr('text-anchor', 'left')
-        .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 14);
-
-    d3.selectAll("#paper-topic-list-svg").remove();
-
-    d3.select("#paper-topic-list").append("svg")
-        .attr("width", topic_list_width)
-        .attr("height", topic_height)
-        .attr("id", "paper-topic-list-svg");
-    
-    const paper_topic_list_g = d3.select("#paper-topic-list-svg").append('g');
-    
-    var topic_list_paper = [];
-    var init_y = 15;
-    for (let i = 0; i < overall_field.length; i++) {
-        let dic = {};
-        let text_arr = overall_field[i].name.split(' ');
-        if (text_arr.length == 1) {
-            dic.text = text_arr[0];
-        }
-        else {
-            dic.text = text_arr[0] + ' ' + text_arr[1];
-        }
-        dic.x = 10;
-        dic.y = init_y + i * 20;
-        dic.color = overall_field[i].color;
-        topic_list_paper.push(dic);
-    }
-
-    paper_topic_list_g.selectAll("rect").data(topic_list_background).enter().append("rect")
-        .attr("x", 0)
-        .attr("y", d => d.y)
-        .attr("width", topic_list_width)
-        .attr("height", 20)
-        .attr("fill", d => {
-            if (((d.y + 1) / 20) % 2 == 1) {
-                return d3.rgb(230, 230, 230);
-            }
-            else {
-                return "#f8f8f8";
-            }
-        });
-    
-    paper_topic_list_g.selectAll("text").data(topic_list_paper).enter().append("text")
-        .attr("x", d => d.x)
-        .attr("y", d => d.y)
-        .text(d => d.text)
-        .attr("fill", d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-        .attr("textLength", d => {
-            if (d.text.length >= 15) return topic_list_width * 0.85;
-            else    return topic_list_width * 0.9 * d.text.length / 15;
-        })
-        .attr('text-anchor', 'left')
-        .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 14);
-    
-    if (topic_list_paper.length == 0) {
-        $("#hidden-slider").hide();
+    if (overall_field.length == 0) {
+        $("#topic-slider").hide();
     }
 
 }
@@ -708,11 +466,10 @@ function visual_graph(polygon) {
                 }
             });
 
-        $("#papers-list").hide();
+        $("#paper-list").hide();
         $("#edge-info").hide();
         $("#up-line").hide();
         $("#down-line").hide();
-        $("#topic-info").hide();
         $("#selector").show();
         $("#node-info").show();
 
@@ -731,6 +488,16 @@ function visual_graph(polygon) {
                 $('#abstract').text(nodes[i].abstract);
             }
         }
+
+        //因为abstract为overflow类型，需要先确定高度才能出现滑轮
+        //同时为了使右侧和中间保持相对对齐，所以需要用中间列的高度-abstract上面一些元素的高度和
+        //同样的计算内容在line.click中也出现了
+        let other_height = 0;
+        $(".abstract-minus-height").each(function() {
+            other_height += $(this).height();
+        });
+        let abstract_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.08;
+        $("#abstract").css("height", abstract_height);
 
         var vis = new Array(edges.length).fill(0);
         var citedTraversal = function (root) {
@@ -821,7 +588,6 @@ function visual_graph(polygon) {
             .attr('cursor', 'pointer');
     })
     .on('click', function () {
-
         //得到source和target的id
         var id = d3.select(this).attr('id');
         let id_arr = id.split('->');
@@ -917,15 +683,14 @@ function visual_graph(polygon) {
                 }
             });
         
-        $("#papers-list").hide();
+        $("#paper-list").hide();
         $("#selector").hide();
         $("#node-info").hide();
         $("#up-line").hide();
         $("#down-line").hide();
-        $("#topic-info").hide();
         $("#edge-info").show();
-        let left_sider_height = $("#self-info").height();
-        $("#citation-context").height(left_sider_height / 2.5);
+        
+        //更新edge-info中的内容
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].id == source) {
                 $('#source-paper').text(nodes[i].name);
@@ -940,6 +705,16 @@ function visual_graph(polygon) {
                 break;
             }
         }
+
+        //因为citation-context为overflow类型，需要先确定高度才能出现滑轮
+        //同时为了使右侧和中间保持相对对齐，所以需要用中间列的高度-citation-context上面一些元素的高度和
+        //同样的计算内容在ellipse.click中也出现了
+        let other_height = 0;
+        $(".citation-context-minus-height").each(function() {
+            other_height += $(this).height();
+        });
+        let citation_context_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.06;
+        $("#citation-context").css("height", citation_context_height);
     })
     .on('mouseout', function () {
         d3.select(this)
@@ -976,12 +751,11 @@ function visual_graph(polygon) {
             for (let i = 0; i < edges.length; i++) {
                 edges[i]['flag'] = 0;
             }
-            $("#papers-list").show();
+            $("#paper-list").show();
             $("#selector").hide();
             $("#node-info").hide();
             $("#up-line").hide();
             $("#down-line").hide();
-            $("#topic-info").show();
             $("#edge-info").hide();
         }
     });
