@@ -1,3 +1,5 @@
 csv
 nohup.out
 __pycache__
+static/json
+static/image/svg
