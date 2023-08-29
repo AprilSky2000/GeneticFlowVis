@@ -77,43 +77,65 @@ function textSize(text, size) {
     return {width, height}
 }
 
-function draw_tag_cloud(data) {
+function handleMouseOver(d) {
+    // fill rect with color
+    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
+    // show tooltip
+    d3.select(`#tag-tooltip`).text(d.name)
+        .style("opacity", 1);
+    // d3.select(`.overall-topic-tip`).show(d);
+
+    // console.log('show tooltip', d, tooltip);
+    d3.select(`#text_${d.id}`).attr('font-weight', 'bold')
+        .attr("x", d => d.x + d.width * 0.02);
+
+    d3.select(this).attr('cursor', 'pointer');
+
+    // console.log('fieldColor: ', d.color, d.id);
+    highlight_field(d.id, d.color);
+}
+
+function handleMouseOut(d) {
+    // reset rect color
+    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
+    // remove tooltip
+    d3.select(`#tag-tooltip`).style("opacity", 0);
+    // d3.select(`.overall-topic-tip`).hide(d);
+    // reset word
+    d3.select(`#text_${d.id}`).attr('font-weight', 'normal')
+        .attr("x", d => d.x + d.width * 0.06);
+
+    reset_field();
+}
+
+function calculateWordPosition(sortedData, maxFontSize) {
     let svgWidth = $(".middle-column").width();
     let svgHeight = $(".middle-column").height() * 0.25;
-    console.log('svgWidth: ', svgWidth);
-    console.log('svgHeight: ', svgHeight);
-
-    const svg = d3.select(".middle-column").append("svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .attr("id", "tagcloud");
-
-    const sortedData = data.sort((a, b) => b.num - a.num);
-    const maxNum = sortedData[0].num;
-
-    const wordCloud = svg.append("g")
-        .attr("transform", "translate(10, 10)");
-
-    const lineHeight = 60;
-    const maxFontSize = 50;
-    const emptySpace = 10;
-
-    const wordPosition = [];
+    let lineHeight = maxFontSize * 1.2;
+    let emptySpace = maxFontSize * 0.1;
+    let wordPosition = [];
     let currentLine = [];
     let currentLineWidth = 0;
     let currentLineHeight = 0;
+    let minFontSize = 10;
 
-    sortedData.forEach(d => {
-        let ratio = Math.sqrt(d.num / maxNum);
+    for (const d of sortedData) {
+        let ratio = Math.cbrt(d.num / sortedData[0].num);
+        if (ratio * maxFontSize < minFontSize) {
+            ratio = minFontSize / maxFontSize;
+        }
         let size = ratio * maxFontSize;
         let height = ratio * lineHeight;
-        let opacity = ratio * 0.6 + 0.2;
+        let opacity = ratio * 0.8 + 0.1;
         let shortName = d.name.split(" ").slice(0, 2).join(' ');
         // let width = size * shortName.length * 0.5;
-        let width = textSize(shortName, size).width;
-        
+        let width = textSize(shortName, size).width * 1.06;
+
         if (currentLineWidth + width > svgWidth) {
             currentLineHeight += currentLine[0].height + emptySpace;
+            if (currentLineHeight + height > svgHeight) {
+                return null;
+            }
             wordPosition.push(currentLine);
             currentLine = [];
             currentLineWidth = 0;
@@ -132,11 +154,37 @@ function draw_tag_cloud(data) {
             y: currentLineHeight
         });
         currentLineWidth += width + emptySpace;
-    });
+    }
 
     wordPosition.push(currentLine);
+    return wordPosition;
+}
 
-    console.log('wordPosition: ', wordPosition);
+function draw_tag_cloud(data) {
+    let svgWidth = $(".middle-column").width();
+    let svgHeight = $(".middle-column").height() * 0.25;
+    console.log('svgWidth: ', svgWidth);
+    console.log('svgHeight: ', svgHeight);
+
+    const svg = d3.select(".middle-column").append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("id", "tagcloud");
+
+    console.log(svg);
+    const sortedData = data.sort((a, b) => b.num - a.num);
+
+    const wordCloud = svg.append("g");
+        // .attr("transform", "translate(10, 10)");
+
+    let maxFontSize = 60;
+    
+    while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
+        maxFontSize *= 0.9;
+        console.log("height overflow! change maxFontSize to ", maxFontSize);
+    }
+
+    console.log('wordPosition: ', wordPosition, maxFontSize);
 
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
@@ -144,10 +192,23 @@ function draw_tag_cloud(data) {
         .append("g")
         .attr("transform", (d, i) => `translate(0, ${d[0].y})`);
 
-    const topic_tip = d3.tip()
-        .attr("class", "overall-topic-tip")
-        .html(d => d.name);
-    svg.call(topic_tip);
+    // let tooltip = d3.select(".middle-column")
+    // .append("text")
+    // .attr("class", "tooltip")
+    // .attr("id", "tag-tooltip")
+    // .attr("text-anchor", "middle")
+    // .style("font-size", "20px")
+    // .style("font-weight", "bold")
+    // .style("fill", "black")
+    // .style("visibility", "visible")
+    // .style("opacity", 0)
+    // .style("position", "absolute")
+    // .style("margin-left", "20%")
+    // .attr("x", svgWidth / 2)
+    //         .attr("y", -svgHeight)
+    //         .attr("transform", `translate(${svgWidth / 2}, -${svgHeight})`); // 上移一些距离
+
+    // console.log('tooltip: ', tooltip);
 
     words.selectAll("rect")
         .data(d => d)
@@ -155,46 +216,30 @@ function draw_tag_cloud(data) {
         .append("rect")
         .attr("x", d => d.x)
         .attr("y", d => 0)
+        .attr("id", d => `rect_${d.id}`)
         .attr("width", d => d.width)
         .attr("height", d => d.height)
-        .attr("rx", d => emptySpace * d.ratio)
-        .attr("ry", d => emptySpace * d.ratio)
-        .attr("fill", d => `rgba(9, 62, 86, ${d.opacity})`)
-        .on('mouseover', function (d) {
-            d3.select(this).attr('cursor', 'pointer');
-            topic_tip.show(d);
-            console.log('fieldColor: ', d.color, d.id);
-            highlight_field(d.id, d.color);
-        })
-        .on('mouseout', function (d) {
-            topic_tip.hide(d);
-            reset_field();
-        });
+        .attr("rx", d => maxFontSize * 0.1 * d.ratio)
+        .attr("ry", d => maxFontSize * 0.1 * d.ratio)
+        .attr("fill", d => `rgba(15, 161, 216, ${d.opacity})`)
+        .on('mouseover', handleMouseOver)
+        .on('mouseout', handleMouseOut);
 
     words.selectAll("text")
         .data(d => d)
         .enter()
         .append("text")
         .text(d => d.shortName)
-        .attr("x", d => d.x + d.width * 0.04)
+        .attr("x", d => d.x + d.width * 0.06)
         .attr("y", d => d.height / 2)
         .attr("dy", "0.35em")
-        .attr("id", d => d.id)
+        .attr("id", d => `text_${d.id}`)
         .attr("font-size", d => d.size + "px")
         .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`)
-        .on('mouseover', function (d) {
-            d3.select(this).attr('cursor', 'pointer');
-            topic_tip.show(d);
-            console.log('fieldColor: ', d.color, d.id);
-            highlight_field(d.id, d.color);
-        })
-        .on('mouseout', function (d) {
-            topic_tip.hide(d);
-            reset_field();
-        });
-
-    
+        .on('mouseover', handleMouseOver)
+        .on('mouseout', handleMouseOut);
 }
+
 
 function init_graph (viewBox, transform) {
     // let left_sider_height = $(".left-column").height();
@@ -205,7 +250,7 @@ function init_graph (viewBox, transform) {
         .attr("height", $(".middle-column").height() * 0.75)
         .attr("viewBox", viewBox)
         .attr("id", "mainsvg");
-
+    
     zoom = d3.zoom()
         .scaleExtent([0.05, 10])
         .on("zoom", _ => g.attr("transform", d3.event.transform + transform));
@@ -447,34 +492,8 @@ function visual_topics(overall_field) {
         highlight_field(fieldId, fieldColor);
     })
     .on('mouseout', function (d) {
-        d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
         topic_map_tip.hide(d);
-        g.selectAll(".paper").data(nodes)
-            .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-            .attr('stroke', d => {
-                let outlineColorVal = $("#outline-color").val();
-                if (outlineColorVal == 0)
-                    return 'black';
-                else if (outlineColorVal == 1) {
-                    if (d.isKeyPaper == 1)
-                        return 'red';
-                    else if (d.isKeyPaper >= 0.5)
-                        return 'pink';
-                    else
-                        return 'black';
-                }
-                else if (outlineColorVal == 2) {
-                    if (d.citationCount < 10)
-                        return 'black';
-                    else if (d.citationCount < 50)
-                        return 'pink';
-                    else
-                        return 'red';
-                }
-            });
-        g.selectAll(".reference").attr('stroke', 'black');
-        d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
-        $("#mainsvg").attr("style", "background-color: white;");
+        reset_field();
     });
     
     if (overall_field.length == 0) {

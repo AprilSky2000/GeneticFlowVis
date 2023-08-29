@@ -280,6 +280,8 @@
                 </ul>
             </div>
             <div class="middle-column" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+                <div id="tag-tooltip" class="tooltip"></div>
+                
                 <div id="toolbox">
                     <button id="restore" class="icon-button" style="background-image: url('/src/image/restore.png');"></button>
                     <button id="zoom-in" class="icon-button" style="background-image: url('/src/image/zoom-in.png');"></button>
@@ -502,6 +504,7 @@
                 data: paramData,
                 success: function (param) {
                     $("#mainsvg").remove();
+                    $("#tagcloud").remove();
                     d3.tip().destroy();
                     $("#abstract").empty();
                     $("#citation-context").empty();
@@ -529,6 +532,7 @@
                         init_graph(viewBox, transform);
                         update_nodes();
                         var fieldCount = update_fields();
+                        draw_tag_cloud(fieldCount);
                         visual_graph(polygon);
                         visual_topics(fieldCount);
                         outline_color_change();
