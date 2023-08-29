@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>Index</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
@@ -24,14 +25,15 @@
 
 <body>
     <div class="container-fluid" style="min-height: 100vh; padding-left: 0px; padding-right: 0px; background-color: #cedfe6;">
-        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
+        <div id="navigation" class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
                 <!--h1 style="color: #FFFFFF;"><span style="color: #FFFFFF">G</span>eneticFlow</h1-->
                 <img src="/src/image/logo-index.jpg" width="288" height="64">
             </div>
             <div class="clearfix"></div>
         </div>
-        <div class="tool-panel" style="background-color: #f7f7f7; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px;">
+        <!-- <div class="tool-panel" style="background-color: #f7f7f7; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px;"></div> -->
+        <div id="toolbar" class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
             <form id="update-info">
                 {% csrf_token %}
                 <ul class="address" style="padding-top: 0px;">
@@ -212,7 +214,44 @@
                                 var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
                                 var fileName = "{{ name|safe }}" + " GF profile.jpg";
                                 downloadSvg(zoomSvg, fileName);
-                            })
+                            });
+                            $(document).ready(function() {
+                                $("#save").click(function () {
+                                    var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
+                                    var fileName = "{{ name|safe }}" + " GF profile.jpg";
+                                    downloadSvg(zoomSvg, fileName);
+                                })
+                                $("#fullscreen").click(function() {
+                                    const container = document.getElementsByClassName("middle-column")[0];
+                                    if (container.requestFullscreen) {
+                                        container.requestFullscreen();
+                                    } else if (container.webkitRequestFullscreen) {
+                                        container.webkitRequestFullscreen();
+                                    }
+                                    d3.select("#mainsvg").remove();
+                                    d3.select("#tagcloud").remove();
+
+                                    console.log(viewBox, transform);
+
+                                    init_graph(viewBox, transform);
+                                    update_nodes();
+                                    var paper_field = update_fields();
+                                    draw_tag_cloud(paper_field);
+                                    visual_graph(polygon);
+                                })
+                                $("#zoom-in").click(function() {
+                                    console.log("zoom in");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
+                                })
+                                $("#zoom-out").click(function() {
+                                    console.log("zoom out");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
+                                })
+                                $("#restore").click(function() {
+                                    console.log("restore");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+                                })
+                            });
                         </script>
                     </li>
                 </ul>
@@ -237,28 +276,17 @@
                                 })
                             </script>
                         </div>
-                        <!-- <div id="topic-graph" style="position: relative">
-                            <div id="paper-topic-map" style="display: flex;">
-                                <div id="topic-width" style="flex: 7;">
-                                    <div id="paper-topic-distribution"></div>
-                                    <div id="hidden-slider" style="display: flex;">
-                                        <span style="flex: 2; margin-top: -5%; margin-left: 10%; color: #333;">topic size</span>
-                                        <input id="paper-slider" class="topic-slider" style="flex: 8; --thumb-size: 2px; height: 3px; margin-top: 2%; margin-left: 0%; color: #777" type="range" value="0.5" min="0" max="1" step="0.1">
-                                    </div>
-                                    <script>
-                                        $("#paper-slider").change(function () {
-                                            var topic_r = $("#paper-slider").val();
-                                            d3.selectAll(".paper-topic")
-                                                .attr("r", d => Math.sqrt(d.num) * 4 * topic_r);
-                                        })
-                                    </script>
-                                </div>
-                            </div>
-                        </div> -->
                     </li>
                 </ul>
             </div>
-            <div class="middle-column">
+            <div class="middle-column" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+                <div id="toolbox">
+                    <button id="restore" class="icon-button" style="background-image: url('/src/image/restore.png');"></button>
+                    <button id="zoom-in" class="icon-button" style="background-image: url('/src/image/zoom-in.png');"></button>
+                    <button id="zoom-out" class="icon-button" style="background-image: url('/src/image/zoom-out.png');"></button>
+                    <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
+                    <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
+                </div>
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
                 <div id="svg">
@@ -423,8 +451,8 @@
                 edges = data[3];      //path
                 polygon = data[4];    //箭头
                 const params = data[0];
-                const viewBox = params[0];
-                const transform = params[1];
+                viewBox = params[0];
+                transform = params[1];
                 for (let i = 0; i < nodes.length; i++) {
                     nodes[i]['flag'] = 0;
                 }
@@ -442,6 +470,7 @@
                 init_graph(viewBox, transform);
                 update_nodes();
                 var paper_field = update_fields();
+                draw_tag_cloud(paper_field);
                 visual_topics(paper_field);
                 visual_graph(polygon);
                 $("#overall-topic-map").hide();
