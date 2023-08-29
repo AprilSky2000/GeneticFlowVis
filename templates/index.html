@@ -365,6 +365,41 @@
                                 document.body.removeChild(downloadLink);*/
                                 svgDownloadAll(d3.select('#mainsvg').node(), '.all_g');
                             })
+                            $(document).ready(function() {
+                                $("#save").click(function () {
+                                    svgDownloadAll(d3.select('#mainsvg').node(), '.all_g');
+                                })
+                                $("#fullscreen").click(function() {
+                                    const container = document.getElementById("graph");
+                                    if (container.requestFullscreen) {
+                                        container.requestFullscreen();
+                                    } else if (container.webkitRequestFullscreen) {
+                                        container.webkitRequestFullscreen();
+                                    }
+                                    d3.select("#mainsvg").remove();
+                                    d3.select("#tagcloud").remove();
+
+                                    console.log(viewBox, transform);
+                                    
+                                    init_graph(viewBox, transform);
+                                    update_nodes();
+                                    var paper_field = update_fields();
+                                    draw_tag_cloud(paper_field);
+                                    visual_graph(polygon);
+                                })
+                                $("#zoom-in").click(function() {
+                                    console.log("zoom in");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
+                                })
+                                $("#zoom-out").click(function() {
+                                    console.log("zoom out");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
+                                })
+                                $("#restore").click(function() {
+                                    console.log("restore");
+                                    d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+                                })
+                            });
                         </script>
                     </li>
                 </ul>
@@ -377,6 +412,13 @@
                     <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="850" height="560" viewBox="0 0 0 0"></svg>
                 </div>
                 <canvas width="850" height="560" style="display:none"></canvas-->
+                <div id="toolbox">
+                    <button id="restore" class="icon-button" style="background-image: url('/src/image/restore.png');"></button>
+                    <button id="zoom-in" class="icon-button" style="background-image: url('/src/image/zoom-in.png');"></button>
+                    <button id="zoom-out" class="icon-button" style="background-image: url('/src/image/zoom-out.png');"></button>
+                    <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
+                    <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
+                </div>
             </div>
             <div id="detailed-info" class="col-md-3" style="padding-left: 1.5%; padding-right: 1.5%; padding-top: 0.5%;">
                 <ul id="topic-info" class="address" style="background-color: #FFFFFF; margin-top: 0px; border-top: none; padding-top: 0px; border-radius: 10px;">
@@ -586,56 +628,55 @@
     <!--初始js-->
     <script type="text/javascript">
         // text1 paperLabel; text2 paperCount; text3 year; text4 field
-        $(function () {
-            $("#selector").hide();
-            $("#node-info").hide();
-            $("#up-line").hide();
-            $("#down-line").hide();
-            $("#edge-info").hide();
-            const authorRank = {{ authorRank|safe }};
-            const name = '{{ name }}';
-            const fields = {{ fields|safe }};
-            field_roots = fields[0];
-            field_leaves = fields[1];
-            // console.log(field_roots);
-            // console.log(field_leaves);
-            current_topic_div = 1;
-            const filename = '/src/json/' + String(authorRank) + '_0_0.5_0.3_10_1.json';
-            d3.json(filename).then( data => {
-                years = data[1];      //年份节点
-                nodes = data[2];      //论文节点
-                edges = data[3];      //path
-                polygon = data[4];    //箭头
-                const params = data[0];
-                const viewBox = params[0];
-                const transform = params[1];
-                for (let i = 0; i < nodes.length; i++) {
-                    nodes[i]['flag'] = 0;
-                }
-                for (let i = 0; i < edges.length; i++) {
-                    edges[i]['flag'] = 0;
-                }
-                for (let i = 0; i < field_roots.length; i++) {
-                    field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
-                }
-                for (let i = 0; i < field_leaves.length; i++) {
-                    field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
-                }
+        $("#selector").hide();
+        $("#node-info").hide();
+        $("#up-line").hide();
+        $("#down-line").hide();
+        $("#edge-info").hide();
+        const authorRank = {{ authorRank|safe }};
+        const name = '{{ name }}';
+        const fields = {{ fields|safe }};
+        //  viewBox, transform;
+        field_roots = fields[0];
+        field_leaves = fields[1];
+        // console.log(field_roots);
+        // console.log(field_leaves);
+        current_topic_div = 1;
+        const filename = '/src/json/' + String(authorRank) + '_0_0.5_0.3_10_1.json';
+        d3.json(filename).then( data => {
+            years = data[1];      //年份节点
+            nodes = data[2];      //论文节点
+            edges = data[3];      //path
+            polygon = data[4];    //箭头
+            const params = data[0];
+            viewBox = params[0];
+            transform = params[1];
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i]['flag'] = 0;
+            }
+            for (let i = 0; i < edges.length; i++) {
+                edges[i]['flag'] = 0;
+            }
+            for (let i = 0; i < field_roots.length; i++) {
+                field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
+            }
+            for (let i = 0; i < field_leaves.length; i++) {
+                field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
+            }
 
-                update_sider(name);
-                init_graph(viewBox, transform);
-                update_nodes();
-                var paper_field = update_fields();
-                draw_tag_cloud(paper_field);
-                visual_topics(paper_field);
-                visual_graph(polygon);
-                $("#overall-topic-map").hide();
-                $("#paper-topic-map").show();
-                outline_color_change();
-                outline_thickness_change();
+            update_sider(name);
+            init_graph(viewBox, transform);
+            update_nodes();
+            var paper_field = update_fields();
+            draw_tag_cloud(paper_field);
+            visual_topics(paper_field);
+            visual_graph(polygon);
+            $("#overall-topic-map").hide();
+            $("#paper-topic-map").show();
+            outline_color_change();
+            outline_thickness_change();
                 // sugiyama(years, nodes, edges);
             });
-        })
     </script>
 
     <!--ajax提交表单-->
@@ -684,9 +725,10 @@
                         update_sider(name);
                         init_graph(viewBox, transform);
                         update_nodes();
-                        var fieldCount = update_fields();
+                        var paper_field = update_fields();
+                        draw_tag_cloud(paper_field);
                         visual_graph(polygon);
-                        visual_topics(fieldCount);
+                        visual_topics(paper_field);
                         outline_color_change();
                         outline_thickness_change();
                     });

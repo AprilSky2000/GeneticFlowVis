@@ -73,6 +73,37 @@ function textSize(text, size) {
     return {width, height}
 }
 
+function handleMouseOver(d) {
+    // fill rect with color
+    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
+    // show tooltip
+    d3.select(`#tag-tooltip`).text(d.name)
+        .style("opacity", 1);
+    // d3.select(`.overall-topic-tip`).show(d);
+
+    // console.log('show tooltip', d, tooltip);
+    d3.select(`#text_${d.id}`).attr('font-weight', 'bold')
+        .attr("x", d => d.x + d.width * 0.02);
+
+    d3.select(this).attr('cursor', 'pointer');
+    
+    // console.log('fieldColor: ', d.color, d.id);
+    highlight_field(d.id, d.color);
+}
+
+function handleMouseOut(d) {
+    // reset rect color
+    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
+    // remove tooltip
+    d3.select(`#tag-tooltip`).style("opacity", 0);
+    // d3.select(`.overall-topic-tip`).hide(d);
+    // reset word
+    d3.select(`#text_${d.id}`).attr('font-weight', 'normal')
+        .attr("x", d => d.x + d.width * 0.06);
+
+    reset_field();
+}
+
 function draw_tag_cloud(data) {
     let svgWidth = $("#graph").width();
     let svgHeight = $("#graph").height() * 0.25;
@@ -92,7 +123,7 @@ function draw_tag_cloud(data) {
 
     const lineHeight = 60;
     const maxFontSize = 50;
-    const emptySpace = 10;
+    const emptySpace = 5;
 
     const wordPosition = [];
     let currentLine = [];
@@ -106,7 +137,7 @@ function draw_tag_cloud(data) {
         let opacity = ratio * 0.6 + 0.2;
         let shortName = d.name.split(" ").slice(0, 2).join(' ');
         // let width = size * shortName.length * 0.5;
-        let width = textSize(shortName, size).width;
+        let width = textSize(shortName, size).width * 1.06;
         
         if (currentLineWidth + width > svgWidth) {
             currentLineHeight += currentLine[0].height + emptySpace;
@@ -140,10 +171,18 @@ function draw_tag_cloud(data) {
         .append("g")
         .attr("transform", (d, i) => `translate(0, ${d[0].y})`);
 
-    const topic_tip = d3.tip()
-        .attr("class", "overall-topic-tip")
-        .html(d => d.name);
-    svg.call(topic_tip);
+    d3.select("#mainsvg")
+        .append("text")
+        .attr("class", "tooltip")
+        .attr("id", "tag-tooltip")
+        .attr("text-anchor", "middle")
+        .style("font-size", "100px")
+        .style("font-weight", "bold")
+        .style("fill", "black")
+        .style("visibility", "visible")
+        .style("opacity", 0)
+        .attr("x", $("#mainsvg").width() * 2)
+        .attr("y", 10);
 
     words.selectAll("rect")
         .data(d => d)
@@ -151,45 +190,28 @@ function draw_tag_cloud(data) {
         .append("rect")
         .attr("x", d => d.x)
         .attr("y", d => 0)
+        .attr("id", d => `rect_${d.id}`)
         .attr("width", d => d.width)
         .attr("height", d => d.height)
         .attr("rx", d => emptySpace * d.ratio)
         .attr("ry", d => emptySpace * d.ratio)
-        .attr("fill", d => `rgba(9, 62, 86, ${d.opacity})`)
-        .on('mouseover', function (d) {
-            d3.select(this).attr('cursor', 'pointer');
-            topic_tip.show(d);
-            console.log('fieldColor: ', d.color, d.id);
-            highlight_field(d.id, d.color);
-        })
-        .on('mouseout', function (d) {
-            topic_tip.hide(d);
-            reset_field();
-        });
+        .attr("fill", d => `rgba(15, 161, 216, ${d.opacity})`)
+        .on('mouseover', handleMouseOver)
+        .on('mouseout', handleMouseOut);
 
     words.selectAll("text")
         .data(d => d)
         .enter()
         .append("text")
         .text(d => d.shortName)
-        .attr("x", d => d.x + d.width * 0.04)
+        .attr("x", d => d.x + d.width * 0.06)
         .attr("y", d => d.height / 2)
         .attr("dy", "0.35em")
-        .attr("id", d => d.id)
+        .attr("id", d => `text_${d.id}`)
         .attr("font-size", d => d.size + "px")
         .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`)
-        .on('mouseover', function (d) {
-            d3.select(this).attr('cursor', 'pointer');
-            topic_tip.show(d);
-            console.log('fieldColor: ', d.color, d.id);
-            highlight_field(d.id, d.color);
-        })
-        .on('mouseout', function (d) {
-            topic_tip.hide(d);
-            reset_field();
-        });
-
-    
+        .on('mouseover', handleMouseOver)
+        .on('mouseout', handleMouseOut);
 }
 
 function init_graph (viewBox, transform) {
