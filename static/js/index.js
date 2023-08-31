@@ -11,7 +11,7 @@ function op(key){
     }
 }
 
-function update_sider (name) {
+function updateSider (name) {
     const screenHeight = $(window).height();
     $("#topic-info").css("height", screenHeight / 4);
     var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
@@ -28,10 +28,23 @@ function update_sider (name) {
     $("#timeline").empty();
     for (let i = 0; i < nodes.length; i++) {
         const paperName = String(nodes[i].name);
-        var paperFirstAuthor = String(nodes[i].firstName);
-        if (paperFirstAuthor == "") 
-            paperFirstAuthor = name;
-        var content = "<div style=\"float: left;\"><i style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #00a78e; display: inline-block;\"></i></div>" + "<div style=\"margin-left: 7%;\"><b style=\"margin-left: 0%;\">" + paperName + "</b></div>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;\">" + paperFirstAuthor + "</p>";
+        const paperVenu = String(nodes[i].venu);
+        const paperYear = String(nodes[i].year);
+
+        var authors = String(nodes[i].authors);
+        if (authors == "") {
+            authors = name;
+        }
+        var authorList = authors.split(", ");
+        var paperAuthors = "";
+        for (let i = 0; i < authorList.length; i++) {
+            if (authorList[i] == name) 
+                paperAuthors += "<span style=\"color: #00A78E\">" + authorList[i] + "</span>, ";
+            else 
+                paperAuthors += authorList[i] + ", ";
+        }
+
+        var content = "<div style=\"float: left;\"><i style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #00a78e; display: inline-block;\"></i></div>" + "<div style=\"margin-left: 7%;\"><b style=\"margin-left: 0%;\">" + paperName + "</b></div>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #333;\">" + paperAuthors.slice(0, -2) + "</p>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;\">" + paperVenu + " " + paperYear + "</p>";
         $("#timeline").append(content);
     }
     $("#paper-list").show();
@@ -163,15 +176,14 @@ function calculateWordPosition(sortedData, maxFontSize) {
 function draw_tag_cloud(data) {
     let svgWidth = $(".middle-column").width();
     let svgHeight = $(".middle-column").height() * 0.25;
-    console.log('svgWidth: ', svgWidth);
-    console.log('svgHeight: ', svgHeight);
+    // console.log('svgWidth: ', svgWidth);
+    // console.log('svgHeight: ', svgHeight);
 
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
         .attr("id", "tagcloud");
 
-    console.log(svg);
     const sortedData = data.sort((a, b) => b.num - a.num);
 
     const wordCloud = svg.append("g");
@@ -242,9 +254,6 @@ function draw_tag_cloud(data) {
 
 
 function init_graph (viewBox, transform) {
-    // let left_sider_height = $(".left-column").height();
-    // $(".middle-column").height(left_sider_height * 1.2);
-
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", $(".middle-column").width())
         .attr("height", $(".middle-column").height() * 0.75)
@@ -257,7 +266,7 @@ function init_graph (viewBox, transform) {
 
     tip = d3.tip()
         .attr("class", "d3-tip")
-        .html(function(d) { return d.name });
+        .html(d => d.name);
 
     svg.call(zoom);
     svg.call(tip);
@@ -282,7 +291,6 @@ function update_nodes() {
 }
 
 function update_fields() {
-
     var overall_field = [];
     let fieldLevelVal = $("#field-level").val();
     let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
@@ -503,7 +511,6 @@ function visual_topics(overall_field) {
 }
 
 function visual_graph(polygon) {
-    
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
         .attr('cx', d => d.cx)
         .attr('cy', d => d.cy)
@@ -973,7 +980,7 @@ function visual_graph(polygon) {
     });
 }
 
-var outline_color_change = function () {
+function outline_color_change() {
     let outlineColorVal = $("#outline-color").val();
     if (outlineColorVal == 0) {
         d3.selectAll(".paper").attr('stroke', 'black');
@@ -1008,7 +1015,7 @@ var outline_color_change = function () {
     }
 }
 
-var outline_thickness_change = function () {
+function outline_thickness_change() {
     let outlineThicknessVal = $("#outline-thickness").val();
     if (outlineThicknessVal == 0) {
         d3.selectAll(".paper")
@@ -1053,7 +1060,7 @@ var outline_thickness_change = function () {
     }
 }
 
-var fill_color_change = function () {
+function fill_color_change() {
     let fillColorVal = $("#fill-color").val();
     if (fillColorVal == 0) {
         d3.selectAll(".paper").attr('fill', 'white');
@@ -1068,7 +1075,7 @@ var fill_color_change = function () {
     }
 }
 
-var field_level_change = function () {
+function field_level_change() {
     let fillColorVal = $("#fill-color").val();
     if (fillColorVal == 1) {
         update_nodes();

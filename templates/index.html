@@ -1,7 +1,6 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>Index</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
@@ -21,19 +20,27 @@
     <script src="/src/js/index.js"></script>
     <script src="/src/js/download-svg.js"></script>
 
+    <!-- Google tag (gtag.js) --> 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> 
+    <script> 
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);} 
+        gtag('js', new Date());
+        gtag('config', 'G-9FR7K2YVNR');
+    </script>
+
 </head>
 
 <body>
-    <div class="container-fluid" style="min-height: 100vh; padding-left: 0px; padding-right: 0px; background-color: #cedfe6;">
-        <div id="navigation" class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
+    <div class="container-fluid">
+        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center; z-index: 3;">
             <div class="logo">
-                <!--h1 style="color: #FFFFFF;"><span style="color: #FFFFFF">G</span>eneticFlow</h1-->
-                <img src="/src/image/logo-index.jpg" width="288" height="64">
+                <a href="http://82.156.152.182:9001/"><img src="/src/image/logo-index.jpg" width="288" height="64"></a>
             </div>
             <div class="clearfix"></div>
         </div>
         <!-- <div class="tool-panel" style="background-color: #f7f7f7; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px;"></div> -->
-        <div id="toolbar" class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+        <div class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; z-index: 2;">
             <form id="update-info">
                 {% csrf_token %}
                 <ul class="address" style="padding-top: 0px;">
@@ -203,57 +210,6 @@
                             <li id="edge-num" style="color: #333;"></li>
                         </ul>
                     </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 100%; margin-left: 5%; margin-top: 2em;">
-                                <a id="download" style="cursor: pointer;">download graph as picture</a>
-                            </li>
-                        </ul>
-                        <script type="text/javascript">
-                            $("#download").click(function () {
-                                var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
-                                var fileName = "{{ name|safe }}" + " GF profile.jpg";
-                                downloadSvg(zoomSvg, fileName);
-                            });
-                            $(document).ready(function() {
-                                $("#save").click(function () {
-                                    var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
-                                    var fileName = "{{ name|safe }}" + " GF profile.jpg";
-                                    downloadSvg(zoomSvg, fileName);
-                                })
-                                $("#fullscreen").click(function() {
-                                    const container = document.getElementsByClassName("middle-column")[0];
-                                    if (container.requestFullscreen) {
-                                        container.requestFullscreen();
-                                    } else if (container.webkitRequestFullscreen) {
-                                        container.webkitRequestFullscreen();
-                                    }
-                                    d3.select("#mainsvg").remove();
-                                    d3.select("#tagcloud").remove();
-
-                                    console.log(viewBox, transform);
-
-                                    init_graph(viewBox, transform);
-                                    update_nodes();
-                                    var paper_field = update_fields();
-                                    draw_tag_cloud(paper_field);
-                                    visual_graph(polygon);
-                                })
-                                $("#zoom-in").click(function() {
-                                    console.log("zoom in");
-                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
-                                })
-                                $("#zoom-out").click(function() {
-                                    console.log("zoom out");
-                                    d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
-                                })
-                                $("#restore").click(function() {
-                                    console.log("restore");
-                                    d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-                                })
-                            });
-                        </script>
-                    </li>
                 </ul>
                 <br />
                 <ul id="topic-info" class="address">
@@ -289,6 +245,40 @@
                     <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
                 </div>
+                <script type="text/javascript">
+                    $(document).ready(function() {
+                        $("#save").click(function () {
+                            var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
+                            var fileName = "{{ name|safe }}" + " GF profile.jpg";
+                            downloadSvg(zoomSvg, fileName);
+                        })
+                        $("#fullscreen").click(function() {
+                            const container = document.getElementsByClassName("middle-column")[0];
+                            if (container.requestFullscreen) {
+                                container.requestFullscreen();
+                            } else if (container.webkitRequestFullscreen) {
+                                container.webkitRequestFullscreen();
+                            }
+                            d3.select("#mainsvg").remove();
+                            d3.select("#tagcloud").remove();
+
+                            init_graph(viewBox, transform);
+                            update_nodes();
+                            var paper_field = update_fields();
+                            draw_tag_cloud(paper_field);
+                            visual_graph(polygon);
+                        })
+                        $("#zoom-in").click(function() {
+                            d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
+                        })
+                        $("#zoom-out").click(function() {
+                            d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
+                        })
+                        $("#restore").click(function() {
+                            d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+                        })
+                    });
+                </script>
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
                 <div id="svg">
@@ -443,8 +433,7 @@
             const fields = {{ fields|safe }};
             field_roots = fields[0];
             field_leaves = fields[1];
-            // console.log(field_roots);
-            // console.log(field_leaves);
+            
             current_topic_div = 1;
             const filename = '/src/json/' + String(authorRank) + '_0_0.5_0.3_10_1.json';
             d3.json(filename).then( data => {
@@ -468,7 +457,7 @@
                     field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
                 }
 
-                update_sider(name);
+                updateSider(name);
                 init_graph(viewBox, transform);
                 update_nodes();
                 var paper_field = update_fields();
@@ -528,7 +517,7 @@
                             nodes[i]['flag'] = 0;
                         }
 
-                        update_sider(name);
+                        updateSider(name);
                         init_graph(viewBox, transform);
                         update_nodes();
                         var fieldCount = update_fields();

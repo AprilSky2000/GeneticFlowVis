@@ -12,8 +12,6 @@ import base64
 from bs4 import BeautifulSoup
 import re
 
-# paper: 0-ID; 1-title; 2-year; 4-citationCount; 6-isKeyPaper; 8-firstAuthor; 9-venue; 11-abstract
-
 def search(request):
     return render(request, 'search.html')
 
@@ -28,7 +26,7 @@ def create_node(dot, papers, nodeWidth):
                 initYear = year
         publicationTime = [i for i in range(initYear, 2022)]
 
-    # 根据已有年份对论文重新分类，分成subgraph()
+    # 根据已有年份对论文重新分类，每个年份的论文构成一个子图，分成subgraph()
     papers = sorted(papers, key=lambda x:int(x[2]))
     for year in publicationTime:
         with dot.subgraph() as s:
@@ -37,12 +35,13 @@ def create_node(dot, papers, nodeWidth):
             for paper in papers:
                 if int(paper[2]) == year:
                     # label: 第一作者首字+发表年份+论文标题首字
-                    s1 = paper[8].split(' ')
+                    authors = paper[7].split(', ')
+                    s1 = authors[0].split(' ')
                     s2 = paper[1].split(' ')
                     if s1 == ['']:
                         label = str(year) + s2[0]
                     else:
-                        label = s1[1] + str(year) + s2[0]
+                        label = s1[-1] + str(year) + s2[0]
                     if nodeWidth != 0 and nodeWidth < len(label):
                         label = label[0:nodeWidth] + '...'
 
@@ -59,34 +58,33 @@ def create_node(dot, papers, nodeWidth):
 
 def create_edge(dot, papers, links):
     for link in links:
-        citingpaperID = link[0]
-        citedpaperID = link[1]
-        x = len(papers)
-        y = len(papers)
+        citingpaperID, citedpaperID = link[0], link[1]
+        x, y = len(papers), len(papers)
         for i in range(0, len(papers)):
-            if citingpaperID in papers[i]:
+            if citingpaperID == papers[i][0]:
                 x = i
-            if citedpaperID in papers[i]:
+            if citedpaperID == papers[i][0]:
                 y = i
         if x < len(papers) and y < len(papers):
             dot.edge(str(papers[y][0]), str(papers[x][0]))
 
 def create_partial_graph(dot, papers, links, nodeWidth):
+    print(len(papers))
     # 当节点没有边与其相连时，删去
-    n = len(papers)
     for link in links:
         citingpaperID, citedpaperID = link[0], link[1]
-        x, y = n, n
-        for i in range(0, n):
+        x, y = len(papers), len(papers)
+        for i in range(0, len(papers)):
             if citingpaperID == papers[i][0]:
                 x = i
             if citedpaperID == papers[i][0]:
                 y = i
-        if x < n and y < n:
+        if x < len(papers) and y < len(papers):
             papers[x][-1] += 1
             papers[y][-1] += 1
 
     papers_backup = [paper for paper in papers if paper[-1] > 0]
+    print(len(papers_backup), len(links))
 
     create_node(dot, papers_backup, nodeWidth)
 
@@ -104,19 +102,22 @@ def get_node(nodes, papers):
             if str(paper[0]) == dic['id']:
                 dic['name'] = paper[1]
                 dic['year'] = int(paper[2])
-                dic['firstName'] = paper[8]
+                # dic['firstName'] = paper[8]
+                dic['authors'] = paper[7]
+                dic['venu'] = paper[6]
 
-                if paper[8] == '':
+                if paper[7] == '':
                     label = str(paper[2]) + paper[1].split(' ')[0]
                 else:
-                    label = paper[8].split(' ')[1] + str(paper[2]) + paper[1].split(' ')[0]
+                    firstName = paper[7].split(', ')[0]
+                    label = firstName.split(' ')[-1] + str(paper[2]) + paper[1].split(' ')[0]
                 dic['label'] = label
 
-                dic['isKeyPaper'] = float(paper[6])
+                dic['isKeyPaper'] = float(paper[5])
                 dic['citationCount'] = int(paper[4])
                 
-                dic['abstract'] = paper[9]
-                dic['topic'] = int(paper[10])
+                dic['abstract'] = paper[8]
+                dic['topic'] = int(paper[9])
                 break
         dic['cx'] = float(ellipse['cx'])
         dic['cy'] = float(ellipse['cy'])
@@ -211,7 +212,7 @@ def index(request):
         return render(request, 'error.html', {'error': error})
     else:
         authorRank = author["authorRank"].iloc[0]
-        name = author["name"].iloc[0].lower()
+        name = author["name"].iloc[0]
         paperCount = author["PaperCount_field"].iloc[0]
         citationCount = author["CitationCount_field"].iloc[0]
         hIndex = author["hIndex_field"].iloc[0]
@@ -228,7 +229,7 @@ def index_id(request, id):
     df["authorRank"].astype(int)
     author = df[df["authorRank"] == int(id)]
     authorRank = author["authorRank"].iloc[0]
-    name = author["name"].iloc[0].lower().replace('.', '')
+    name = author["name"].iloc[0]
     paperCount = author["PaperCount_field"].iloc[0]
     citationCount = author["CitationCount_field"].iloc[0]
     hIndex = author["hIndex_field"].iloc[0]
@@ -250,9 +251,9 @@ def same_index(authorRank):
         file = str(authorRank)
         # file = name.replace(' ', '') + str(authorRank)
         # 读取相应papers文件
-        papers, surveys = read_papers(file, isKeyPaper, removeSurvey)
+        papers = read_papers(file, isKeyPaper, removeSurvey)
         # 读取相应influence文件
-        links = read_link(file, extendsProb, surveys)
+        links = read_links(file, extendsProb)
         # 创建图
         create_partial_graph(dot, papers, links, nodeWidth)
 
@@ -281,8 +282,8 @@ def update(request):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
         file = str(authorRank)
-        papers, surveys = read_papers(file, isKeyPaper, removeSurvey)
-        links = read_link(file, extendsProb, surveys)
+        papers = read_papers(file, isKeyPaper, removeSurvey)
+        links = read_links(file, extendsProb)
 
         if mode == 1:
             create_node(dot, papers, nodeWidth)
@@ -315,28 +316,27 @@ def find_scholar(row):
     return scholar
 
 def read_papers(file, isKeyPaper, removeSurvey):
-    df = pd.read_csv('./csv/papers_' + file + '.csv', sep=',', header=0)
+    df = pd.read_csv('./csv/papers_' + file + '.csv', sep=',', index_col=0)
     df = df.fillna('')
     df["isKeyPaper"].astype(float)
     df = df[df["isKeyPaper"] >= isKeyPaper]
     df["isolated"] = 0
-    surveys = []
     if removeSurvey == 1:
-        surveys = df.loc[df['title'].str.contains('survey|Survey'), 'paperID'].tolist()
-        print(surveys)
-        df = df[~df['title'].str.contains('survey')]
+        # surveys = df.loc[df['title'].str.contains('survey|Survey'), 'paperID'].tolist() # 抽取所有title中含有survey的paperID作为list
+        df = df[~df['title'].str.contains(r'survey|surveys', case=False, regex=True)]
     papers = df.values.tolist()
-    return papers, surveys
+    print(papers[0])
+    return papers
 
-def read_link(file, extendsProb, surveys):
-    df = pd.read_csv('./csv/links_' + file + '.csv', sep=',',
-                     names=["childrenID", "parentID", "extendsProb", "citationContext"])
+def read_links(file, extendsProb):
+    df = pd.read_csv('./csv/links_' + file + '.csv', sep=',', index_col=0)
     df["extendsProb"].astype(float)
     df = df.where(df.notnull(), None)
     df = df[df["extendsProb"] >= extendsProb]
-    df = df[~df["childrenID"].isin(surveys)]
-    df = df[~df["parentID"].isin(surveys)]
+    # df = df[~df["childrenID"].isin(surveys)]
+    # df = df[~df["parentID"].isin(surveys)]
     links = df.values.tolist()
+    print(links[0])
     return links
 
 def get_fields():
