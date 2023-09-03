@@ -12,8 +12,9 @@ function op(key){
 }
 
 function updateSider (name) {
-    const screenHeight = $(window).height();
-    $("#topic-info").css("height", screenHeight / 4);
+    // const screenHeight = $(window).height();
+    // $("#topic-info").css("height", screenHeight / 4);
+    $("#topic-info").css("height", $("#basic-info").width());
     var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
     $("#timeline").css("height", left_height);
     $("#cited-papers").css("height", left_height * 1.03);
@@ -252,7 +253,6 @@ function draw_tag_cloud(data) {
         .on('mouseout', handleMouseOut);
 }
 
-
 function init_graph (viewBox, transform) {
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", $(".middle-column").width())
@@ -291,19 +291,22 @@ function update_nodes() {
 }
 
 function update_fields() {
-    var overall_field = [];
-    let fieldLevelVal = $("#field-level").val();
-    let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
+    var self_field = [];    //该学者个人的field信息
+    let field_level_val = $("#field-level").val();
+    let fields = field_level_val == 1 ? field_roots : field_leaves; //该领域所有的field信息
     for (let i = 0; i < nodes.length; i++) {
+        // 判断该论文节点的topic是叶子层还是顶层
         let topic = parseInt(nodes[i].topic);
-        topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-        for (var j = 0; j < overall_field.length; j++) {
-            if (topic == overall_field[j].id) {
-                overall_field[j].num += 1;
+        topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
+        // 统计该学者的topic信息，如果已经统计(纳入了self_field)，num++
+        for (var j = 0; j < self_field.length; j++) {
+            if (topic == self_field[j].id) {
+                self_field[j].num += 1;
                 break;
             }
         }
-        if (j == overall_field.length) {
+        // 如果没有统计，在self_field中新建k-v
+        if (j == self_field.length) {
             let dic = {};
             dic.id = topic;
             dic.num = 1;
@@ -311,28 +314,30 @@ function update_fields() {
             dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
             dic.cx = parseFloat(fields[topic][3]);
             dic.cy = parseFloat(fields[topic][4]);
-            overall_field.push(dic);
+            self_field.push(dic);
         }
     }
-    overall_field.sort(op('num'));
+    self_field.sort(op('num'));
 
     // 处理左侧柱状图
     g.selectAll('.year-topic').remove();
-
+    // 因为需要统计各个年份的各个field的分布，是一个二维向量，要绘制柱状图只能在每年的时候将field柱状分布图画出来，所以没有放到visual_topic函数里
     for (let i = 0; i < years.length; i++) {
-        var year_field = [];
-        for (let j = 0; j < overall_field.length; j++) {
+        var year_field = [];    //该学者每一年的field信息
+        //初始化每一年的field信息：将self_field中的所有field移到当前年份，并置num=0
+        for (let j = 0; j < self_field.length; j++) {
             let dic = {};
-            dic.id = overall_field[j].id;
-            dic.name = overall_field[j].name.split(':')[0];
+            dic.id = self_field[j].id;
+            dic.name = self_field[j].name.split(':')[0];
             dic.num = 0;
-            dic.color = overall_field[j].color;
+            dic.color = self_field[j].color;
             year_field.push(dic);
         }
+        //如果是该年发表的论文，将它的topic和该年的field匹配，匹配上的field数量++
         for (let j = 0; j < nodes.length; j++) {
             if (nodes[j].year == years[i].id) {
                 let topic = parseInt(nodes[j].topic);
-                topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
+                topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
                 for (let k = 0; k < year_field.length; k++) {
                     if (topic == year_field[k].id) {
                         year_field[k].num += 1;
@@ -364,45 +369,49 @@ function update_fields() {
     .on('mouseover', function (d) {
         d3.select(this).attr('cursor', 'pointer');
         tip.show(d);
+        let field_color = d3.select(this).attr("fill");
+        field_color = field_color.slice(4, -1).split(', ');
+        highlight_field(d.id.slice(4), field_color);
     })
     .on('mouseout', function (d) {
         d3.selectAll('.year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
         tip.hide(d);
+        reset_field();
     });
 
-    return overall_field;
+    return self_field;
 }
 
-function highlight_field(fieldId, fieldColor) {
+function highlight_field(field_id, field_color) {
     g.selectAll(".year-topic")
         .attr("fill", d => {
-            if (fieldId != d.id.slice(4))
+            if (field_id != d.id.slice(4))  // 每个year-topic的柱子绑定的数据中id=year+topicID，year的长度为4，所以topic的id就可以切片得出
                 return d3.rgb(200, 200, 200);
             else
-                return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
+                return d3.rgb(parseInt(field_color[0]), parseInt(field_color[1]), parseInt(field_color[2]));
         });
 
-    var papersId = [];
-    let fieldLevelVal = $("#field-level").val();
+    var color_papers = [];  // 记录颜色不需要变化的paperID
+    let field_level_val = $("#field-level").val();
     for (let i = 0; i < nodes.length; i++) {
         let topic = parseInt(nodes[i].topic);
-        topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-        if (topic == fieldId) {
-            papersId.push(nodes[i].id);
+        topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
+        if (topic == field_id) {
+            color_papers.push(nodes[i].id);
         }
     }
     g.selectAll(".paper").data(nodes)
         .attr('fill', d => {
-            if (papersId.indexOf(d.id) == -1)
+            if (color_papers.indexOf(d.id) == -1)
                 return d3.rgb(250, 250, 250);
             else
-                return d3.rgb(parseInt(fieldColor[0]), parseInt(fieldColor[1]), parseInt(fieldColor[2]));
+                return d3.rgb(parseInt(field_color[0]), parseInt(field_color[1]), parseInt(field_color[2]));
         })
         .attr('stroke', d3.rgb(200, 200, 200));
 
     g.selectAll('.reference').data(edges)
         .attr('stroke', d => {
-            if (papersId.indexOf(d.source) != -1 || papersId.indexOf(d.target) != -1)
+            if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
                 return 'black';
             else
                 return d3.rgb(200, 200, 200);
@@ -415,32 +424,20 @@ function highlight_field(fieldId, fieldColor) {
 }
 
 function reset_field() {
-    d3.selectAll('.rect1, .year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
+    // 恢复左侧年份主题柱状图
+    d3.selectAll('.rect1, .year-topic')
+        .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
+    //恢复节点填充色和边缘色
     g.selectAll(".paper").data(nodes)
-        .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-        .attr('stroke', d => {
-            let outlineColorVal = $("#outline-color").val();
-            if (outlineColorVal == 0)
-                return 'black';
-            else if (outlineColorVal == 1) {
-                if (d.isKeyPaper == 1)
-                    return 'red';
-                else if (d.isKeyPaper >= 0.5)
-                    return 'pink';
-                else
-                    return 'black';
-            }
-            else if (outlineColorVal == 2) {
-                if (d.citationCount < 10)
-                    return 'black';
-                else if (d.citationCount < 50)
-                    return 'pink';
-                else
-                    return 'red';
-            }
-        });
-    g.selectAll(".reference").attr('stroke', 'black');
-    d3.selectAll(".year").attr("fill", "white").attr("stroke", "black");
+        .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
+    outline_color_change();
+    //恢复边的颜色
+    g.selectAll(".reference")
+        .attr('stroke', 'black');
+    //恢复年份节点的填充色和边缘色
+    d3.selectAll(".year")
+        .attr("fill", "white")
+        .attr("stroke", "black");
     $("#mainsvg").attr("style", "background-color: white;");
 }
 
@@ -448,13 +445,10 @@ function visual_topics(overall_field) {
     $("#topic-slider").val(0.5);
     $("#topic-slider").show();
 
-    let fieldLevelVal = $("#field-level").val();
-    let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
-
     let topic_width = $("#topic-map-graph").width();
     let topic_height = $("#topic-info").height() - $("#topic-map-banner").height();
     const topic_margin1 = 35;
-    const topic_margin2 = 15;
+    const topic_margin2 = 20;
 
     d3.selectAll("#topic-map-svg").remove();
 
@@ -491,13 +485,12 @@ function visual_topics(overall_field) {
 
     topics
     .on('mouseover', function (d) {
-        let fieldColor = d3.select(this).attr("fill");
-        fieldColor = fieldColor.slice(4, -1).split(', ');
         d3.select(this).attr('cursor', 'pointer');
         topic_map_tip.show(d);
 
-        let fieldId = d3.select(this).attr("id");
-        highlight_field(fieldId, fieldColor);
+        let field_color = d3.select(this).attr("fill");
+        field_color = field_color.slice(4, -1).split(', ');
+        highlight_field(d.id, field_color);
     })
     .on('mouseout', function (d) {
         topic_map_tip.hide(d);
@@ -987,31 +980,31 @@ function outline_color_change() {
     }
     else if (outlineColorVal == 1) {
         d3.selectAll('.paper').data(nodes)
-        .attr('stroke', d => {
-            if (d.isKeyPaper == 1) {
-                return 'red';
-            }
-            else if (d.isKeyPaper >= 0.5) {
-                return 'pink';
-            }
-            else {
-                return 'black';
-            }
-        });
+            .attr('stroke', d => {
+                if (d.isKeyPaper == 1) {
+                    return 'red';
+                }
+                else if (d.isKeyPaper >= 0.5) {
+                    return 'pink';
+                }
+                else {
+                    return 'black';
+                }
+            });
     }
     else if (outlineColorVal == 2) {
         d3.selectAll('.paper').data(nodes)
-        .attr('stroke', d => {
-            if (d.citationCount < 10) {
-                return 'black';
-            }
-            else if (d.citationCount < 50) {
-                return 'pink';
-            }
-            else {
-                return 'red';
-            }
-        })
+            .attr('stroke', d => {
+                if (d.citationCount < 10) {
+                    return 'black';
+                }
+                else if (d.citationCount < 50) {
+                    return 'pink';
+                }
+                else {
+                    return 'red';
+                }
+            });
     }
 }
 
@@ -1019,44 +1012,44 @@ function outline_thickness_change() {
     let outlineThicknessVal = $("#outline-thickness").val();
     if (outlineThicknessVal == 0) {
         d3.selectAll(".paper")
-        .attr('stroke-width', 1)
-        .attr('stroke-dasharray', null);
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', null);
     }
     else if (outlineThicknessVal == 1) {
         d3.selectAll('.paper').data(nodes)
-        .attr('stroke-width', d => {
-            if (d.isKeyPaper == 1) {
-                return 10;
-            }
-            else if (d.isKeyPaper >= 0.5) {
-                return 5;
-            }
-            else {
-                return 1;
-            }
-        });
+            .attr('stroke-width', d => {
+                if (d.isKeyPaper == 1) {
+                    return 10;
+                }
+                else if (d.isKeyPaper >= 0.5) {
+                    return 5;
+                }
+                else {
+                    return 1;
+                }
+            });
     }
     else if (outlineThicknessVal == 2) {
         d3.selectAll('.paper').data(nodes)
-        .attr('stroke-dasharray', d => {
-            if (d.citationCount == -1) {
-                return '5,2';
-            }
-            else {
-                return null;
-            }
-        })
-        .attr('stroke-width', d => {
-            if (d.citationCount <= 10) {
-                return 1;
-            }
-            else if (d.citationCount <= 50) {
-                return (d.citationCount - 10) / 15 + 1;
-            }
-            else {
-                return 10;
-            }
-        })
+            .attr('stroke-dasharray', d => {
+                if (d.citationCount == -1) {
+                    return '5,2';
+                }
+                else {
+                    return null;
+                }
+            })
+            .attr('stroke-width', d => {
+                if (d.citationCount <= 10) {
+                    return 1;
+                }
+                else if (d.citationCount <= 50) {
+                    return (d.citationCount - 10) / 15 + 1;
+                }
+                else {
+                    return 10;
+                }
+            });
     }
 }
 

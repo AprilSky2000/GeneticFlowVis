@@ -241,8 +241,8 @@ def index_id(request, id):
                   {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields})
 
 def same_index(authorRank):
-    isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.3, 10, 1
-    detail = str(authorRank) + '_0_0.5_0.3_10_1'
+    isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.5, 10, 1
+    detail = str(authorRank) + '_0_0.5_0.5_10_1'
     filename = './static/json/' + detail + '.json'
 
     if os.path.exists(filename) == False:
