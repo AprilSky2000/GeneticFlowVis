@@ -246,28 +246,62 @@
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
                 </div>
                 <script type="text/javascript">
+                    function toggleFullscreen() {
+                        const container = document.getElementsByClassName("middle-column")[0];
+                        if (container.requestFullscreen) {
+                            container.requestFullscreen().then(() => {
+                                // 在全屏状态变化后测量宽度
+                                document.addEventListener("fullscreenchange", onFullscreenChange);
+                                // 监听ESC键按下事件
+                                document.addEventListener("keydown", onEscKeyPressed);
+                            }).catch(error => {
+                                console.error('Error entering fullscreen:', error);
+                            });
+                        } else if (container.webkitRequestFullscreen) {
+                            container.webkitRequestFullscreen().then(() => {
+                                // 在全屏状态变化后测量宽度
+                                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+                                // 监听ESC键按下事件
+                                document.addEventListener("keydown", onEscKeyPressed);
+                            }).catch(error => {
+                                console.error('Error entering fullscreen:', error);
+                            });
+                        }
+                    }
+
+                    function onFullscreenChange() {
+                        console.log('middle width', $(".middle-column").width());
+                        console.log('middle height', $(".middle-column").height());
+
+                        // 在这里执行其他操作
+                        d3.select("#mainsvg").remove();
+                        d3.select("#tagcloud").remove();
+
+                        init_graph(viewBox, transform);
+                        update_nodes();
+                        var paper_field = update_fields();
+                        draw_tag_cloud(paper_field);
+                        visual_graph(polygon);
+                    }
+
+                    function onEscKeyPressed(event) {
+                        if (event.key === "Escape") {
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            }
+                        }
+                    }
+
                     $(document).ready(function() {
                         $("#save").click(function () {
                             var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
                             var fileName = "{{ name|safe }}" + " GF profile.jpg";
                             downloadSvg(zoomSvg, fileName);
                         })
-                        $("#fullscreen").click(function() {
-                            const container = document.getElementsByClassName("middle-column")[0];
-                            if (container.requestFullscreen) {
-                                container.requestFullscreen();
-                            } else if (container.webkitRequestFullscreen) {
-                                container.webkitRequestFullscreen();
-                            }
-                            d3.select("#mainsvg").remove();
-                            d3.select("#tagcloud").remove();
-
-                            init_graph(viewBox, transform);
-                            update_nodes();
-                            var paper_field = update_fields();
-                            draw_tag_cloud(paper_field);
-                            visual_graph(polygon);
-                        })
+                        // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
+                        document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);
                         $("#zoom-in").click(function() {
                             d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
                         })

@@ -92,10 +92,10 @@ function textSize(text, size) {
 
 function handleMouseOver(d) {
     // fill rect with color
-    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
+    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
     // show tooltip
-    d3.select(`#tag-tooltip`).text(d.name)
-        .style("opacity", 1);
+    // d3.select(`#tag-tooltip`).text(d.name)
+    //     .style("opacity", 1);
     // d3.select(`.overall-topic-tip`).show(d);
 
     // console.log('show tooltip', d, tooltip);
@@ -110,10 +110,11 @@ function handleMouseOver(d) {
 
 function handleMouseOut(d) {
     // reset rect color
-    d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
+    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
     // remove tooltip
-    d3.select(`#tag-tooltip`).style("opacity", 0);
+    // d3.select(`#tag-tooltip`).style("opacity", 0);
     // d3.select(`.overall-topic-tip`).hide(d);
+    
     // reset word
     d3.select(`#text_${d.id}`).attr('font-weight', 'normal')
         .attr("x", d => d.x + d.width * 0.06);
@@ -147,6 +148,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
         if (currentLineWidth + width > svgWidth) {
             currentLineHeight += currentLine[0].height + emptySpace;
             if (currentLineHeight + height > svgHeight) {
+                // console.log(currentLineHeight, height, svgHeight)
                 return null;
             }
             wordPosition.push(currentLine);
@@ -233,7 +235,7 @@ function draw_tag_cloud(data) {
         .attr("height", d => d.height)
         .attr("rx", d => maxFontSize * 0.1 * d.ratio)
         .attr("ry", d => maxFontSize * 0.1 * d.ratio)
-        .attr("fill", d => `rgba(15, 161, 216, ${d.opacity})`)
+        .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`) //rgba(15, 161, 216, ${d.opacity})
         .on('mouseover', handleMouseOver)
         .on('mouseout', handleMouseOut);
 
@@ -247,7 +249,7 @@ function draw_tag_cloud(data) {
         .attr("dy", "0.35em")
         .attr("id", d => `text_${d.id}`)
         .attr("font-size", d => d.size + "px")
-        .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`)
+        .attr("fill", d => `rgb(0,0,0)`) //rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})
         .on('mouseover', handleMouseOver)
         .on('mouseout', handleMouseOut);
 }

@@ -26,12 +26,12 @@
 .left-column {
     flex: 2;
     background-color: #cedfe6;
-    padding: 1%;
+    padding: 0.7%;
 }
 .middle-column {
     flex: 7;
     background-color: #FFFFFF;
-    padding: 1%;
+    padding: 0.7%;
     z-index: 3;
 	box-shadow:
 		5px 5px 5px rgba(0, 0, 0, 0.5),
@@ -39,7 +39,7 @@
 }
 .right-column {
     flex: 3;
-    padding: 1%;
+    padding: 0.7%;
     overflow: hidden;
 }
 
