@@ -196,10 +196,10 @@ function draw_tag_cloud(data) {
     
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
-        console.log("height overflow! change maxFontSize to ", maxFontSize);
+        // console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
 
-    console.log('wordPosition: ', wordPosition, maxFontSize);
+    // console.log('wordPosition: ', wordPosition, maxFontSize);
 
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
@@ -448,7 +448,7 @@ function visual_topics(overall_field) {
     $("#topic-slider").show();
 
     let topic_width = $("#topic-map-graph").width();
-    let topic_height = $("#topic-info").height() - $("#topic-map-banner").height();
+    let topic_height = $("#topic-info").width() - $("#topic-map-banner").height();
     const topic_margin1 = 35;
     const topic_margin2 = 20;
 
@@ -527,7 +527,7 @@ function visual_graph(polygon) {
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
         .attr('fill', 'none')
         .attr('stroke', 'black')
-        .attr('stroke-width', 3)
+        .attr('stroke-width', d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
         .attr('d', d => d.d)
         .attr('id', d => d.source + '->' + d.target)
         .attr('class', 'reference');
@@ -937,7 +937,7 @@ function visual_graph(polygon) {
                 else if (d.flag == 2)   return "red";
                 else    return "black";
             })
-            .attr("stroke-width", 3)
+            .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-dasharray", d => {
                 if (d.flag == 1)    return '5.2';
                 else    return null;

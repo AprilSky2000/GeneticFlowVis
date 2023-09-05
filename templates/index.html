@@ -160,13 +160,13 @@
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 50%; padding-left: 1%;"><b>author (rank)</b></li>
-                            <li style="color: #333;" id="authorRank">{{ name }} ({{ authorRank}})</li>
+                            <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
+                            <li style="color: #333;" id="authorRank">{{ name }}</li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 60%;"><b>h-index/citations</b></li>
+                            <li style="width: 60%;"><b>h-index / citations</b></li>
                             <li style="color: #333;">{{ hIndex }} / {{ citationCount }}</li>
                         </ul>
                     </li>
@@ -188,13 +188,13 @@
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 55%;"><b>nodes</b></li>
+                            <li style="width: 55%;"><b># of nodes</b></li>
                             <li id="node-num" style="color: #333;"></li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 55%;"><b>edges</b></li>
+                            <li style="width: 55%;"><b># of edges</b></li>
                             <li id="edge-num" style="color: #333;"></li>
                         </ul>
                     </li>
@@ -258,9 +258,6 @@
                     }
 
                     function onFullscreenChange() {
-                        console.log('middle width', $(".middle-column").width());
-                        console.log('middle height', $(".middle-column").height());
-
                         // 在这里执行其他操作
                         d3.select("#mainsvg").remove();
                         d3.select("#tagcloud").remove();
@@ -270,6 +267,8 @@
                         var paper_field = update_fields();
                         draw_tag_cloud(paper_field);
                         visual_graph(polygon);
+                        outline_color_change();
+                        outline_thickness_change();
                     }
 
                     function onEscKeyPressed(event) {
@@ -453,11 +452,12 @@
             const authorRank = "{{ authorRank }}";
             const name = "{{ name }}";
             const fields = {{ fields|safe }};
+            const field = "{{ field }}";
             field_roots = fields[0];
             field_leaves = fields[1];
             
             current_topic_div = 1;
-            const filename = '/src/json/' + String(authorRank) + '_0_0.5_0.5_10_1.json';
+            const filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.5_10_1.json';
             d3.json(filename).then( data => {
                 years = data[1];      //年份节点
                 nodes = data[2];      //论文节点
@@ -473,6 +473,7 @@
                     edges[i]['flag'] = 0;
                 }
                 for (let i = 0; i < field_roots.length; i++) {
+                    console.log(field_roots[i][2]);
                     field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
                 }
                 for (let i = 0; i < field_leaves.length; i++) {
@@ -505,9 +506,8 @@
                 const temp = formData[i].split('=');
                 paramData[temp[0]] = temp[1]
             }
-            var rank = $("#authorRank").text();
-            const regex = /\((\d+)\)/;  // 正则表达式匹配括号内的数字
-            paramData.authorRank = regex.exec(rank)[1];
+            paramData.authorRank = "{{ authorRank }}"
+            paramData.field = "{{ field }}";
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},
                 type: "POST",
@@ -527,7 +527,8 @@
                     $("#edge-info").hide();
                     $("#timeline").empty();
                     var detail = param['detail'];
-                    var filename = '/src/json/' + detail + '.json';
+                    var field = param['field'];
+                    var filename = '/src/json/' + field + '/' + detail + '.json';
                     d3.json(filename).then( data => {
                         years = data[1];
                         nodes = data[2];
@@ -540,7 +541,7 @@
                             nodes[i]['flag'] = 0;
                         }
 
-                        updateSider(name);
+                        updateSider("{{ name }}");
                         init_graph(viewBox, transform);
                         update_nodes();
                         var fieldCount = update_fields();

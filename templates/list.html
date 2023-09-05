@@ -13,6 +13,9 @@
     <script src="/src/js/bootstrap.js"></script>
     <script src="/src/js/bootstrap.bundle.js"></script>
     <script src="/src/js/bootstrap-table.js"></script>
+
+    <script src="/src/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="/src/css/jquery.dataTables.min.css">
 </head>
 
 <body>
@@ -25,31 +28,15 @@
             <div class="clearfix"></div>
         </div>
         <div class="banner-info" style="margin-left: 8%; margin-right: 4%;">
-            <div style="float: left; width: 7%;">
-                <table class="table table-sm" data-toggle="table" style="background-color: #dddddd;">
+            <div style="float: left; width: 100%;">
+                <table id="table" class="table table-striped table-bordered" style="background-color: #dddddd;">
                     <thead>
                         <tr>
-                            <th>Sequence</th>
-                        </tr>
-                    </thead>
-                    <tbody class="seq"></tbody>
-                    <script>
-                        let data = {{ scholarList | safe }};
-                        for (let i = 1; i <= data.length; i++) {
-                            $(".seq").append("<tr><td>"+i+"</td></tr>");
-                        }
-                    </script>
-                </table>
-            </div>
-            <div style="float: left; width: 91%;">
-                <table id="table" class="table table-sm" style="background-color: #dddddd;" data-toggle="table" data-custom-sort="authorSort">
-                    <thead>
-                        <tr>
-                            <th data-sortable="true">Author Rank</th>
-                            <th data-sortable="true">Author Name</th>
-                            <th data-sortable="true">Paper Count</th>
-                            <th data-sortable="true">Citation Count</th>
-                            <th data-sortable="true">h-index</th>
+                            <th>rank</th>
+                            <th>Author Name</th>
+                            <th>Paper Count</th>
+                            <th>Citation Count</th>
+                            <th>h-index</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -62,7 +49,7 @@
                             <td>{{ scholar.citationCount }}</td>
                             <td>{{ scholar.hIndex }}</td>
                             <td>
-                                <a class="btn-sm btn-primary" href="/idx/{{ scholar.authorRank }}" style="font-size: 14px;">
+                                <a class="btn-sm btn-primary" href="/index?field={{ field }}&id={{ scholar.authorRank }}" style="font-size: 2px;">
                                     Visualize
                                 </a>
                             </td>
@@ -76,30 +63,16 @@
     </div>
 
     <script>
-        function authorSort(sortName, sortOrder, data) {
-            //sortName为列的序号；sortOrder为'asc'或'desc'；data即为table里的数据
-            var order = sortOrder === 'desc' ? 1 : -1;  //1从小到大排；-1从大到小排
-            data.sort(function (a, b) {
-                if (sortName == 1) {
-                    if (a[sortName] < b[sortName]) {
-                        return order * -1;
-                    }
-                    if (a[sortName] > b[sortName]) {
-                        return order;
-                    }
-                    return 0;
-                }
-                var aa = +((a[sortName] + '').replace(/[^\d]/g, ''));
-                var bb = +((b[sortName] + '').replace(/[^\d]/g, ''));
-                if (aa < bb) {
-                    return order * -1;
-                }
-                if (aa > bb) {
-                    return order;
-                }
-                return 0;
-            })
-        }
+        $(document).ready(function() {
+            
+            $("#table").DataTable({
+                "order": [[0, 'asc']], // 默认按第一列升序排序
+                "columnDefs": [
+                    { "orderable": false, "targets": [5] } // 第一列不可排序
+                ]
+            });
+        });
+        
     </script>
 </body>
 </html>

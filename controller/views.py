@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import re
 
 def search(request):
-    return render(request, 'search.html')
+    return render(request, 'search.html', {'error': ''})
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
@@ -150,6 +150,7 @@ def get_edge(edges, influence):
         dic['d'] = d
         for link in influence:
             if str(target) == str(link[0]) and str(source) == str(link[1]):
+                dic['extends_prob'] = link[2]
                 dic['citation_context'] = link[3]
         edgeData.append(dic)
     return edgeData
@@ -162,12 +163,12 @@ def get_polygon(edges):
         polygon.append(d)
     return polygon
 
-def write_d3_data(detail, papers, influence):
+def write_d3_data(field, detail, papers, influence):
     # cmd = "dot -Ksfdp -Ebundle=0.9 ./static/image/svg/" + detail + " -Tsvg -o ./templates/" + detail + ".html"
     # print(cmd)
     # os.system(cmd)
     # filename = './templates/' + detail + '.html'
-    filename = "./static/image/svg/" + detail + ".svg"
+    filename = "./static/image/svg/" + field + '/' + detail + ".svg"
     soup = BeautifulSoup(open(filename))
     nodes = soup.select('.node')
     edges = soup.select('.edge')
@@ -184,87 +185,92 @@ def write_d3_data(detail, papers, influence):
     graph = [viewBox, transform]
 
     data = json.dumps([graph, yearData, nodeData, edgeData, polygon], indent=4, separators=(',', ': '))
-    filename = './static/json/' + detail + '.json'
+    filename = './static/json/' + field + '/' + detail + '.json'
     f = open(filename, 'w')
     f.write(data)
     f.close()
 
-def index(request):
-    author = request.POST.get("author")
-    s = author
-    checkBoxList = request.POST.getlist("partial_match")
+def list(request):
+    author = request.POST.get("name")
+    field = request.POST.get("field")
+    error = 'No author named ' + author # 错误信息
+    # checkBoxList = request.GET.getlist("partial_match") # 不选参数为[]，选择时参数为['1']
+    filename = "./csv/" + field + "/top_field_authors.csv"
     # 部分匹配
-    if len(checkBoxList) == 1:
-        df = pd.read_csv("./csv/top_field_authors.csv", sep=',', header=None)
-        data = df.values.tolist()
-        scholarList = [find_scholar(row) for row in data if author.lower() in row[2].lower()]
-        
-        return render(request, "list.html", {'scholarList': scholarList})
+    # if len(checkBoxList) == 1:
+    df = pd.read_csv(filename, sep=',', header=None)
+    data = df.values.tolist()
+    scholarList = [find_scholar(row) for row in data if author.lower() in row[2].lower()]
+    if len(scholarList) == 0:
+        return JsonResponse({"error": error}, json_dumps_params={'ensure_ascii': False})
+    print(error)
+    return render(request, "list.html", {'scholarList': scholarList})
 
     # 匹配所查询的author
-    df = pd.read_csv("./csv/top_field_authors.csv", sep=',',
-                     names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
+    # df = pd.read_csv(filename, sep=',',
+    #                  names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
+    # author = df[df["name"] == author]
 
-    author = df[df["name"] == author]
-    # 不存在这样的name，返回error页面
-    if author.empty:
-        error = 'No author named ' + s
-        return render(request, 'error.html', {'error': error})
-    else:
-        authorRank = author["authorRank"].iloc[0]
-        name = author["name"].iloc[0]
-        paperCount = author["PaperCount_field"].iloc[0]
-        citationCount = author["CitationCount_field"].iloc[0]
-        hIndex = author["hIndex_field"].iloc[0]
+    # # 不存在这样的name，返回error页面
+    # if author.empty:
+    #     return render(request, 'search.html', {'error': error})
+    # else:
+    #     authorRank = author["authorRank"].iloc[0]
+    #     name = author["name"].iloc[0]
+    #     paperCount = author["PaperCount_field"].iloc[0]
+    #     citationCount = author["CitationCount_field"].iloc[0]
+    #     hIndex = author["hIndex_field"].iloc[0]
 
-    fields = get_fields()
-    same_index(authorRank)
+    # fields = get_fields()
+    # same_index(authorRank)
 
-    return render(request, "index.html",
-                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields})
+    # return render(request, "index.html",
+    #               {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields})
 
-def index_id(request, id):
-    df = pd.read_csv("./csv/top_field_authors.csv", sep=',',
+def index_id(request):
+    field = request.GET.get("field")
+    id = request.GET.get("id")
+    authorRank = int(id)
+    df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',',
                      names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
     df["authorRank"].astype(int)
-    author = df[df["authorRank"] == int(id)]
-    authorRank = author["authorRank"].iloc[0]
+    author = df[df["authorRank"] == authorRank]
     name = author["name"].iloc[0]
     paperCount = author["PaperCount_field"].iloc[0]
     citationCount = author["CitationCount_field"].iloc[0]
     hIndex = author["hIndex_field"].iloc[0]
     
-    fields = get_fields()
-    same_index(authorRank)
+    fields = get_fields(field)
+    same_index(authorRank, field)
 
     return render(request, "index.html",
-                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields})
+                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'field': field})
 
-def same_index(authorRank):
+def same_index(authorRank, field):
+    authorRank = str(authorRank)
     isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.5, 10, 1
-    detail = str(authorRank) + '_0_0.5_0.5_10_1'
-    filename = './static/json/' + detail + '.json'
+    detail = authorRank + '_0_0.5_0.5_10_1'
+    filename = './static/json/' + field + '/' + detail + '.json'
 
     if os.path.exists(filename) == False:
         dot = graphviz.Digraph(filename=detail, format='svg')
 
-        file = str(authorRank)
         # file = name.replace(' ', '') + str(authorRank)
         # 读取相应papers文件
-        papers = read_papers(file, isKeyPaper, removeSurvey)
+        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey)
         # 读取相应influence文件
-        links = read_links(file, extendsProb)
+        links = read_links(field, authorRank, extendsProb)
         # 创建图
         create_partial_graph(dot, papers, links, nodeWidth)
 
-        dot.render(directory="./static/image/svg", view=False)
+        dot.render(directory="./static/image/svg/" + field, view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
-        write_d3_data(detail, papers, links)
+        write_d3_data(field, detail, papers, links)
 
 def update(request):
     authorRank = request.POST.get("authorRank")
-    
+    field = request.POST.get("field")
     mode = request.POST.get("mode")
     isKeyPaper = request.POST.get("isKeyPaper")
     extendsProb = request.POST.get("extendsProb")
@@ -277,13 +283,12 @@ def update(request):
     nodeWidth = int(nodeWidth)
     removeSurvey = int(removeSurvey)
 
-    filename = './static/json/' + detail + '.json'
+    filename = './static/json/' + field + '/' + detail + '.json'
     if os.path.exists(filename) == False:
         dot = graphviz.Digraph(filename=detail, format='svg')
 
-        file = str(authorRank)
-        papers = read_papers(file, isKeyPaper, removeSurvey)
-        links = read_links(file, extendsProb)
+        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey)
+        links = read_links(field, authorRank, extendsProb)
 
         if mode == 1:
             create_node(dot, papers, nodeWidth)
@@ -291,20 +296,22 @@ def update(request):
         else:
             create_partial_graph(dot, papers, links, nodeWidth)
 
-        dot.render(directory="./static/image/svg", view=False)
+        dot.render(directory="./static/image/svg/" + field, view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
-        write_d3_data(detail, papers, links)
+        write_d3_data(field, detail, papers, links)
 
     param = {}
     param['detail'] = detail
+    param['field'] = field
     return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
 
 def showlist(request):
-    df = pd.read_csv("./csv/top_field_authors.csv", sep=',', header=None)
+    field = request.GET.get("field")
+    df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',', header=None)
     data = df.values.tolist()
     scholarList = [find_scholar(row) for row in data]
-    return render(request, "list.html", {'scholarList': scholarList})
+    return render(request, "list.html", {'scholarList': scholarList, 'field': field})
 
 def find_scholar(row):
     scholar = {}
@@ -315,8 +322,8 @@ def find_scholar(row):
     scholar['paperCount'] = int(row[5])
     return scholar
 
-def read_papers(file, isKeyPaper, removeSurvey):
-    df = pd.read_csv('./csv/papers_' + file + '.csv', sep=',', index_col=0)
+def read_papers(field, authorRank, isKeyPaper, removeSurvey):
+    df = pd.read_csv('./csv/' + field + '/papers_' + authorRank + '.csv', sep=',', index_col=0)
     df = df.fillna('')
     df["isKeyPaper"].astype(float)
     df = df[df["isKeyPaper"] >= isKeyPaper]
@@ -328,9 +335,10 @@ def read_papers(file, isKeyPaper, removeSurvey):
     print(papers[0])
     return papers
 
-def read_links(file, extendsProb):
-    df = pd.read_csv('./csv/links_' + file + '.csv', sep=',', index_col=0)
-    df["extendsProb"].astype(float)
+def read_links(field, authorRank, extendsProb):
+    df = pd.read_csv('./csv/' + field + '/links_' + authorRank + '.csv', sep=',', index_col=0)
+    df['extendsProb'] = df["extendsProb"].replace('\\N', '0')
+    df['extendsProb'] = df["extendsProb"].astype(float)
     df = df.where(df.notnull(), None)
     df = df[df["extendsProb"] >= extendsProb]
     # df = df[~df["childrenID"].isin(surveys)]
@@ -339,9 +347,9 @@ def read_links(file, extendsProb):
     print(links[0])
     return links
 
-def get_fields():
-    df_roots = pd.read_csv("./csv/visualization_roots.csv", sep=',')
+def get_fields(field):
+    df_roots = pd.read_csv("./csv/" + field + "/field_roots.csv", sep=',')
     roots = df_roots.values.tolist()
-    df_leaves = pd.read_csv("./csv/visualization_leaves.csv", sep=',')
+    df_leaves = pd.read_csv("./csv/" + field + "/field_leaves.csv", sep=',')
     leaves = df_leaves.values.tolist()
     return [roots, leaves]
