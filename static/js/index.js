@@ -554,7 +554,7 @@ function visual_topics(overall_field) {
 
 }
 
-function probToColor(prob, a=0.4, b=1) {
+function probToColor(prob, a=0.1, b=1) {
     // 确保透明度在 [a, b] 范围内
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     
