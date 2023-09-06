@@ -26,21 +26,30 @@
 .left-column {
     flex: 2;
     background-color: #cedfe6;
-    padding: 0.7%;
+    padding: 1%;
 }
 .middle-column {
     flex: 7;
     background-color: #FFFFFF;
     padding: 1%;
-    /* z-index: 1; */
+    z-index: 0;
 	box-shadow:
 		5px 5px 5px rgba(0, 0, 0, 0.5),
 		-5px 5px 5px rgba(0, 0, 0, 0.5);
 }
 .right-column {
     flex: 3;
-    padding: 0.7%;
+    padding: 1% 1% 1% 0;
     overflow: hidden;
+}
+
+/* 在小屏幕上重新排列列 */
+@media (max-width: 768px) {
+    .left-column, .middle-column, .right-column {
+        flex: 1; /* 重新分配宽度 */
+        width: 100%; /* 使它们占满整个宽度 */
+        padding: 1%; /* 可选的内边距 */
+    }
 }
 
 a {
@@ -55,7 +64,7 @@ ul.address {
     padding: 0;
     margin-top: 0px; 
     border-top: none;
-    border-radius: 10px;
+    border-radius: 7px;
     background-color: #FFFFFF;
 }
 ul.address li ul.address-text li {
@@ -233,3 +242,16 @@ input[type=range]::-webkit-slider-thumb {
 /* input[type=range]:focus::-webkit-slider-runnable-track {
 	background: #bada55;
 } */
+
+.address-text button {
+    opacity: 0.5; /* 默认透明度为0.5 */
+}
+
+.address-text p {
+    font-weight: bold;
+}
+
+#paper-list {
+    display: flex;
+    flex-direction: column; /* 如果需要垂直排列子元素 */
+}

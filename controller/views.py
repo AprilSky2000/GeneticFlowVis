@@ -184,6 +184,9 @@ def write_d3_data(field, detail, papers, influence):
 
     data = json.dumps([graph, yearData, nodeData, edgeData, polygon], indent=4, separators=(',', ': '))
     filename = './static/json/' + field + '/' + detail + '.json'
+    # make the directory if it doesn't exist already
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
     f = open(filename, 'w')
     f.write(data)
     f.close()

@@ -15,7 +15,11 @@ function updateSider (name) {
     // const screenHeight = $(window).height();
     // $("#topic-info").css("height", screenHeight / 4);
     $("#topic-info").css("height", $("#basic-info").width());
-    var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
+    // var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
+    // var left_height = ($("#paper-list").height() - $("#paper-list-title").height()) *0.96;
+    var left_height = mainPanalHeight * 0.88 - $("#paper-list-title").height()
+    
+    // console.log('left height', left_height);
     $("#timeline").css("height", left_height);
     $("#cited-papers").css("height", left_height * 1.03);
     $("#citing-papers").css("height", left_height * 1.03);
@@ -26,7 +30,18 @@ function updateSider (name) {
     $('#node-num').text(nodesNum);
     $('#edge-num').text(edgesNum);
 
+    // [0].citationCount    [0].color  [24.7, 0.982876170558304, 1]
+
     $("#timeline").empty();
+    $("#timeline").append(content = `
+    <div style="float: left;">
+        <i style="width: 10px; height: 10px; border-radius: 50%; background-color: white; display: inline-block;"></i>
+    </div>
+    <div style="margin-left: 7%; margin-bottom: 2%; display: flex; justify-content: space-between;">
+        <b style="margin-left: 0%; font-size:16px;">Paper Name</b>
+        <b style="margin-right: 1%; margin-left: 5%; font-size:16px;">#Citation</b>
+    </div>`);
+    // console.log('nodes', nodes);
     for (let i = 0; i < nodes.length; i++) {
         const paperName = String(nodes[i].name);
         const paperVenu = String(nodes[i].venu);
@@ -44,8 +59,19 @@ function updateSider (name) {
             else 
                 paperAuthors += authorList[i] + ", ";
         }
-
-        var content = "<div style=\"float: left;\"><i style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #00a78e; display: inline-block;\"></i></div>" + "<div style=\"margin-left: 7%;\"><b style=\"margin-left: 0%;\">" + paperName + "</b></div>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #333;\">" + paperAuthors.slice(0, -2) + "</p>" + "<p style=\"margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;\">" + paperVenu + " " + paperYear + "</p>";
+        var color = hsvToHex(nodes[i].color[0], nodes[i].color[1], nodes[i].color[2]);
+        var content = `
+        <div style="float: left;">
+            <i style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; display: inline-block;"></i>
+        </div>
+        <div style="margin-left: 7%; display: flex; justify-content: space-between;">
+            <b style="margin-left: 0%;">${paperName}</b>
+            <b style="margin-right: 5%; margin-left: 5%;">${nodes[i].citationCount}</b>
+        </div>
+        <p style="margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #333;">
+            ${paperAuthors.slice(0, -2)}
+        </p>
+        <p style="margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;">${paperVenu} ${paperYear}</p>`;
         $("#timeline").append(content);
     }
     $("#paper-list").show();
@@ -74,6 +100,27 @@ function hsvToRgb(h, s, v) {
 
     const rgbColor = [(r + m) * 255, (g + m) * 255, (b + m) * 255];
     return rgbColor;
+}
+
+function hsvToHex(h, s, v) {
+    let rgbColor = hsvToRgb(h, s, v);
+    let r = Math.round(rgbColor[0]);
+    let g = Math.round(rgbColor[1]);
+    let b = Math.round(rgbColor[2]);
+
+    // 将RGB值转换为十六进制字符串
+    const toHex = (value) => {
+        const hex = value.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    };
+
+    const red = toHex(r);
+    const green = toHex(g);
+    const blue = toHex(b);
+
+    // console.log("#" + red + green + blue);
+
+    return "#" + red + green + blue;
 }
 
 function textSize(text, size) {
@@ -290,6 +337,8 @@ function update_nodes() {
         }
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
     }
+    // sort nodes by citationCount
+    nodes.sort((a, b) =>  b.citationCount - a.citationCount);
 }
 
 function update_fields() {
@@ -414,7 +463,7 @@ function highlight_field(field_id, field_color) {
     g.selectAll('.reference').data(edges)
         .attr('stroke', d => {
             if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
-                return 'black';
+                return  probToColor(d.extends_prob);
             else
                 return d3.rgb(200, 200, 200);
         });
@@ -435,7 +484,7 @@ function reset_field() {
     outline_color_change();
     //恢复边的颜色
     g.selectAll(".reference")
-        .attr('stroke', 'black');
+        .attr('stroke', d => probToColor(d.extends_prob));
     //恢复年份节点的填充色和边缘色
     d3.selectAll(".year")
         .attr("fill", "white")
@@ -505,6 +554,20 @@ function visual_topics(overall_field) {
 
 }
 
+function probToColor(prob, a=0.4, b=1) {
+    // 确保透明度在 [a, b] 范围内
+    const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
+    
+    // 将透明度映射到 [a, b] 范围
+    const mappedOpacity = a + (b - a) * opacity;
+    
+    // 构建 rgba 颜色字符串
+    const color = `rgba(0, 0, 0, ${mappedOpacity})`;
+    
+    return color;
+}
+
+
 function visual_graph(polygon) {
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
         .attr('cx', d => d.cx)
@@ -524,10 +587,18 @@ function visual_graph(polygon) {
     // }
     // ellipse.call(d3.drag().on("drag", dragged));
 
+    // .attr('stroke-width', d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
+
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
+<<<<<<< HEAD
         .attr('fill', "none")
         .attr('stroke', "black")
         .attr('stroke-width', d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
+=======
+        .attr('fill', 'none')
+        .attr('stroke', d => probToColor(d.extends_prob))
+        .attr('stroke-width', 5)
+>>>>>>> 3df90f5 (add gray line)
         .attr('d', d => d.d)
         .attr('id', d => d.source + '->' + d.target)
         .attr('class', 'reference');
@@ -687,6 +758,10 @@ function visual_graph(polygon) {
         $("#selector").show();
         $("#node-info").show();
 
+        // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
+        $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
+        $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
+
         //更新node-info里的内容
         let fieldLevelVal = $("#field-level").val();
         let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
@@ -710,8 +785,10 @@ function visual_graph(polygon) {
         $(".abstract-minus-height").each(function() {
             other_height += $(this).height();
         });
-        let abstract_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.08;
-        $("#abstract").css("height", abstract_height);
+        // let abstract_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.08;
+        let abstract_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
+        // console.log('max height', abstract_height, 'other height', other_height);
+        $("#abstract").css("max-height", abstract_height);
 
         var vis = new Array(edges.length).fill(0);
         var citedTraversal = function (root) {
@@ -794,10 +871,14 @@ function visual_graph(polygon) {
     });
 
     lines
-    .on('mouseover', function () {
+    .on('mouseover', function (d) {
         d3.select(this)
             .attr("stroke", "red")
+<<<<<<< HEAD
             .attr("stroke-width", 8)
+=======
+            .attr("stroke-width", 10)
+>>>>>>> 3df90f5 (add gray line)
             .attr("stroke-dasharray", null)
             .attr('cursor', 'pointer');
     })
@@ -876,6 +957,7 @@ function visual_graph(polygon) {
                 if (d.flag == 2)   return 'red';
                 else    return d3.rgb(200, 200, 200);
             })
+            .attr('stroke-width', 10)
             .attr('stroke-dasharray', d => {
                 if (d.flag == 2)   return null;
                 else    return '5.2';
@@ -927,7 +1009,8 @@ function visual_graph(polygon) {
         $(".citation-context-minus-height").each(function() {
             other_height += $(this).height();
         });
-        let citation_context_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.06;
+        // let citation_context_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.06;
+        let citation_context_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
         $("#citation-context").css("height", citation_context_height);
     })
     .on('mouseout', function () {
@@ -935,9 +1018,14 @@ function visual_graph(polygon) {
             .attr("stroke", d => {
                 if (d.flag == 1)    return d3.rgb(200, 200, 200);
                 else if (d.flag == 2)   return "red";
-                else    return "black";
+                else    return probToColor(d.extends_prob);
             })
+<<<<<<< HEAD
             .attr("stroke-width", d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
+=======
+            // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
+            .attr("stroke-width", 5)
+>>>>>>> 3df90f5 (add gray line)
             .attr("stroke-dasharray", d => {
                 if (d.flag == 1)    return '5.2';
                 else    return null;
@@ -957,7 +1045,9 @@ function visual_graph(polygon) {
             outline_color_change();
             outline_thickness_change();
             d3.selectAll('.reference')
-                .attr('stroke', 'black')
+                .attr('stroke', d => probToColor(d.extends_prob))
+                .attr('stroke-width', 5)
+                // .attr('stroke', 'black')
                 .attr('stroke-dasharray', null);
             for (let i = 0; i < nodes.length; i++) {
                 nodes[i].flag = 0;
