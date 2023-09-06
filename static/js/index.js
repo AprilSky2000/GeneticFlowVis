@@ -554,7 +554,7 @@ function visual_topics(overall_field) {
 
 }
 
-function probToColor(prob, a=0.4, b=1) {
+function probToColor(prob, a=0.1, b=1) {
     // 确保透明度在 [a, b] 范围内
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     
@@ -590,15 +590,9 @@ function visual_graph(polygon) {
     // .attr('stroke-width', d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
 
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
-<<<<<<< HEAD
-        .attr('fill', "none")
-        .attr('stroke', "black")
-        .attr('stroke-width', d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
-=======
         .attr('fill', 'none')
         .attr('stroke', d => probToColor(d.extends_prob))
         .attr('stroke-width', 5)
->>>>>>> 3df90f5 (add gray line)
         .attr('d', d => d.d)
         .attr('id', d => d.source + '->' + d.target)
         .attr('class', 'reference');
@@ -874,11 +868,7 @@ function visual_graph(polygon) {
     .on('mouseover', function (d) {
         d3.select(this)
             .attr("stroke", "red")
-<<<<<<< HEAD
-            .attr("stroke-width", 8)
-=======
             .attr("stroke-width", 10)
->>>>>>> 3df90f5 (add gray line)
             .attr("stroke-dasharray", null)
             .attr('cursor', 'pointer');
     })
@@ -1020,12 +1010,8 @@ function visual_graph(polygon) {
                 else if (d.flag == 2)   return "red";
                 else    return probToColor(d.extends_prob);
             })
-<<<<<<< HEAD
-            .attr("stroke-width", d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
-=======
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-width", 5)
->>>>>>> 3df90f5 (add gray line)
             .attr("stroke-dasharray", d => {
                 if (d.flag == 1)    return '5.2';
                 else    return null;
