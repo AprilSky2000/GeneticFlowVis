@@ -69,7 +69,6 @@ def create_edge(dot, papers, links):
             dot.edge(str(papers[y][0]), str(papers[x][0]))
 
 def create_partial_graph(dot, papers, links, nodeWidth):
-    print(len(papers))
     # 当节点没有边与其相连时，删去
     for link in links:
         citingpaperID, citedpaperID = link[0], link[1]
@@ -84,7 +83,6 @@ def create_partial_graph(dot, papers, links, nodeWidth):
             papers[y][-1] += 1
 
     papers_backup = [paper for paper in papers if paper[-1] > 0]
-    print(len(papers_backup), len(links))
 
     create_node(dot, papers_backup, nodeWidth)
 
@@ -190,44 +188,7 @@ def write_d3_data(field, detail, papers, influence):
     f.write(data)
     f.close()
 
-def list(request):
-    author = request.POST.get("name")
-    field = request.POST.get("field")
-    error = 'No author named ' + author # 错误信息
-    # checkBoxList = request.GET.getlist("partial_match") # 不选参数为[]，选择时参数为['1']
-    filename = "./csv/" + field + "/top_field_authors.csv"
-    # 部分匹配
-    # if len(checkBoxList) == 1:
-    df = pd.read_csv(filename, sep=',', header=None)
-    data = df.values.tolist()
-    scholarList = [find_scholar(row) for row in data if author.lower() in row[2].lower()]
-    if len(scholarList) == 0:
-        return JsonResponse({"error": error}, json_dumps_params={'ensure_ascii': False})
-    print(error)
-    return render(request, "list.html", {'scholarList': scholarList})
-
-    # 匹配所查询的author
-    # df = pd.read_csv(filename, sep=',',
-    #                  names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
-    # author = df[df["name"] == author]
-
-    # # 不存在这样的name，返回error页面
-    # if author.empty:
-    #     return render(request, 'search.html', {'error': error})
-    # else:
-    #     authorRank = author["authorRank"].iloc[0]
-    #     name = author["name"].iloc[0]
-    #     paperCount = author["PaperCount_field"].iloc[0]
-    #     citationCount = author["CitationCount_field"].iloc[0]
-    #     hIndex = author["hIndex_field"].iloc[0]
-
-    # fields = get_fields()
-    # same_index(authorRank)
-
-    # return render(request, "index.html",
-    #               {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields})
-
-def index_id(request):
+def index(request):
     field = request.GET.get("field")
     id = request.GET.get("id")
     authorRank = int(id)
@@ -241,12 +202,6 @@ def index_id(request):
     hIndex = author["hIndex_field"].iloc[0]
     
     fields = get_fields(field)
-    same_index(authorRank, field)
-
-    return render(request, "index.html",
-                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'field': field})
-
-def same_index(authorRank, field):
     authorRank = str(authorRank)
     isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.5, 10, 1
     detail = authorRank + '_0_0.5_0.5_10_1'
@@ -267,6 +222,9 @@ def same_index(authorRank, field):
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
         write_d3_data(field, detail, papers, links)
+
+    return render(request, "index.html",
+                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'field': field})
 
 def update(request):
     authorRank = request.POST.get("authorRank")
@@ -308,18 +266,24 @@ def update(request):
 
 def showlist(request):
     field = request.GET.get("field")
+    name = request.GET.get("name", None)
     df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',', header=None)
     data = df.values.tolist()
-    scholarList = [find_scholar(row) for row in data]
-    return render(request, "list.html", {'scholarList': scholarList, 'field': field})
+    scholarList = [get_scholar(row, name) for row in data if get_scholar(row, name) != {}]
+    if len(scholarList) == 0:
+        error = 'No author named ' + name # 错误信息
+        return render(request, 'search.html', {'error': error})
+    else:
+        return render(request, "list.html", {'scholarList': scholarList, 'field': field})
 
-def find_scholar(row):
+def get_scholar(row, name):
     scholar = {}
-    scholar['authorRank'] = int(row[6])
-    scholar['name'] = str(row[2])
-    scholar['citationCount'] = str(row[7])
-    scholar['hIndex'] = int(row[8])
-    scholar['paperCount'] = int(row[5])
+    if name == None or (name != None and name.lower() in str(row[2]).lower()):
+        scholar['authorRank'] = int(row[6])
+        scholar['name'] = str(row[2])
+        scholar['citationCount'] = int(row[7])
+        scholar['hIndex'] = int(row[8])
+        scholar['paperCount'] = int(row[5])
     return scholar
 
 def read_papers(field, authorRank, isKeyPaper, removeSurvey):
@@ -332,7 +296,6 @@ def read_papers(field, authorRank, isKeyPaper, removeSurvey):
         # surveys = df.loc[df['title'].str.contains('survey|Survey'), 'paperID'].tolist() # 抽取所有title中含有survey的paperID作为list
         df = df[~df['title'].str.contains(r'survey|surveys', case=False, regex=True)]
     papers = df.values.tolist()
-    print(papers[0])
     return papers
 
 def read_links(field, authorRank, extendsProb):
@@ -344,7 +307,6 @@ def read_links(field, authorRank, extendsProb):
     # df = df[~df["childrenID"].isin(surveys)]
     # df = df[~df["parentID"].isin(surveys)]
     links = df.values.tolist()
-    print(links[0])
     return links
 
 def get_fields(field):

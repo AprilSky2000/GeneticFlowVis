@@ -16,14 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import re_path as url
-from controller.views import search, list, update, showlist, index_id
+from controller.views import search, update, showlist, index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', search),
-    # path('list/', list),
     path('update/', update),
     path('list/', showlist),
-    path('index/', index_id)
+    path('index/', index)
     # url(r'^idx/([0-9]+)', index_id),
 ]

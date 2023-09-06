@@ -143,6 +143,43 @@ ul.address-text p {
 	border: none;
 }
 
+/* table相关 */
+table {
+	background-color: #dddddd;
+}
+
+table thead {
+	border-top-left-radius: 4%;
+	border-top-right-radius: 4%;
+}
+
+table th,
+table td {
+	text-align: center; /* 文本水平居中对齐 */
+	vertical-align: middle; /* 文本垂直居中对齐 */
+	/* border: 1px solid #ccc; 添加单元格边框样式 */
+	padding: 8px; /* 添加内边距以增加可读性 */
+	font-family: Arial, sans-serif; /* 设置字体系列 */
+	font-size: 16px;
+}
+
+table th {
+	background-color: #ccc;
+}
+
+table th.asc:before {
+	display: inline;
+	content: '↓ ';
+}
+
+table th.desc:before {
+	display: inline;
+	content: '↑ ';
+}
+
+tr:hover {
+    background-color: #0f0b0b07; /* 鼠标滑过时的背景颜色 */
+}
 
 /* 滚动槽 */
 ::-webkit-scrollbar {

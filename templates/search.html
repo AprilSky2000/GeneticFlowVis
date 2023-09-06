@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+		<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Search</title>
@@ -18,54 +19,83 @@
 			<img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="288" height="108">
 			<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
             <br />
-			<p id="error" style="color: red"></p>
-            <div style="float: left; margin-right: 0px; width: 90%; margin-left: -105%; margin-bottom: 10%;">
-                <select name="field">
-                    <option value="visualization">Visualization</option>
-					<option value="acl">Natural Language Processing</option>
-                </select>
+			<p id="error" style="color: red">{{ error }}</p>
+            <div style="display: flex; width: 50%; margin-left: 30%; margin-bottom: 1%;">
+				<!-- <img src="/src/image/search.png" style="order: -1; height: 38px;"> -->
+				<div class="card" style="height: 44px; width: 25%; border-top-left-radius: 24px; border-bottom-left-radius: 24px;">
+					<div id="scholar-field" class="card-body" style="padding-top: 10px; border-right: none;">
+						Visualization Scholar
+					</div>
+				</div>
+                <input name="name" type="text" class="form-control" placeholder="Please enter the author's name" autofocus="" style="height: 44px; width: 60%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
             </div>
-            <div style="float: right; width: 200%; margin-left: 0px; margin-right: -85%; margin-bottom: 10%;">
-                <input name="name" type="text" class="form-control" placeholder="Please enter the author's name" required="" autofocus="" style="height: 38px; border-left: none;">
-            </div>
-            <div style="margin-bottom: 10%;">
-                <a id="scholarListLink" href=" " style="margin-left: 5%;">the ranked scholar list</a>
+			<div class="form-check form-check-inline">
+				<input class="form-check-input radio" type="radio" name="field" value="visualization" checked>
+				<label class="form-check-label">Visualization</label>
+			</div>
+			<div class="form-check form-check-inline">
+				<input class="form-check-input radio" type="radio" name="field" value="acl">
+				<label class="form-check-label">NLP</label>
+			</div>
+			<br />
+			<br />
+            <div style="display: inline;">
+                <a id="listLink" class="btn btn-primary" href="list/?field=visualization" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">Scholar List</a>
+				<a id="searchLink" class="btn btn-primary" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">Scholar Search</a>
 				<script>
-					$("select").change(function(event) {
-						event.preventDefault();
-						var field = $("select").val();
-						console.log(field);
-						$("#scholarListLink").attr("href", "list/?field=" + field);
-					})
+					$("#listLink")
+						.on("mouseover", () => $("#listLink").css("border-color", "#a9a9a9"))
+						.on("mouseout", () => $("#listLink").css("border-color", "#f8f9fa"));
+					$("#searchLink")
+						.on("mouseover", () => $("#searchLink").css("border-color", "#a9a9a9"))
+						.on("mouseout", () => $("#searchLink").css("border-color", "#f8f9fa"));
 				</script>
 			</div>
-			<button class="btn btn-lg btn-primary btn-block">Search</button>
 			<p class="mt-5 mb-3 text-muted">© 2023-2024</p>
-			<p class="mt-5 mb-3 text-muted">京ICP备2022000473号-2</p>
+			<a href=" " target="_blank">京ICP备2022000473号-2</a>
 		</form>
 		<script type="text/javascript">
-			$(function() {
-				$("#scholarListLink").attr("href", "list/?field=" + $("select").val());
+			// window.addEventListener('popstate', function(event) {
+			// 	// 页面回退时执行这段代码
+			// 	$("#listLink").attr("href", "list/?field=" + $(".radio").val());
+			// });
+			$(".radio").click(function() {
+				var field = $("input[name='field']:checked").val();
+				if (field == "visualization")
+					$("#scholar-field").text("Visualization Scholar");
+				else if (field == "acl")
+					$("#scholar-field").text("NLP Scholar");
 			});
-			window.addEventListener('popstate', function(event) {
-				// 页面回退时执行这段代码
-				$("#scholarListLink").attr("href", "list/?field=" + $("select").val());
-			});
-			$("button").click(function(event) {
+			$("#listLink").click(function(event) {
 				event.preventDefault();		// form表单当button在里面时，会默认发送GET请求
-				var formData = $(".form-signin").serialize();
-				console.log(formData);
-				$.ajax({
-					type: "POST",
-					url: "/list/",
-					dataType: "json",
-					data: formData,
-					success: function(param) {
-						console.log(param['error']);
-						$("#error").text(param['error']);
-					}
-				});
+				var field = $("input[name='field']:checked").val();
+				$("#error").empty();
+				// 当跳转失败停留在原页面时，url现在已经发生改变，
+				// 很奇怪的是此时不管发送什么请求window.location.href都会带上"list/"这个后缀，所以只能判断此时url是否包括它，包括就删去
+				if (window.location.href.includes("list/")) {
+					window.location.href = "?field=" + field;
+				}
+				else {
+					window.location.href = "list/?field=" + field;
+				}
 			})
+			$("#searchLink").click(function(event) {
+				event.preventDefault();
+				var field = $("input[name='field']:checked").val();
+					name = $(".form-control").val();
+				if (name == '') {
+					$("#error").text("Please input the name");
+				}
+				else {
+					$("#error").empty();
+					if (window.location.href.includes("list/")) {
+						window.location.href = "?field=" + field + "&name=" +name;
+					}
+					else {
+						window.location.href = "list/?field=" + field + "&name=" +name;
+					}
+				}
+			});
 		</script>
 	</body>
 </html>

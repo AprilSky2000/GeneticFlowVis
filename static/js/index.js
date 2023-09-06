@@ -525,9 +525,9 @@ function visual_graph(polygon) {
     // ellipse.call(d3.drag().on("drag", dragged));
 
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
-        .attr('fill', 'none')
-        .attr('stroke', 'black')
-        .attr('stroke-width', d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
+        .attr('fill', "none")
+        .attr('stroke', "black")
+        .attr('stroke-width', d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
         .attr('d', d => d.d)
         .attr('id', d => d.source + '->' + d.target)
         .attr('class', 'reference');
@@ -797,7 +797,7 @@ function visual_graph(polygon) {
     .on('mouseover', function () {
         d3.select(this)
             .attr("stroke", "red")
-            .attr("stroke-width", 5)
+            .attr("stroke-width", 8)
             .attr("stroke-dasharray", null)
             .attr('cursor', 'pointer');
     })
@@ -937,7 +937,7 @@ function visual_graph(polygon) {
                 else if (d.flag == 2)   return "red";
                 else    return "black";
             })
-            .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
+            .attr("stroke-width", d => d.extends_prob <= 0.3 ? 0.5 : d.extends_prob >= 0.8 ? 8 : 0.5 + 15 * (d.extends_prob - 0.3))
             .attr("stroke-dasharray", d => {
                 if (d.flag == 1)    return '5.2';
                 else    return null;
