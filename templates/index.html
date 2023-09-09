@@ -10,7 +10,9 @@
     <link rel='stylesheet' type='text/css' href="/src/css/style.css">
     <link rel='stylesheet' type='text/css' href="/src/css/d3tip.css">
     <link rel="stylesheet" type='text/css' href="/src/css/layui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.css">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.js"></script>
     <script src="/src/js/jquery.min.js"></script>
     <script src="/src/js/bootstrap.js"></script>
     <script src="/src/js/d3.min.js"></script>
@@ -20,6 +22,7 @@
 
     <script src="/src/js/index.js"></script>
     <script src="/src/js/download-svg.js"></script>
+    
 </head>
 
 <body>
@@ -141,7 +144,7 @@
         </div>
         <div class="main-panel">
             <div class="left-column">
-                <ul id="basic-info" class="address" style="padding-bottom: 10%;">
+                <ul id="basic-info" class="address" style="padding-bottom: 5%;">
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
                             <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
@@ -169,7 +172,7 @@
                     </li>
                 </ul>
                 <br />
-                <ul id="graph-info" class="address" style="padding-bottom: 10%;">
+                <ul id="graph-info" class="address" style="padding-bottom: 5%;">
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
                             <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
@@ -202,13 +205,62 @@
                     <li>
                         <div id="topic-map-graph">
                             <div id="topic-distribution"></div>
-                            <input id="topic-slider" class="topic-slider" style="--thumb-size: 2px; height: 3px; width: 80%; margin-top: 2%; margin-left: 10%; color: #777" type="range" value="0.5" min="0" max="1" step="0.1">
+                            
+                            <div class="slider-container">
+                                <label for="topic-slider" style="font-size: 12px;">Size:</label>
+                                <input id="topic-slider" class="topic-slider"  type="range" value="1" min="0" max="2" step="0.01">
+                                <span id="topic-label" style="font-size: 12px;">0.5</span>
+                            </div>
+                            
+                            
+                            <div class="slider-container">
+                                <label for="range-slider" style="font-size: 12px;">Range:</label>
+                                <!-- <input type="range" id="range-slider" min="0" max="100" value="0" multiple>
+                                 -->
+                                <div id="range-slider" style="width:80%"></div>
+                                <span id="range-label" style="font-size: 12px;">0-100</span>
+                            </div>
+
                             <script>
                                 $("#topic-slider").change(function () {
                                     var topic_r = $("#topic-slider").val();
                                     d3.selectAll(".topic-map")
+                                        .transition()
+                                        .duration(300)
                                         .attr("r", d => Math.sqrt(d.num) * 10 * topic_r);
+                                    $("#topic-label").text(topic_r);
                                 })
+
+                                const rangeSlider = document.getElementById("range-slider");
+                                const rangeLabel = document.getElementById("range-label");
+
+                                noUiSlider.create(rangeSlider, {
+                                    start: [0, 100], // 初始值
+                                    connect: true,   // 连接两个滑块
+                                    range: {
+                                        'min': 0,
+                                        'max': 100
+                                    },
+                                    step: 1
+                                });
+
+                                // 监听滑块值的变化
+                                rangeSlider.noUiSlider.on("update", function (values, handle) {
+                                    const min = Math.round(values[0]);
+                                    const max = Math.round(values[1]);
+                                    rangeLabel.textContent = `${min}-${max}`;
+
+                                    d3.selectAll(".topic-map")
+                                        .transition()
+                                        .duration(300)
+                                        .attr("opacity", d => {
+                                            if (d.num >= min && d.num <= max) {
+                                                return 1;
+                                            } else {
+                                                return 0.2;
+                                            }
+                                        });
+                                });
                             </script>
                         </div>
                     </li>
@@ -258,13 +310,14 @@
                             return sum + $(element).outerHeight();
                         }, 0);
                         mainPanalHeight = windowHeight - navigationHeight;
+                        mainPanalWidth = $('.main-panel').width();
 
                         $('.main-panel').css('max-height', mainPanalHeight);
                         $('.right-column').css('max-height', mainPanalHeight * 0.98);
 
                         init_graph(viewBox, transform);
                         update_nodes();
-                        var paper_field = update_fields();
+                        paper_field = update_fields();
                         draw_tag_cloud(paper_field);
                         visual_topics(paper_field);
                         visual_graph(polygon);

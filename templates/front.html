@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Front Page</title>
+        <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+		<!-- Bootstrap core CSS -->
+		<link href="/src/css/bootstrap.min.css" rel="stylesheet">
+		<!-- Custom styles for this template -->
+		<link href="/src/css/signin.css" rel="stylesheet">
+		<script src="/src/js/jquery.min.js"></script>
+
+        <style>
+            /* 基本按钮样式 */
+            .custom-button {
+                display: inline-block;
+                padding: 20px 30px;
+                background-color: #ffffff;
+                /* border: 1px solid #f8f9fa; */
+                color: #3c4043;
+                text-decoration: none; /* 移除链接下划线 */
+                position: relative;
+                overflow: hidden;
+                transition: background-color 0.3s, color 0.3s;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 30px; /* 增大字号 */
+                font-weight: bold; /* 加粗文本 */
+                box-shadow: 0 0 10px #3c4043;
+                margin: 10px;
+            }
+    
+            /* 悬停时的按钮样式 */
+            .custom-button:hover {
+                background-color: #3c4043;
+                text-decoration: none; /* 移除链接下划线 */
+                color: #ffffff;
+            }
+    
+            /* 添加阴影效果 */
+            .custom-button::before {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                height: 10px;
+                background: rgba(0, 0, 0, 0.2);
+                transform: scaleY(0);
+                transform-origin: bottom;
+                transition: transform 0.3s;
+            }
+    
+            .custom-button:hover::before {
+                transform: scaleY(1);
+            }
+    
+            /* 添加图标元素 */
+            .custom-button .icon {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                /* background-color: #3c4043; */
+                margin-right: 10px; /* 调整图标与文本之间的间距 */
+                position: relative;
+                /* transition: background-color 0.3s; */
+            }
+    
+        </style>
+	</head>
+    
+	<body class="text-center">
+		<form class="form-signin">
+            <input type="hidden" name="csrfmiddlewaretoken" value="Yse6cgbnpqJr4Xjn1flWIVqE5knZ5Ty44Z0GtTvzdxFypbn46s9aILmj2eTgPCWJ">
+			<img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="288" height="108">
+			<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
+			<br />
+            <div style="display: inline;">
+                <!-- <a id="visualizationLink" class="btn btn-front" href="search/?field=visualization" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">visualization</a> -->
+				<a id="visualizationLink" class="custom-button" href="search/?field=visualization">
+                    <i class="fas fa-eye icon"></i>
+                    visualization
+                </a>
+                <a id="NLPLink" class="custom-button" href="search/?field=acl">
+                    <i class="fa-solid fa-pencil icon"></i>
+                    NLP
+                </a>
+
+			</div>
+			<p class="mt-5 mb-3 text-muted">© 2023-2024</p>
+			<a href=" " target="_blank">京ICP备2022000473号-2</a>
+		</form>
+	</body>
+</html>

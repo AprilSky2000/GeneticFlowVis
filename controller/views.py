@@ -12,8 +12,11 @@ import base64
 from bs4 import BeautifulSoup
 import re
 
+def front(request):
+    return render(request, 'front.html', {'error': ''})
+
 def search(request):
-    return render(request, 'search.html', {'error': ''})
+    return render(request, 'search.html', {'error': '', 'field': request.GET.get("field")})
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份

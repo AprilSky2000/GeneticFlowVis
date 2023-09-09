@@ -14,7 +14,7 @@ function op(key){
 function updateSider (name) {
     // const screenHeight = $(window).height();
     // $("#topic-info").css("height", screenHeight / 4);
-    $("#topic-info").css("height", $("#basic-info").width());
+    // $("#topic-info").css("height", $("#basic-info").width());
     // var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
     // var left_height = ($("#paper-list").height() - $("#paper-list-title").height()) *0.96;
     var left_height = mainPanalHeight * 0.88 - $("#paper-list-title").height()
@@ -71,7 +71,7 @@ function updateSider (name) {
         <p style="margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #333;">
             ${paperAuthors.slice(0, -2)}
         </p>
-        <p style="margin-top: 1%; margin-bottom: 1%; margin-left: 7%; color: #808080;">${paperVenu} ${paperYear}</p>`;
+        <p style="margin-top: 1%; margin-bottom: 2%; margin-left: 7%; color: #808080;">${paperVenu} ${paperYear}</p>`;
         $("#timeline").append(content);
     }
     $("#paper-list").show();
@@ -138,37 +138,6 @@ function textSize(text, size) {
     return {width, height}
 }
 
-function handleMouseOver(d) {
-    // fill rect with color
-    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
-    // show tooltip
-    // d3.select(`#tag-tooltip`).text(d.name)
-    //     .style("opacity", 1);
-    // d3.select(`.overall-topic-tip`).show(d);
-
-    // console.log('show tooltip', d, tooltip);
-    d3.select(`#text_${d.id}`).attr('font-weight', 'bold')
-        .attr("x", d => d.x + d.width * 0.02);
-
-    d3.select(this).attr('cursor', 'pointer');
-
-    // console.log('fieldColor: ', d.color, d.id);
-    highlight_field(d.id, d.color);
-}
-
-function handleMouseOut(d) {
-    // reset rect color
-    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
-    // remove tooltip
-    // d3.select(`#tag-tooltip`).style("opacity", 0);
-    // d3.select(`.overall-topic-tip`).hide(d);
-    
-    // reset word
-    d3.select(`#text_${d.id}`).attr('font-weight', 'normal')
-        .attr("x", d => d.x + d.width * 0.06);
-
-    reset_field();
-}
 
 function calculateWordPosition(sortedData, maxFontSize) {
     let svgWidth = $(".middle-column").width();
@@ -211,7 +180,8 @@ function calculateWordPosition(sortedData, maxFontSize) {
             name: d.name,
             ratio: ratio,
             shortName: shortName,
-            color: hsvToRgb(d.color[0], d.color[1], d.color[2]),
+            rgb: hsvToRgb(d.color[0], d.color[1], d.color[2]),
+            color: d.color,
             opacity: opacity,
             x: currentLineWidth,
             y: currentLineHeight
@@ -239,11 +209,11 @@ function draw_tag_cloud(data) {
     const wordCloud = svg.append("g");
         // .attr("transform", "translate(10, 10)");
 
-    let maxFontSize = 60;
+    let maxFontSize = 50;
     
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
-        // console.log("height overflow! change maxFontSize to ", maxFontSize);
+        console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
 
     // console.log('wordPosition: ', wordPosition, maxFontSize);
@@ -283,9 +253,9 @@ function draw_tag_cloud(data) {
         .attr("height", d => d.height)
         .attr("rx", d => maxFontSize * 0.1 * d.ratio)
         .attr("ry", d => maxFontSize * 0.1 * d.ratio)
-        .attr("fill", d => `rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})`) //rgba(15, 161, 216, ${d.opacity})
-        .on('mouseover', handleMouseOver)
-        .on('mouseout', handleMouseOut);
+        .attr("fill", d => `rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`) //rgba(15, 161, 216, ${d.opacity})
+        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseout', reset_field);
 
     words.selectAll("text")
         .data(d => d)
@@ -297,9 +267,9 @@ function draw_tag_cloud(data) {
         .attr("dy", "0.35em")
         .attr("id", d => `text_${d.id}`)
         .attr("font-size", d => d.size + "px")
-        .attr("fill", d => `rgb(0,0,0)`) //rgb(${d.color[0]}, ${d.color[1]}, ${d.color[2]})
-        .on('mouseover', handleMouseOver)
-        .on('mouseout', handleMouseOut);
+        .attr("fill", d => `rgb(0,0,0)`) 
+        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseout', reset_field);
 }
 
 function init_graph (viewBox, transform) {
@@ -404,7 +374,7 @@ function update_fields() {
             year_field[j].x = x;
             year_field[j].y = y;
             x -= year_field[j].num * 40;
-            year_field[j].id = String(years[i].id) + String(year_field[j].id);
+            year_field[j].yearid = String(years[i].id) + String(year_field[j].id);
         }
         
         g.selectAll('circle').data(year_field).enter().append('rect')
@@ -413,30 +383,55 @@ function update_fields() {
             .attr('width', d => d.num * 40)
             .attr('height', 50)
             .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
-            .attr('class', 'year-topic');
+            .attr('class', 'year-topic')
+            .attr('id', d => d.id);
     }
 
     g.selectAll('.year-topic')
-    .on('mouseover', function (d) {
-        d3.select(this).attr('cursor', 'pointer');
-        tip.show(d);
-        let field_color = d3.select(this).attr("fill");
-        field_color = field_color.slice(4, -1).split(', ');
-        highlight_field(d.id.slice(4), field_color);
-    })
-    .on('mouseout', function (d) {
-        d3.selectAll('.year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
-        tip.hide(d);
-        reset_field();
-    });
+    .on('mouseover', function(d) {highlight_field(d, this)})
+    .on('mouseout', reset_field);
 
     return self_field;
 }
 
-function highlight_field(field_id, field_color) {
+function highlight_field(d, that) {
+    // 选择具有特定ID的元素
+    // d3.select("#circle" + field_id).select(".topic-map-tip")
+    //     .style("display", "block");
+    
+    let duration = 300;
+    let field_id = d.id;
+    let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
+    // console.log('highlight field', d, field_color);
+    // topic_map_tip.show(d);
+    tip.show(d);
+
+    // =========================tagcloud=========================
+    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, 1)`);
+    // show tooltip
+    // d3.select(`#tag-tooltip`).text(d.name)
+    //     .style("opacity", 1);
+    // d3.select(`.overall-topic-tip`).show(d);
+
+    // console.log('show tooltip', d, tooltip);
+    d3.select(`#text_${d.id}`)
+        .attr('font-weight', 'bold')
+        .attr("x", d => d.x + d.width * 0.02);
+    d3.select(that).attr('cursor', 'pointer');
+
+    // =========================topic map=========================
+    d3.selectAll(".topic-map")
+        .transition()
+        .duration(duration)
+        .attr("fill-opacity", 0.2);
+    d3.select("#circle" + field_id)
+        .transition()
+        .duration(duration)
+        .attr("fill-opacity", 1);
+
     g.selectAll(".year-topic")
         .attr("fill", d => {
-            if (field_id != d.id.slice(4))  // 每个year-topic的柱子绑定的数据中id=year+topicID，year的长度为4，所以topic的id就可以切片得出
+            if (field_id != d.id)  // 每个year-topic的柱子绑定的数据中id=year+topicID，year的长度为4，所以topic的id就可以切片得出
                 return d3.rgb(200, 200, 200);
             else
                 return d3.rgb(parseInt(field_color[0]), parseInt(field_color[1]), parseInt(field_color[2]));
@@ -474,7 +469,29 @@ function highlight_field(field_id, field_color) {
     $("#mainsvg").attr("style", "background-color: #FAFAFA;");
 }
 
-function reset_field() {
+function reset_field(d) {
+    // =========================tagcloud=========================
+    // reset rect color
+    // d3.select(`#rect_${d.id}`).attr('fill', `rgba(15, 161, 216, ${d.opacity})`);
+    // remove tooltip
+    // d3.select(`#tag-tooltip`).style("opacity", 0);
+    // d3.select(`.overall-topic-tip`).hide(d);
+    
+    // reset word
+    d3.select(`#text_${d.id}`)
+        .attr('font-weight', 'normal')
+        .attr("x", d => d.x + d.width * 0.06);
+    
+    // =========================topic map=========================
+    // topic_map_tip.hide(d);
+    tip.hide(d);
+    // d3.selectAll(".topic-map-tip").style("display", "none");
+
+    d3.selectAll(".topic-map")
+        .transition()
+        .duration(200)
+        .attr("fill-opacity", 0.6);
+
     // 恢复左侧年份主题柱状图
     d3.selectAll('.rect1, .year-topic')
         .attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
@@ -484,24 +501,45 @@ function reset_field() {
     outline_color_change();
     //恢复边的颜色
     g.selectAll(".reference")
-        .attr('stroke', d => probToColor(d.extends_prob));
+        .attr('stroke', d => probToColor(d.extends_prob))
+        .attr('stroke-width', d => probToWidth(d.extends_prob));
     //恢复年份节点的填充色和边缘色
     d3.selectAll(".year")
         .attr("fill", "white")
         .attr("stroke", "black");
     $("#mainsvg").attr("style", "background-color: white;");
+    d3.selectAll('.year-topic').attr('fill', d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]));
 }
 
 function visual_topics(overall_field) {
     $("#topic-slider").val(0.5);
     $("#topic-slider").show();
 
-    let topic_width = $("#topic-map-graph").width();
-    let topic_height = $("#topic-info").width() - $("#topic-map-banner").height();
+    // let topic_width = $("#topic-map-graph").width();
+    let topic_width = mainPanalWidth * 0.18;
+    let topic_height = topic_width - $("#topic-map-banner").height();
     const topic_margin1 = 35;
     const topic_margin2 = 20;
 
     d3.selectAll("#topic-map-svg").remove();
+
+    // console.log('overall field', overall_field);
+    // set the ranges of rangeSlider
+
+    let rangeSlider = document.getElementById("range-slider");
+    rangeSlider.noUiSlider.updateOptions({
+        range: {
+            'min': d3.min(overall_field, d => d.num),
+            'max': d3.max(overall_field, d => d.num)
+        }
+    });
+    var maxNum = d3.max(overall_field, d => d.num);
+    var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
+    if (topic_r > 2) {
+        topic_r = 2;
+    }
+    $("#topic-label").text(topic_r);
+    $("#topic-slider").val(topic_r);
 
     var xScale = d3.scaleLinear()
         .domain([d3.min(overall_field, d => d.cx), d3.max(overall_field, d => d.cx)])
@@ -522,31 +560,22 @@ function visual_topics(overall_field) {
     const topics = topic_map_g.selectAll(".topic-map").data(overall_field).enter().append("circle")
         .attr("cx", d => xScale(d.cx))
         .attr("cy", d => yScale(d.cy))
-        .attr("r", d => Math.sqrt(d.num) * 5)
+        .attr("r", d => Math.sqrt(d.num) * 10 * topic_r)
         .attr("fill", d => d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]))
         .attr("stroke", "black")
         .attr("stroke-width", 0.2)
-        .attr("id", d => d.id)
+        .attr('fill-opacity', 0.6)
+        .attr("id", d => 'circle' + d.id)
         .attr("class", "topic-map");
 
-    const topic_map_tip = d3.tip()
+    topic_map_tip = d3.tip()
         .attr("class", "topic-map-tip")
         .html(d => d.name);
     topic_map_svg.call(topic_map_tip);
 
     topics
-    .on('mouseover', function (d) {
-        d3.select(this).attr('cursor', 'pointer');
-        topic_map_tip.show(d);
-
-        let field_color = d3.select(this).attr("fill");
-        field_color = field_color.slice(4, -1).split(', ');
-        highlight_field(d.id, field_color);
-    })
-    .on('mouseout', function (d) {
-        topic_map_tip.hide(d);
-        reset_field();
-    });
+    .on('mouseover', function(d) {highlight_field(d, this)})
+    .on('mouseout', reset_field);
     
     if (overall_field.length == 0) {
         $("#topic-slider").hide();
@@ -565,6 +594,16 @@ function probToColor(prob, a=0.1, b=1) {
     const color = `rgba(0, 0, 0, ${mappedOpacity})`;
     
     return color;
+}
+
+function probToWidth(prob, a=1, b=10) {
+    if (prob <= 0.3) {
+        return a;
+    }
+    else if (prob >= 0.8) {
+        return b;
+    }
+    return a + (b-a) * (prob - 0.3);
 }
 
 
@@ -1032,7 +1071,7 @@ function visual_graph(polygon) {
             outline_thickness_change();
             d3.selectAll('.reference')
                 .attr('stroke', d => probToColor(d.extends_prob))
-                .attr('stroke-width', 5)
+                .attr('stroke-width', d => probToWidth(d.extends_prob))
                 // .attr('stroke', 'black')
                 .attr('stroke-dasharray', null);
             for (let i = 0; i < nodes.length; i++) {
