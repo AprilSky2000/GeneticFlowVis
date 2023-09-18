@@ -15,11 +15,10 @@ function updateSider (name) {
     // const screenHeight = $(window).height();
     // $("#topic-info").css("height", screenHeight / 4);
     // $("#topic-info").css("height", $("#basic-info").width());
-    // var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
+    var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
     // var left_height = ($("#paper-list").height() - $("#paper-list-title").height()) *0.96;
-    var left_height = mainPanalHeight * 0.88 - $("#paper-list-title").height()
+    // var left_height = mainPanalHeight * 0.88 - $("#paper-list-title").height();
     
-    // console.log('left height', left_height);
     $("#timeline").css("height", left_height);
     $("#cited-papers").css("height", left_height * 1.03);
     $("#citing-papers").css("height", left_height * 1.03);
@@ -137,7 +136,6 @@ function textSize(text, size) {
     container.remove()
     return {width, height}
 }
-
 
 function calculateWordPosition(sortedData, maxFontSize) {
     let svgWidth = $(".middle-column").width();
@@ -603,9 +601,8 @@ function probToWidth(prob, a=1, b=10) {
     else if (prob >= 0.8) {
         return b;
     }
-    return a + (b-a) * (prob - 0.3);
+    return a + 2 * (prob - 0.3) * (b - a);
 }
-
 
 function visual_graph(polygon) {
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
@@ -631,7 +628,7 @@ function visual_graph(polygon) {
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
         .attr('fill', 'none')
         .attr('stroke', d => probToColor(d.extends_prob))
-        .attr('stroke-width', 5)
+        .attr('stroke-width', d => probToWidth(d.extends_prob))
         .attr('d', d => d.d)
         .attr('id', d => d.source + '->' + d.target)
         .attr('class', 'reference');
@@ -818,11 +815,14 @@ function visual_graph(polygon) {
         $(".abstract-minus-height").each(function() {
             other_height += $(this).height();
         });
-        // let abstract_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.08;
-        let abstract_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
+        let abstract_height = (($("#paper-list").height() / 1.1 - $("#selector").height()) - other_height) / 1.03;
+        console.log($("#paper-list").height());
+        console.log($("#selector").height(), other_height);
+        // let abstract_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
         // console.log('max height', abstract_height, 'other height', other_height);
-        $("#abstract").css("max-height", abstract_height);
+        $("#abstract").css("height", abstract_height);
 
+        // 下面的代码均为构建引用和被引树
         var vis = new Array(edges.length).fill(0);
         var citedTraversal = function (root) {
             var self_dict = {};
@@ -850,7 +850,6 @@ function visual_graph(polygon) {
             }
             return self_dict;
         }
-
         vis = new Array(edges.length).fill(0);
         var citingTraversal = function (root) {
             var self_dict = {};
@@ -878,10 +877,8 @@ function visual_graph(polygon) {
             }
             return self_dict;
         }
-
         var cited_list = [citedTraversal(id)];
         var citing_list = [citingTraversal(id)];
-
         layui.use(['tree', 'util'], function(){
             var tree = layui.tree,
             data = cited_list
@@ -986,7 +983,10 @@ function visual_graph(polygon) {
                 if (d.flag == 2)   return 'red';
                 else    return d3.rgb(200, 200, 200);
             })
-            .attr('stroke-width', 10)
+            .attr('stroke-width', d => {
+                if (d.id == id) return 10;
+                else    return 2;
+            })
             .attr('stroke-dasharray', d => {
                 if (d.flag == 2)   return null;
                 else    return '5.2';
@@ -1038,8 +1038,8 @@ function visual_graph(polygon) {
         $(".citation-context-minus-height").each(function() {
             other_height += $(this).height();
         });
-        // let citation_context_height = (($("#paper-list").height() * 1.05 - $("#selector").height()) / 1.1 - other_height) / 1.06;
-        let citation_context_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
+        let citation_context_height = ($("#paper-list").height() / 1.1 - other_height) / 1.03;
+        // let citation_context_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
         $("#citation-context").css("height", citation_context_height);
     })
     .on('mouseout', function () {
@@ -1050,7 +1050,7 @@ function visual_graph(polygon) {
                 else    return probToColor(d.extends_prob);
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
-            .attr("stroke-width", 5)
+            .attr("stroke-width", d => probToWidth(d.extends_prob))
             .attr("stroke-dasharray", d => {
                 if (d.flag == 1)    return '5.2';
                 else    return null;

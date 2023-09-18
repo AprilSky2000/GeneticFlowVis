@@ -4,9 +4,11 @@
     <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>List</title>
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css"> -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/src/css/bootstrap.css" rel='stylesheet' type='text/css' />
     <link href="/src/css/style.css" rel='stylesheet' type='text/css' />
+    <link href="/src/css/all.min.css" rel="stylesheet" type="text/css" />
 
     <script src="/src/js/jquery.min.js"></script>
     <script src="/src/js/bootstrap.js"></script>
@@ -26,29 +28,16 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>rank</th>
-                            <th>Author Name</th>
-                            <th class="asc">Paper Count</th>
-                            <th>Citation Count</th>
-                            <th>h-index</th>
+                            <th>Sequence</th>
+                            <th>Scholar Name</th>
+                            <th id="paper-count" class="asc"></th>
+                            <th id="citations"></th>
+                            <th id="h-index"></th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for scholar in scholarList %}
-                        <tr>
-                            <td>{{ scholar.authorRank }}</td>
-                            <td>{{ scholar.name }}</td>
-                            <td>{{ scholar.paperCount }}</td>
-                            <td>{{ scholar.citationCount }}</td>
-                            <td>{{ scholar.hIndex }}</td>
-                            <td>
-                                <a class="btn-sm btn-primary" href="/index?field={{ field }}&id={{ scholar.authorRank }}" style="font-size: 2px;">
-                                    Visualize
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
+
                     </tbody>
                 </table>
             </div>
@@ -63,8 +52,15 @@
         //         { "orderable": false, "targets": [4] } // 第一列不可排序
         //     ]
         // });
+        function table_show(scholarList, fieldType) {
+            $('table tbody').empty();
+            for (let i = 0; i < scholarList.length; i++) {
+                scholarList[i]["rank"] = i + 1;
+                var content = "<tr><td>" + scholarList[i]["rank"] + "</td><td>" + scholarList[i]["name"] + "</td><td>" + scholarList[i]["paperCount"] + "</td><td>" + scholarList[i]["citationCount"] + "</td><td>" + scholarList[i]["hIndex"] + "</td><td><a class=\"btn-sm btn-primary\" href=\"index?field=" + fieldType + "&id=" + scholarList[i]["authorRank"] + "\" style=\"font-size: 2px;\">Visualize</a></td></tr>";
+                $('table tbody').append(content);
+            }
+        }
         function compare(index, sortType) {
-            console.log(index, sortType);
             return function(row1, row2) {
                 var aValue = row1[index];
                     bValue = row2[index];
@@ -80,26 +76,43 @@
             }
         }
         $(function () {
-            $('table').on('click', 'th', function () {
-                var index = $(this).index();
-                if (index != 0) {
-                    const indexLabel = ["unamed", "name", "paperCount", "citationCount", "hIndex"];
-                    var thClass = $(this).hasClass('asc') ? 'desc' : 'asc',
-                        scholarList = {{ scholarList|safe }},
-                        fieldType = "{{ field }}";
-                    scholarList.sort(compare(indexLabel[index], thClass));
+            var scholarList = {{ scholarList|safe }},
+                fieldType = "{{ field }}",
+                field, question_content;
+            if (fieldType == "visualization") {
+                field = "Visualization";
+                question_content = "The scholar metrics below are obtained from all the publications tagged as visualization papers in Microsoft Academic Graph (MAG) dataset, till 2020.5. All paper citation counts are native data from MAG.";
+            }
+            else if (fieldType == "acl") {
+                field = "NLP";
+                question_content = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from ARC.";
+            }
+            var content = `
+            <div class="question">
+                <i class="fa-solid fa-circle-question hover-text"></i>
+                <span class="question-tip" style="font-size: 2px;">
+                    ${question_content}
+                </span>
+            </div>`;
+            $("#paper-count").text(field + " Paper Count ");
+            $("#citations").text(field + " Paper Citations ");
+            $("#h-index").text("h-index (" + field + ") ");
+            $("#paper-count, #citations, #h-index").append(content);
+            table_show(scholarList, fieldType);
+        });
+        $('table').on('click', 'th', function () {
+            var index = $(this).index();
+            if (index != 0) {
+                const indexLabel = ["unamed", "name", "paperCount", "citationCount", "hIndex"];
+                var thClass = $(this).hasClass('asc') ? 'desc' : 'asc',
+                    scholarList = {{ scholarList|safe }},
+                    fieldType = "{{ field }}";
+                scholarList.sort(compare(indexLabel[index], thClass));
 
-                    $('table th').removeClass('asc desc');
-                    $(this).addClass(thClass);
-
-                    $('table tbody').empty();
-                    for (let i = 0; i < scholarList.length; i++) {
-                        scholarList[i]["rank"] = i + 1;
-                        var content = "<tr><td>" + scholarList[i]["rank"] + "</td><td>" + scholarList[i]["name"] + "</td><td>" + scholarList[i]["paperCount"] + "</td><td>" + scholarList[i]["citationCount"] + "</td><td>" + scholarList[i]["hIndex"] + "</td><td><a class=\"btn-sm btn-primary\" href=\"/index?field=" + fieldType + "&id=" + scholarList[i]["authorRank"] + "\" style=\"font-size: 2px;\">Visualize</a></td></tr>";
-                        $('table tbody').append(content);
-                    }
-                }
-            });
+                $('table th').removeClass('asc desc');
+                $(this).addClass(thClass);
+                table_show(scholarList, fieldType);
+            }
         });
     </script>
 </body>

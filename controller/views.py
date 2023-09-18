@@ -12,11 +12,16 @@ import base64
 from bs4 import BeautifulSoup
 import re
 
+def reference(request):
+    return render(request, 'reference.html')
+
 def front(request):
     return render(request, 'front.html', {'error': ''})
 
 def search(request):
-    return render(request, 'search.html', {'error': '', 'field': request.GET.get("field")})
+    field = request.GET.get("field", None)
+    if field:
+        return render(request, 'search.html', {'error': '', 'field': field})
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
@@ -210,7 +215,9 @@ def index(request):
     fields = get_fields(field)
     authorRank = str(authorRank)
     isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.5, 10, 1
-    detail = authorRank + '_0_0.5_0.5_10_1'
+    if field == "acl":
+        extendsProb = 0.4
+    detail = authorRank + '_0_0.5_' + str(extendsProb) + '_10_1'
     filename = './static/json/' + field + '/' + detail + '.json'
 
     if os.path.exists(filename) == False:
@@ -278,7 +285,7 @@ def showlist(request):
     scholarList = [get_scholar(row, name) for row in data if get_scholar(row, name) != {}]
     if len(scholarList) == 0:
         error = 'No author named ' + name # 错误信息
-        return render(request, 'search.html', {'error': error})
+        return render(request, 'search.html', {'error': error, 'field': field})
     else:
         return render(request, "list.html", {'scholarList': scholarList, 'field': field})
 

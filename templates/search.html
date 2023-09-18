@@ -16,25 +16,25 @@
 	<body class="text-center">
 		<form class="form-signin">
             {%csrf_token%}
-			<img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="288" height="108">
+			<img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="390" height="140.4">
 			<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
             <br />
 			<p id="error" style="color: red">{{ error }}</p>
-            <div style="display: flex; width: 50%; margin-left: 30%; margin-bottom: 1%;">
+            <div style="display: flex; width: 60%; margin-left: 20%; margin-bottom: 1%;">
 				<!-- <img src="/src/image/search.png" style="order: -1; height: 38px;"> -->
-				<div class="card" style="height: 44px; width: 25%; border-top-left-radius: 24px; border-bottom-left-radius: 24px;">
-					<div id="scholar-field" class="card-body" style="padding-top: 10px; border-right: none;">
+				<div class="card" style="height: 50px; width: 30%; border-top-left-radius: 24px; border-bottom-left-radius: 24px;">
+					<div id="scholar-field" class="card-body" style="padding-top: 13px; border-right: none;">
 						{{ field }} Scholar
 					</div>
 				</div>
-                <input name="name" type="text" class="form-control" placeholder="Please enter the author's name" autofocus="" style="height: 44px; width: 60%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
+                <input name="name" type="text" class="form-control" placeholder="Please enter the author's name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
             </div>
 			<br />
             <div style="display: inline;">
 				{% if field %}
-                	<a id="listLink" class="btn btn-primary" href="/list/?field={{ field }}" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">Scholar List</a>
+                	<a id="listLink" class="btn btn-primary" href="/list?field={{ field }}" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043; margin-right: 10px;">Scholar List</a>
 				{% else %}
-					<a id="listLink" class="btn btn-primary" href="/list/?field=visualization" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">Scholar List</a>
+					<a id="listLink" class="btn btn-primary" href="/list?field=visualization" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043; margin-left: 10px;">Scholar List</a>
 				{% endif %}
 				<a id="searchLink" class="btn btn-primary" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">Scholar Search</a>
 				<script>
@@ -46,8 +46,15 @@
 						.on("mouseout", () => $("#searchLink").css("border-color", "#f8f9fa"));
 				</script>
 			</div>
+			<br />
+			<br />
 			<p class="mt-5 mb-3 text-muted">© 2023-2024</p>
 			<a href=" " target="_blank">京ICP备2022000473号-2</a>
+			<br />
+			<br />
+			<p style="white-space: pre-wrap; text-align: center;">Please send any enquiry/feedback to: <b>geneticflowcontact@gmail.com</b>,
+and see our <a href="reference">KDD/VIS 2023 paper</a> for more details.
+			</p>
 		</form>
 		<script type="text/javascript">
 			// $("#listLink").click(function(event) {
@@ -64,28 +71,23 @@
 			// 	}
 			// })
 			var field = "{{ field }}";
-			if (field == '') {
-				$("#scholar-field").text("visualization Scholar");
-			}
-			else if (field == 'acl') {
+			if (field == 'acl') {
 				$("#scholar-field").text("NLP Scholar");
-			} else {
-				$("#scholar-field").text(field + " Scholar");
+			}
+			else if (field == 'visualization') {
+				$("#scholar-field").text("Visualization" + " Scholar");
 			}
 			$("#searchLink").click(function(event) {
 				event.preventDefault();
-					name = $(".form-control").val();
+				name = $(".form-control").val();
 				if (name == '') {
 					$("#error").text("Please input the name");
 				}
 				else {
 					$("#error").empty();
-					if (window.location.href.includes("list/")) {
-						window.location.href = "?field=" + field + "&name=" +name;
-					}
-					else {
-						window.location.href = "list/?field=" + field + "&name=" +name;
-					}
+					var field = "{{ field }}";
+					console.log(field);
+					window.location.href = "list?field=" + field + "&name=" +name;
 				}
 			});
 		</script>
