@@ -42,6 +42,7 @@ function updateSider (name) {
     </div>`);
     // console.log('nodes', nodes);
     for (let i = 0; i < nodes.length; i++) {
+        console.log(nodes[i].name);
         const paperName = String(nodes[i].name);
         const paperVenu = String(nodes[i].venu);
         const paperYear = String(nodes[i].year);
@@ -211,7 +212,7 @@ function draw_tag_cloud(data) {
     
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
-        console.log("height overflow! change maxFontSize to ", maxFontSize);
+        // console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
 
     // console.log('wordPosition: ', wordPosition, maxFontSize);
@@ -816,8 +817,8 @@ function visual_graph(polygon) {
             other_height += $(this).height();
         });
         let abstract_height = (($("#paper-list").height() / 1.1 - $("#selector").height()) - other_height) / 1.03;
-        console.log($("#paper-list").height());
-        console.log($("#selector").height(), other_height);
+        // console.log($("#paper-list").height());
+        // console.log($("#selector").height(), other_height);
         // let abstract_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
         // console.log('max height', abstract_height, 'other height', other_height);
         $("#abstract").css("height", abstract_height);

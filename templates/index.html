@@ -323,6 +323,7 @@
                         
                         // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
                         // $(".middle-column").css('height', maxHeight);
+                        console.log(name);
                         updateSider(name);
                         // console.log('left height2', left_height);
                         // $("paper-list").css('height', maxHeight);
@@ -549,7 +550,6 @@
                     edges[i]['flag'] = 0;
                 }
                 for (let i = 0; i < field_roots.length; i++) {
-                    console.log(field_roots[i][2]);
                     field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
                 }
                 for (let i = 0; i < field_leaves.length; i++) {
@@ -593,12 +593,14 @@
                 url: "/update/",
                 data: paramData,
                 success: function (param) {
-                    $("#mainsvg, #tagcloud, #abstract, #citation-context, #timeline").remove();
+                    $("#mainsvg, #tagcloud").remove();
+                    $("#abstract, #citation-context, #timeline").empty();
                     $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
                     d3.tip().destroy();
                     var detail = param['detail'];
                     var field = param['field'];
                     var filename = '/src/json/' + field + '/' + detail + '.json';
+                    console.log(filename);
                     d3.json(filename).then( data => {
                         years = data[1];
                         nodes = data[2];
