@@ -332,3 +332,34 @@ input[type=range]::-webkit-slider-thumb {
 .question:hover .question-tip {
 	visibility: visible;
 }
+
+.d3-tip {
+	font-weight: normal !important;
+	padding: 8px !important;
+	background: rgba(0, 0, 0, 0.8) !important;
+	color: #fff;
+	border-radius: 2px !important;
+	font-size: 15px !important;
+	pointer-events: none;
+	box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* Creates a small triangle extender on the tooltip */
+  /* .d3-tip:after {
+	box-sizing: border-box;
+	display: inline;
+	font-size: 10px;
+	width: 100%;
+	line-height: 1;
+	color: rgba(0, 0, 0, 0.8);
+	content: "\25BC";
+	position: absolute;
+	text-align: center;
+  } */
+  
+  /* Style northward tooltips differently */
+  .d3-tip.n:after {
+	margin: -2px 0 0 0 !important;
+	top: 100%;
+	left: 0;
+  }

@@ -252,15 +252,25 @@
                                     rangeLabel.textContent = `${min}-${max}`;
 
                                     d3.selectAll(".topic-map")
-                                        .transition()
-                                        .duration(300)
-                                        .attr("opacity", d => {
-                                            if (d.num >= min && d.num <= max) {
-                                                return 1;
-                                            } else {
-                                                return 0.2;
-                                            }
-                                        });
+                                    .transition()
+                                    .duration(300)
+                                    .attr("opacity", d => {
+                                        if (d.num >= min && d.num <= max) return 1;
+                                        return 0;
+                                    })
+                                    .attr("pointer-events", d => {
+                                        if (d.num >= min && d.num <= max) return "all";
+                                        return "none";
+                                    });
+
+                                    
+                                    paper_field = update_fields();
+                                    // filter paper filed with num between min and max
+                                    paper_field = paper_field.filter(item => item.num >= min && item.num <= max);
+                                    d3.select("#tagcloud").remove();
+                                    draw_tag_cloud();
+                                    // visual_topics();
+
                                 });
                             </script>
                         </div>
@@ -324,8 +334,9 @@
                         init_graph(viewBox, transform);
                         update_nodes();
                         paper_field = update_fields();
-                        draw_tag_cloud(paper_field);
-                        visual_topics(paper_field);
+                        
+                        draw_tag_cloud();
+                        visual_topics();
                         visual_graph(polygon);
                         
                         // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
@@ -593,15 +604,6 @@
                     field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
                 }
                 
-                // init_graph(viewBox, transform);
-                // update_nodes();
-                // var paper_field = update_fields();
-                // draw_tag_cloud(paper_field);
-                // visual_topics(paper_field);
-                // visual_graph(polygon);
-                // updateSider(name);
-                // outline_color_change();
-                // outline_thickness_change();
                 onFullscreenChange();
 
                 $("#overall-topic-map").hide();

@@ -203,7 +203,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
     return wordPosition;
 }
 
-function draw_tag_cloud(data) {
+function draw_tag_cloud() {
     let svgWidth = $(".middle-column").width();
     let svgHeight = $(".middle-column").height() * 0.25;
     // console.log('svgWidth: ', svgWidth);
@@ -214,7 +214,7 @@ function draw_tag_cloud(data) {
         .attr("height", svgHeight)
         .attr("id", "tagcloud");
 
-    const sortedData = data.sort((a, b) => b.num - a.num);
+    const sortedData = paper_field.sort((a, b) => b.num - a.num);
 
     const wordCloud = svg.append("g");
         // .attr("transform", "translate(10, 10)");
@@ -227,30 +227,11 @@ function draw_tag_cloud(data) {
     }
 
     // console.log('wordPosition: ', wordPosition, maxFontSize);
-
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
         .enter()
         .append("g")
         .attr("transform", (d, i) => `translate(0, ${d[0].y})`);
-
-    // let tooltip = d3.select(".middle-column")
-    // .append("text")
-    // .attr("class", "tooltip")
-    // .attr("id", "tag-tooltip")
-    // .attr("text-anchor", "middle")
-    // .style("font-size", "20px")
-    // .style("font-weight", "bold")
-    // .style("fill", "black")
-    // .style("visibility", "visible")
-    // .style("opacity", 0)
-    // .style("position", "absolute")
-    // .style("margin-left", "20%")
-    // .attr("x", svgWidth / 2)
-    //         .attr("y", -svgHeight)
-    //         .attr("transform", `translate(${svgWidth / 2}, -${svgHeight})`); // 上移一些距离
-
-    // console.log('tooltip: ', tooltip);
 
     words.selectAll("rect")
         .data(d => d)
@@ -299,6 +280,9 @@ function init_graph (viewBox, transform) {
         .on("zoom", _ => g.attr("transform", d3.event.transform + transform));
 
     tip = d3.tip()
+        .attr("class", "d3-tip")
+        .html(d => d.name);
+    tip1 = d3.tip()
         .attr("class", "d3-tip")
         .html(d => d.name);
 
@@ -414,19 +398,36 @@ function highlight_field(d, that) {
     // d3.select("#circle" + field_id).select(".topic-map-tip")
     //     .style("display", "block");
     
-    let duration = 300;
+    let duration = 200;
     let field_id = d.id;
     // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
     // let field_color = hsvToColor(d.color);
     // console.log('highlight field', d, field_color);
     // topic_map_tip.show(d);
+
     tip.show(d);
 
+    // if d is an item in paper_field
+    // if (d.hasOwnProperty('num')) {
+    //     let word = wordPosition.flat().find(item => item.id == d.id);
+    //     console.log('word', word);
+    //     tip.show(word);
+    // }
+
+    // // if d is an item in wordPosition
+    // if (d.hasOwnProperty('ratio')) {
+    //     let field = paper_field.find(item => item.id == d.id);
+    //     console.log('field', field);
+    //     tip.show(field);
+    // }
+
     // =========================tagcloud=========================
+    d3.selectAll(".tag-rect")
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", "none");
     d3.select(`#rect_${d.id}`)
-        .transition()
-        .duration(duration)
-        .attr("fill-opacity", 1);
+        .attr("fill-opacity", 1)
+        .attr("stroke", "black");
     // show tooltip
     // d3.select(`#tag-tooltip`).text(d.name)
     //     .style("opacity", 1);
@@ -439,14 +440,15 @@ function highlight_field(d, that) {
     d3.select(that).attr('cursor', 'pointer');
 
     // =========================topic map=========================
+    // 有了duration之后，如果鼠标滑动较快，则没法恢复
     d3.selectAll(".topic-map")
-        .transition()
-        .duration(duration)
-        .attr("fill-opacity", 0.2);
+        .attr("fill-opacity", 0.2)
+        .attr("stroke", "none");
     d3.select("#circle" + field_id)
-        .transition()
-        .duration(duration)
-        .attr("fill-opacity", 1);
+        // .transition()
+        // .duration(duration)
+        .attr("fill-opacity", 1)
+        .attr("stroke", "black");
 
     g.selectAll(".year-topic")
         .attr("fill-opacity", d => {if (field_id != d.id) return virtualOpacity;});
@@ -486,7 +488,9 @@ function hsvToColor(color) {
 function reset_field(d) {
     // =========================tagcloud=========================
     // reset rect color
-    d3.select(`#rect_${d.id}`).attr("fill-opacity", 0.8);
+    d3.select(`#rect_${d.id}`)
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", "none");
     // remove tooltip
     // d3.select(`#tag-tooltip`).style("opacity", 0);
     // d3.select(`.overall-topic-tip`).hide(d);
@@ -501,9 +505,10 @@ function reset_field(d) {
     // d3.selectAll(".topic-map-tip").style("display", "none");
 
     d3.selectAll(".topic-map")
-        .transition()
-        .duration(200)
-        .attr("fill-opacity", 0.6);
+        // .transition()
+        // .duration(200)
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", `rgba(0,0,0,0.5)`);
 
     // 恢复左侧年份主题柱状图
     d3.selectAll('.rect1, .year-topic')
@@ -524,7 +529,7 @@ function reset_field(d) {
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
 }
 
-function visual_topics(overall_field) {
+function visual_topics() {
     $("#topic-slider").val(0.5);
     $("#topic-slider").show();
 
@@ -542,11 +547,11 @@ function visual_topics(overall_field) {
     let rangeSlider = document.getElementById("range-slider");
     rangeSlider.noUiSlider.updateOptions({
         range: {
-            'min': d3.min(overall_field, d => d.num),
-            'max': d3.max(overall_field, d => d.num)
+            'min': d3.min(paper_field, d => d.num),
+            'max': d3.max(paper_field, d => d.num)
         }
     });
-    var maxNum = d3.max(overall_field, d => d.num);
+    var maxNum = d3.max(paper_field, d => d.num);
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
         topic_r = 2;
@@ -555,28 +560,29 @@ function visual_topics(overall_field) {
     $("#topic-slider").val(topic_r);
 
     var xScale = d3.scaleLinear()
-        .domain([d3.min(overall_field, d => d.cx), d3.max(overall_field, d => d.cx)])
+        .domain([d3.min(paper_field, d => d.cx), d3.max(paper_field, d => d.cx)])
         .range([0, topic_width - 2 * topic_margin1]);
 
     var yScale = d3.scaleLinear()
-        .domain([d3.min(overall_field, d => d.cy), d3.max(overall_field, d => d.cy)])
+        .domain([d3.min(paper_field, d => d.cy), d3.max(paper_field, d => d.cy)])
         .range([topic_height * 0.85 - 2 * topic_margin2, 0]);
 
     const topic_map_svg = d3.select("#topic-distribution").append("svg")
         .attr("width", topic_width)
         .attr("height", topic_height * 0.85)
         .attr("id", "topic-map-svg");
-    
+        
     const topic_map_g = topic_map_svg.append('g')
         .attr("transform", `translate(${topic_margin1}, ${topic_margin2})`);
     
-    const topics = topic_map_g.selectAll(".topic-map").data(overall_field).enter().append("circle")
+    const topics = topic_map_g.selectAll(".topic-map").data(paper_field).enter().append("circle")
         .attr("cx", d => xScale(d.cx))
         .attr("cy", d => yScale(d.cy))
         .attr("r", d => Math.sqrt(d.num) * 10 * topic_r)
         .attr("fill", d => hsvToColor(d.color))
-        .attr("stroke", "black")
-        .attr("stroke-width", 0.2)
+        .attr("stroke", `rgba(0, 0, 0, 0.2)`)
+        .attr("stroke-width", 0.5)
+        // .attr("filter", "url(#f1)")
         .attr('fill-opacity', 0.6)
         .attr("id", d => 'circle' + d.id)
         .attr("class", "topic-map");
@@ -590,7 +596,7 @@ function visual_topics(overall_field) {
     .on('mouseover', function(d) {highlight_field(d, this)})
     .on('mouseout', reset_field);
     
-    if (overall_field.length == 0) {
+    if (paper_field.length == 0) {
         $("#topic-slider").hide();
     }
 
@@ -1213,10 +1219,9 @@ function fill_color_change() {
         update_nodes();
         g.selectAll('.paper').data(nodes)
             .attr('fill', d => hsvToColor(d.color));
-        var fieldCount = update_fields();
-        visual_topics(fieldCount);
+        visual_topics();
         $("#tagcloud").remove();
-        draw_tag_cloud(fieldCount);
+        draw_tag_cloud();
     }
     else {
         let fillColor = getFillColorFunc();
