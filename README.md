@@ -21,5 +21,6 @@ cd /home/xfl/pyCode/GFVis
 git pull
 pkill -f "runserver 0.0.0.0:9001"
 # 后台运行，日志追加到当前目录的`nohup.out`文件，2>&1 表示将错误输出也重定向到同一个文件。
+conda activate python3.7
 nohup python manage.py runserver 0.0.0.0:9001 2>&1 &
 ```
