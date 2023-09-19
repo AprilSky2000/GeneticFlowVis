@@ -3,4 +3,5 @@ nohup.out
 __pycache__
 controller/__pycache__
 static/json
+controller/__pycache__
 static/image/svg

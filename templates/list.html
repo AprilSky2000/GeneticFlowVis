@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <meta charset="UTF-8">
     <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>List</title>
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
@@ -55,8 +56,22 @@
         function table_show(scholarList, fieldType) {
             $('table tbody').empty();
             for (let i = 0; i < scholarList.length; i++) {
-                scholarList[i]["rank"] = i + 1;
-                var content = "<tr><td>" + scholarList[i]["rank"] + "</td><td>" + scholarList[i]["name"] + "</td><td>" + scholarList[i]["paperCount"] + "</td><td>" + scholarList[i]["citationCount"] + "</td><td>" + scholarList[i]["hIndex"] + "</td><td><a class=\"btn-sm btn-primary\" href=\"index?field=" + fieldType + "&id=" + scholarList[i]["authorRank"] + "\" style=\"font-size: 2px;\">Visualize</a></td></tr>";
+                let scholar = scholarList[i];
+                scholar["rank"] = i+1;
+                var content = `
+                    <tr>
+                        <td>${scholar["rank"]}</td>
+                        <td>${scholar["name"]}</td>
+                        <td>${scholar["paperCount"]}</td>
+                        <td>${scholar["citationCount"]}</td>
+                        <td>${scholar["hIndex"]}</td>
+                        <td>
+                            <a class="btn-sm btn-primary" href="/index?field=${fieldType}&id=${scholar["authorRank"]}" style="font-size: 2px; text-decoration: none;">
+                                Visualize
+                            </a>
+                        </td>
+                    </tr>`;
+
                 $('table tbody').append(content);
             }
         }

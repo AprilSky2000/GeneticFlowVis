@@ -110,8 +110,10 @@
                             </li>
                             <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="fill-color" class="form-select" name="fillColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="1">paper topic</option>
-                                    <option value="0">none</option>
+                                    <option value="0">paper topic</option>
+                                    <option value="1">blue</option>
+                                    <option value="2">isKeyPaper</option>
+                                    <option value="3">citationCount</option>
                                 </select>
                                 <script type="text/javascript">
                                     $("#fill-color").change(fill_color_change);
@@ -250,15 +252,25 @@
                                     rangeLabel.textContent = `${min}-${max}`;
 
                                     d3.selectAll(".topic-map")
-                                        .transition()
-                                        .duration(300)
-                                        .attr("opacity", d => {
-                                            if (d.num >= min && d.num <= max) {
-                                                return 1;
-                                            } else {
-                                                return 0.2;
-                                            }
-                                        });
+                                    .transition()
+                                    .duration(300)
+                                    .attr("opacity", d => {
+                                        if (d.num >= min && d.num <= max) return 1;
+                                        return 0;
+                                    })
+                                    .attr("pointer-events", d => {
+                                        if (d.num >= min && d.num <= max) return "all";
+                                        return "none";
+                                    });
+
+                                    
+                                    paper_field = update_fields();
+                                    // filter paper filed with num between min and max
+                                    paper_field = paper_field.filter(item => item.num >= min && item.num <= max);
+                                    d3.select("#tagcloud").remove();
+                                    draw_tag_cloud();
+                                    // visual_topics();
+
                                 });
                             </script>
                         </div>
@@ -278,31 +290,46 @@
                 <script type="text/javascript">
                     function toggleFullscreen() {
                         const container = document.getElementsByClassName("middle-column")[0];
-                        if (container.requestFullscreen) {
-                            container.requestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("fullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
-                        } else if (container.webkitRequestFullscreen) {
-                            container.webkitRequestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
+
+                        // 检查是否已经处于全屏状态
+                        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+                        if (!isFullscreen) {
+                            // 进入全屏
+                            if (container.requestFullscreen) {
+                                container.requestFullscreen().then(() => {
+                                    document.addEventListener("fullscreenchange", onFullscreenChange);
+                                    document.addEventListener("keydown", onEscKeyPressed);
+                                }).catch(error => {
+                                    console.error('Error entering fullscreen:', error);
+                                });
+                            } else if (container.webkitRequestFullscreen) {
+                                container.webkitRequestFullscreen().then(() => {
+                                    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+                                    document.addEventListener("keydown", onEscKeyPressed);
+                                }).catch(error => {
+                                    console.error('Error entering fullscreen:', error);
+                                });
+                            }
+                        } else {
+                            // 退出全屏
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            }
                         }
                     }
+
 
                     function onFullscreenChange() {
                         // 在这里执行其他操作
                         d3.select("#mainsvg").remove();
                         d3.select("#tagcloud").remove();
+                        $("#edge-info").hide();
+                        $("#up-line").hide();
+                        $("#down-line").hide();
+                        $("#node-info").hide();
                         
                         const windowHeight = $(window).height();
                         const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
@@ -310,6 +337,7 @@
                         }, 0);
                         mainPanalHeight = windowHeight - navigationHeight;
                         mainPanalWidth = $('.main-panel').width();
+                        virtualOpacity = 0.05;
 
                         $('.main-panel').css('max-height', mainPanalHeight);
                         $('.right-column').css('max-height', mainPanalHeight * 0.98);
@@ -317,8 +345,9 @@
                         init_graph(viewBox, transform);
                         update_nodes();
                         paper_field = update_fields();
-                        draw_tag_cloud(paper_field);
-                        visual_topics(paper_field);
+                        
+                        draw_tag_cloud();
+                        visual_topics();
                         visual_graph(polygon);
                         
                         // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
@@ -450,8 +479,26 @@
                     </li>
                     <li>
                         <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 25.5%;">authors</b></li>
+                            <li id="paper-authors" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">venue</b></li>
+                            <li id="paper-venue" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">year</b></li>
                             <li id="paper-year" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">#citation</b></li>
+                            <li id="paper-citation" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
@@ -491,6 +538,18 @@
                             </li>
                         </ul>
                     </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%;"><b style="margin-left: 25%;">extend type</b></li>
+                            <li id="extend-type" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%;"><b style="margin-left: 25%;">extend prob</b></li>
+                            <li id="extend-prob" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    <li>
                     <li>
                         <ul class="address-text citation-context-minus-height">
                             <li style="width: 40%"><b style="margin-left: 25%;">cited paper</b></li>
@@ -556,15 +615,6 @@
                     field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
                 }
                 
-                // init_graph(viewBox, transform);
-                // update_nodes();
-                // var paper_field = update_fields();
-                // draw_tag_cloud(paper_field);
-                // visual_topics(paper_field);
-                // visual_graph(polygon);
-                // updateSider(name);
-                // outline_color_change();
-                // outline_thickness_change();
                 onFullscreenChange();
 
                 $("#overall-topic-map").hide();
