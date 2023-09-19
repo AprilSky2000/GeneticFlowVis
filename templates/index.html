@@ -290,26 +290,37 @@
                 <script type="text/javascript">
                     function toggleFullscreen() {
                         const container = document.getElementsByClassName("middle-column")[0];
-                        if (container.requestFullscreen) {
-                            container.requestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("fullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
-                        } else if (container.webkitRequestFullscreen) {
-                            container.webkitRequestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
+
+                        // 检查是否已经处于全屏状态
+                        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+                        if (!isFullscreen) {
+                            // 进入全屏
+                            if (container.requestFullscreen) {
+                                container.requestFullscreen().then(() => {
+                                    document.addEventListener("fullscreenchange", onFullscreenChange);
+                                    document.addEventListener("keydown", onEscKeyPressed);
+                                }).catch(error => {
+                                    console.error('Error entering fullscreen:', error);
+                                });
+                            } else if (container.webkitRequestFullscreen) {
+                                container.webkitRequestFullscreen().then(() => {
+                                    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+                                    document.addEventListener("keydown", onEscKeyPressed);
+                                }).catch(error => {
+                                    console.error('Error entering fullscreen:', error);
+                                });
+                            }
+                        } else {
+                            // 退出全屏
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            }
                         }
                     }
+
 
                     function onFullscreenChange() {
                         // 在这里执行其他操作
