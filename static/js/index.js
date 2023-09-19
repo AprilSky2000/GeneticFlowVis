@@ -1217,6 +1217,7 @@ function getFillColorFunc() {
 function fill_color_change() {
     let fillColorVal = $("#fill-color").val();
     if (fillColorVal == 0) {
+        paper_field = update_fields();
         update_nodes();
         g.selectAll('.paper').data(nodes)
             .attr('fill', d => hsvToColor(d.color));
