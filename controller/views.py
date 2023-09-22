@@ -214,10 +214,8 @@ def index(request):
     
     fields = get_fields(field)
     authorRank = str(authorRank)
-    isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.5, 10, 1
-    if field == "acl":
-        extendsProb = 0.4
-    detail = authorRank + '_0_0.5_' + str(extendsProb) + '_10_1'
+    isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.4, 10, 1
+    detail = authorRank + '_0_0.5_0.4_10_1'
     filename = './static/json/' + field + '/' + detail + '.json'
 
     if os.path.exists(filename) == False:

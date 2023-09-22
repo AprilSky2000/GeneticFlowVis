@@ -63,7 +63,6 @@ function updateSider (name) {
         var nodeId = nodes[i].id;
         var citationCount = nodes[i].citationCount;
         if (nodes[i].citationCount == '-1') {
-            console.log(nodes[i].citationCount);
             citationCount = "not available";
         }
         var content = `
@@ -206,7 +205,6 @@ function calculateWordPosition(sortedData, maxFontSize) {
         word.x += (svgWidth - currentLineWidth) / 2;
     }
     wordPosition.push(currentLine);
-    console.log(wordPosition)
     return wordPosition;
 }
 
@@ -676,17 +674,15 @@ function visual_topics() {
 
     var minNum = d3.min(paper_field, d => d.num);
     var maxNum = d3.max(paper_field, d => d.num);
-
-    console.log('paper_field', paper_field, minNum, maxNum);
     
     rangeSlider.noUiSlider.updateOptions({
         range: {
-            'min': minNum,
+            'min': minNum - 1,
             'max': maxNum
         }
     });
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
-    rangeSlider.noUiSlider.set([minNum, maxNum]);
+    rangeSlider.noUiSlider.set([minNum - 1, maxNum]);
 
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
@@ -1070,7 +1066,6 @@ function visual_graph(polygon) {
         $("#down-line").hide();
         $("#edge-info").show();
         
-        console.log('edge', edges)
         //更新edge-info中的内容
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].id == source) {
