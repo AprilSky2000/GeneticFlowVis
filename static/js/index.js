@@ -246,7 +246,8 @@ function draw_tag_cloud() {
         .attr("height", d => d.height)
         .attr("rx", d => maxFontSize * 0.1 * d.ratio)
         .attr("ry", d => maxFontSize * 0.1 * d.ratio)
-        .attr("fill", d => `rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`) //rgba(15, 161, 216, ${d.opacity})
+        .attr("fill", d => hsvToColor(d.color)) //rgba(15, 161, 216, ${d.opacity})
+        //`rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`
         .attr("fill-opacity", 0.8)
         .on('mouseover', function(d) {highlight_field(d, this)})
         .on('mouseout', reset_field);
@@ -483,7 +484,7 @@ function highlight_field(d, that) {
 
 function hsvToColor(color) {
     // return d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    return d3.hsv(color[0], color[1], color[2])
+    return d3.hsv(color[0], 0.4, color[2]) //  color[1]
 }
 
 function reset_field(d) {
