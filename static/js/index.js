@@ -59,15 +59,16 @@ function updateSider (name) {
             else 
                 paperAuthors += authorList[i] + ", ";
         }
-        var color = hsvToHex(nodes[i].color[0], nodes[i].color[1], nodes[i].color[2]);
+        var color = hsvToHex(nodes[i].color[0], 0.7, nodes[i].color[2]);
+        var nodeId = nodes[i].id;
         var content = `
         <div style="float: left;">
             <i style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; display: inline-block;"></i>
         </div>
-        <div style="margin-left: 7%; margin-bottom: 2%;">
+        <div style="margin-left: 5%; margin-right: 3%; padding: 3%; margin-top: -3%; border-radius: 5px"; class="paperNode" onmouseover="highlight_node(${nodeId})" onmouseleave="reset_node()">
             <div style="display: flex; justify-content: space-between; margin-bottom: 1%;">
-                <span style="margin-left: 0%;" class="paperName">${paperName}</span>
-                <span style="margin-right: 5%; margin-left: 5%;">${nodes[i].citationCount}</span>
+                <span style="margin-left: 0%;">${paperName}</span>
+                <span style="margin-right: 2%; margin-left: 5%;">${nodes[i].citationCount}</span>
             </div>
             <span style="color: #808080;">
                 ${paperAuthors.slice(0, -2)}
@@ -375,7 +376,7 @@ function update_fields() {
             year_field[j].x = x;
             year_field[j].y = y;
             x -= year_field[j].num * 40;
-            year_field[j].yearid = String(years[i].id) + String(year_field[j].id);
+            year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
         }
         
         g.selectAll('circle').data(year_field).enter().append('rect')
@@ -385,7 +386,8 @@ function update_fields() {
             .attr('height', 50)
             .attr('fill', d => hsvToColor(d.color))
             .attr('class', 'year-topic')
-            .attr('id', d => d.id);
+            .attr('id', d => d.id)
+            .attr('yearTopicId', d => d.yearTopicId);
     }
 
     g.selectAll('.year-topic')
@@ -466,7 +468,14 @@ function highlight_field(d, that) {
     }
     g.selectAll(".paper").data(nodes)
         .attr('fill-opacity', d => {if (color_papers.indexOf(d.id) == -1) return virtualOpacity;})
-        .attr('stroke', d3.rgb(200, 200, 200));
+        .attr('stroke', function(d) {
+            // 在箭头函数中使用 this 时，this 不会指向当前的 DOM 元素，而是指向定义该箭头函数的上下文。
+            if (color_papers.indexOf(d.id) == -1) {
+                return d3.rgb(200, 200, 200);
+            } else {
+                return this.getAttribute('stroke');
+            }
+        });
 
     g.selectAll('.reference').data(edges)
         .attr('stroke', d => {
@@ -529,6 +538,118 @@ function reset_field(d) {
         .attr("stroke", "black");
     $("#mainsvg").attr("style", "background-color: white;");
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
+}
+
+function highlight_node(id) {
+    // 输入：当前node的 id
+    // 找到当前节点的所有邻接点
+    var adjacent_ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].source) {
+            adjacent_ids.push(edges[i].target);
+        }
+        else if (id == edges[i].target) {
+            adjacent_ids.push(edges[i].source);
+        }
+    }
+    // 改变当前节点颜色和相邻节点
+    let fillColorVal = $("#fill-color").val();
+    let outlineColorVal = $("#outline-color").val();
+    let outlineThicknessVal = $("#outline-thickness").val();
+    g.selectAll(".paper").data(nodes)
+        .attr("fill-opacity", d => {
+            if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
+                return virtualOpacity;
+        })
+        .attr('stroke', d => {
+            if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
+                if (outlineColorVal == 0)   return "black";
+                else if (outlineColorVal == 1) {
+                    if (d.isKeyPaper == 1)  return 'red';
+                    else if (d.isKeyPaper >= 0.5)   return 'pink';
+                    else    return 'black';
+                }
+                else if (outlineColorVal == 2) {
+                    if (d.citationCount < 10)   return 'black';
+                    else if (d.citationCount < 50)  return 'pink';
+                    else    return 'red';
+                }
+            }
+        })
+        .attr('stroke-width', d => {
+            if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
+                if (outlineThicknessVal == 0)   return 1;
+                else if (outlineThicknessVal == 1) {
+                    if (d.isKeyPaper == 1)  return 10;
+                    else if (d.isKeyPaper >= 0.5)   return 5;
+                    else    return 1;
+                }
+                else if (outlineThicknessVal == 2) {
+                    if (d.citationCount <= 10)  return 1;
+                    else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
+                    else    return 10;
+                }
+            }
+        })
+        // .attr('stroke-dasharray', d => {
+        //     if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
+        //         if (outlineThicknessVal == 0)   return null;
+        //         else if (outlineThicknessVal == 2) {
+        //             if (d.citationCount == -1)  return '5,2';
+        //             else    return null;
+        //         }
+        //     }
+        // });
+    // 改变当前节点与其相邻节点间线的颜色为红色
+    d3.selectAll('.reference')
+        .attr('stroke', d => {
+            if (d.target == id || d.source == id)   return 'red';
+            else    return d3.rgb(200, 200, 200);
+        })
+        // .attr('stroke-dasharray', d => {
+        //     if (d.target == id || d.source == id)   return null;
+        //     else    return '5.2';
+        // });
+    for (let i = 0; i < edges.length; i++) {
+        if (edges[i].source != id && edges[i].target != id) {
+            edges[i].flag = 1;
+        }
+        else {
+            edges[i].flag = 2;
+        }
+    }
+    // 将当前节点及其邻接点所对应year的topic显示出来
+    adjacent_ids.push(id);
+    let year_topics = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (adjacent_ids.indexOf(nodes[i].id) != -1) {
+            year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+        }
+    }
+    g.selectAll(".year-topic")
+        .attr("fill-opacity", d => {
+            if (year_topics.indexOf(d.yearTopicId) == -1) return virtualOpacity;
+            return 1;
+        });
+}
+
+function reset_node() {
+    g.selectAll('.paper').data(nodes).attr('fill-opacity', 1);
+    d3.selectAll('.year-topic').attr('fill-opacity', 1);
+    outline_color_change();
+    outline_thickness_change();
+    d3.selectAll('.reference')
+        .attr('stroke', d => probToColor(d.extends_prob))
+        .attr('stroke-width', d => probToWidth(d.extends_prob))
+        // .attr('stroke', 'black')
+        .attr('stroke-dasharray', null);
+    
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i].flag = 0;
+    }
+    for (let i = 0; i < edges.length; i++) {
+        edges[i]['flag'] = 0;
+    }
 }
 
 function visual_topics() {
@@ -715,95 +836,7 @@ function visual_graph(polygon) {
     .on('click', function () {
         var id = d3.select(this).attr('id');    //当前节点id
 
-        // 找到当前节点的所有邻接点
-        var adjacent_ids = [];
-        for (let i = 0; i < edges.length; i++) {
-            if (id == edges[i].source) {
-                adjacent_ids.push(edges[i].target);
-            }
-            else if (id == edges[i].target) {
-                adjacent_ids.push(edges[i].source);
-            }
-        }
-        // 改变当前节点颜色和相邻节点
-        let fillColorVal = $("#fill-color").val();
-        let outlineColorVal = $("#outline-color").val();
-        let outlineThicknessVal = $("#outline-thickness").val();
-        g.selectAll(".paper").data(nodes)
-            .attr("fill-opacity", d => {
-                if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
-                    return virtualOpacity;
-            })
-            .attr('stroke', d => {
-                if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-                    if (outlineColorVal == 0)   return "black";
-                    else if (outlineColorVal == 1) {
-                        if (d.isKeyPaper == 1)  return 'red';
-                        else if (d.isKeyPaper >= 0.5)   return 'pink';
-                        else    return 'black';
-                    }
-                    else if (outlineColorVal == 2) {
-                        if (d.citationCount < 10)   return 'black';
-                        else if (d.citationCount < 50)  return 'pink';
-                        else    return 'red';
-                    }
-                }
-            })
-            .attr('stroke-width', d => {
-                if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-                    if (outlineThicknessVal == 0)   return 1;
-                    else if (outlineThicknessVal == 1) {
-                        if (d.isKeyPaper == 1)  return 10;
-                        else if (d.isKeyPaper >= 0.5)   return 5;
-                        else    return 1;
-                    }
-                    else if (outlineThicknessVal == 2) {
-                        if (d.citationCount <= 10)  return 1;
-                        else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
-                        else    return 10;
-                    }
-                }
-            })
-            // .attr('stroke-dasharray', d => {
-            //     if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-            //         if (outlineThicknessVal == 0)   return null;
-            //         else if (outlineThicknessVal == 2) {
-            //             if (d.citationCount == -1)  return '5,2';
-            //             else    return null;
-            //         }
-            //     }
-            // });
-        // 改变当前节点与其相邻节点间线的颜色为红色
-        d3.selectAll('.reference')
-            .attr('stroke', d => {
-                if (d.target == id || d.source == id)   return 'red';
-                else    return d3.rgb(200, 200, 200);
-            })
-            // .attr('stroke-dasharray', d => {
-            //     if (d.target == id || d.source == id)   return null;
-            //     else    return '5.2';
-            // });
-        for (let i = 0; i < edges.length; i++) {
-            if (edges[i].source != id && edges[i].target != id) {
-                edges[i].flag = 1;
-            }
-            else {
-                edges[i].flag = 2;
-            }
-        }
-        // 将当前节点及其邻接点所对应year的topic显示出来
-        adjacent_ids.push(d3.select(this).attr("id"))
-        let year_topics = [];
-        for (let i = 0; i < nodes.length; i++) {
-            if (adjacent_ids.indexOf(nodes[i].id) != -1) {
-                year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
-            }
-        }
-        g.selectAll(".year-topic")
-            .attr("fill-opacity", d => {
-                if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
-                return 1;
-            });
+        highlight_node(id);
 
         $("#paper-list").hide();
         $("#edge-info").hide();
@@ -1079,21 +1112,7 @@ function visual_graph(polygon) {
             // const fillColorVal = $("#fill-color").val();
             // if (fillColorVal == 0) {
             // 点击的是空白处，隐藏元素
-            g.selectAll('.paper').data(nodes).attr('fill-opacity', 1);
-            d3.selectAll('.year-topic').attr('fill-opacity', 1);
-            outline_color_change();
-            outline_thickness_change();
-            d3.selectAll('.reference')
-                .attr('stroke', d => probToColor(d.extends_prob))
-                .attr('stroke-width', d => probToWidth(d.extends_prob))
-                // .attr('stroke', 'black')
-                .attr('stroke-dasharray', null);
-            for (let i = 0; i < nodes.length; i++) {
-                nodes[i].flag = 0;
-            }
-            for (let i = 0; i < edges.length; i++) {
-                edges[i]['flag'] = 0;
-            }
+            reset_node();
             $("#paper-list").show();
             $("#selector").hide();
             $("#node-info").hide();
