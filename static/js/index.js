@@ -42,7 +42,7 @@ function updateSider (name) {
     </div>`);
     // console.log('nodes', nodes);
     for (let i = 0; i < nodes.length; i++) {
-        console.log(nodes[i].name);
+        // console.log(nodes[i].name);
         const paperName = String(nodes[i].name);
         const paperVenu = String(nodes[i].venu);
         const paperYear = String(nodes[i].year);
@@ -66,7 +66,7 @@ function updateSider (name) {
         </div>
         <div style="margin-left: 7%; margin-bottom: 2%;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 1%;">
-                <span style="margin-left: 0%;">${paperName}</span>
+                <span style="margin-left: 0%;" class="paperName">${paperName}</span>
                 <span style="margin-right: 5%; margin-left: 5%;">${nodes[i].citationCount}</span>
             </div>
             <span style="color: #808080;">
@@ -246,7 +246,8 @@ function draw_tag_cloud() {
         .attr("height", d => d.height)
         .attr("rx", d => maxFontSize * 0.1 * d.ratio)
         .attr("ry", d => maxFontSize * 0.1 * d.ratio)
-        .attr("fill", d => `rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`) //rgba(15, 161, 216, ${d.opacity})
+        .attr("fill", d => hsvToColor(d.color)) //rgba(15, 161, 216, ${d.opacity})
+        //`rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`
         .attr("fill-opacity", 0.8)
         .on('mouseover', function(d) {highlight_field(d, this)})
         .on('mouseout', reset_field);
@@ -483,7 +484,7 @@ function highlight_field(d, that) {
 
 function hsvToColor(color) {
     // return d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    return d3.hsv(color[0], color[1], color[2])
+    return d3.hsv(color[0], 0.4, color[2]) //  color[1]
 }
 
 function reset_field(d) {
@@ -546,13 +547,21 @@ function visual_topics() {
     // set the ranges of rangeSlider
 
     let rangeSlider = document.getElementById("range-slider");
+
+    var minNum = d3.min(paper_field, d => d.num);
+    var maxNum = d3.max(paper_field, d => d.num);
+
+    console.log('paper_field', paper_field, minNum, maxNum);
+    
     rangeSlider.noUiSlider.updateOptions({
         range: {
-            'min': d3.min(paper_field, d => d.num - 1),
-            'max': d3.max(paper_field, d => d.num)
+            'min': minNum,
+            'max': maxNum
         }
     });
-    var maxNum = d3.max(paper_field, d => d.num);
+    // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
+    rangeSlider.noUiSlider.set([minNum, maxNum]);
+
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
         topic_r = 2;
@@ -792,7 +801,9 @@ function visual_graph(polygon) {
         }
         g.selectAll(".year-topic")
             .attr("fill-opacity", d => {
-                if (year_topics.indexOf(d.id) == -1) return virtualOpacity;});
+                if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
+                return 1;
+            });
 
         $("#paper-list").hide();
         $("#edge-info").hide();
