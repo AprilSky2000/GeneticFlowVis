@@ -79,8 +79,8 @@
                                 </script>
                             </li>
                             <li style="width: 10%; float: left; color: #777; margin-left: 1.5%;">
-                                <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.5" min="0" max="1" step="0.1">
-                                <span id="edge-value" style="display: inline-block; color: #333;">>=0.5</span>
+                                <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1">
+                                <span id="edge-value" style="display: inline-block; color: #333;">>=0.4</span>
                                 <script type='text/javascript'>
                                     $("#range-edge").change(function () {
                                         var value = $("#range-edge").val();
@@ -420,12 +420,12 @@
             const field = "{{ field }}";
             field_roots = fields[0];
             field_leaves = fields[1];
-            
-            var filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.5_10_1.json';
             if (field == "acl") {
-                $("#edge-value").text(">=0.4");
-                filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.4_10_1.json';
+                $("#field-level option[value='1']").remove();
+                $("#field-level option[value='2']").text(1)
             }
+            
+            var filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.4_10_1.json';
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
                 nodes = data[2];            //论文节点
@@ -477,10 +477,11 @@
             formData = formData.split("&");
             for (let i = 1; i < formData.length; i++) {
                 const temp = formData[i].split('=');
-                paramData[temp[0]] = temp[1]
+                paramData[temp[0]] = temp[1];
             }
             paramData.authorRank = "{{ authorRank }}"
             paramData.field = "{{ field }}";
+            console.log(paramData);
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},
                 type: "POST",

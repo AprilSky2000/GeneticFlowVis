@@ -216,7 +216,10 @@ function updateSider (name) {
         }
         var color = hsvToHex(nodes[i].color[0], 0.7, nodes[i].color[2]);
         var nodeId = nodes[i].id;
-        // console.log('node id', nodeId)
+        var citationCount = nodes[i].citationCount;
+        if (nodes[i].citationCount == '-1') {
+            citationCount = "not available";
+        }
         var content = `
         <div style="float: left;">
             <i style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; display: inline-block;"></i>
@@ -224,7 +227,7 @@ function updateSider (name) {
         <div style="margin-left: 5%; margin-right: 3%; padding: 3%; margin-top: -3%; border-radius: 5px"; class="paperNode" onmouseover="highlight_node('${nodeId}')" onmouseleave="reset_node()">
             <div style="display: flex; justify-content: space-between; margin-bottom: 1%;">
                 <span style="margin-left: 0%;">${paperName}</span>
-                <span style="margin-right: 2%; margin-left: 5%;">${nodes[i].citationCount}</span>
+                <span style="margin-right: 2%; margin-left: 5%;">${citationCount}</span>
             </div>
             <span style="color: #808080;">
                 ${paperAuthors.slice(0, -2)}
@@ -357,7 +360,6 @@ function calculateWordPosition(sortedData, maxFontSize) {
         word.x += (svgWidth - currentLineWidth) / 2;
     }
     wordPosition.push(currentLine);
-    console.log(wordPosition)
     return wordPosition;
 }
 
@@ -821,17 +823,15 @@ function visual_topics() {
     // set the ranges of rangeSlider
     var minNum = d3.min(paper_field, d => d.num);
     var maxNum = d3.max(paper_field, d => d.num);
-
-    console.log('paper_field', paper_field, minNum, maxNum);
     
     rangeSlider.noUiSlider.updateOptions({
         range: {
-            'min': minNum,
+            'min': minNum - 1,
             'max': maxNum
         }
     });
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
-    rangeSlider.noUiSlider.set([minNum, maxNum]);
+    rangeSlider.noUiSlider.set([minNum - 1, maxNum]);
 
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
@@ -1008,6 +1008,9 @@ function visual_graph(polygon) {
                 $('#paper-name').text(nodes[i].name);
                 $('#paper-year').text(nodes[i].year);
                 $('#paper-citation').text(nodes[i].citationCount);
+                if (nodes[i].citationCount == '-1') {
+                    $('#paper-citation').text("Not available");
+                }
                 $('#paper-authors').text(nodes[i].authors);
                 $('#paper-venue').text(nodes[i].venu);
 
@@ -1198,7 +1201,6 @@ function visual_graph(polygon) {
         $("#down-line").hide();
         $("#edge-info").show();
         
-        console.log('edge', edges)
         //更新edge-info中的内容
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].id == source) {
