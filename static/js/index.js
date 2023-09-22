@@ -548,7 +548,7 @@ function visual_topics() {
     let rangeSlider = document.getElementById("range-slider");
     rangeSlider.noUiSlider.updateOptions({
         range: {
-            'min': d3.min(paper_field, d => d.num),
+            'min': d3.min(paper_field, d => d.num - 1),
             'max': d3.max(paper_field, d => d.num)
         }
     });

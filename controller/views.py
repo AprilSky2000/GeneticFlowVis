@@ -19,9 +19,9 @@ def front(request):
     return render(request, 'front.html', {'error': ''})
 
 def search(request):
-    field = request.GET.get("field", "visualization")
-    # if field:
-    return render(request, 'search.html', {'error': '', 'field': field})
+    field = request.GET.get("field", None)
+    if field:
+        return render(request, 'search.html', {'error': '', 'field': field})
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
@@ -278,7 +278,7 @@ def update(request):
     return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
 
 def showlist(request):
-    field = request.GET.get("field", "visualization")
+    field = request.GET.get("field")
     name = request.GET.get("name", None)
     df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',', header=None)
     data = df.values.tolist()
