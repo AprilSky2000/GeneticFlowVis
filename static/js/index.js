@@ -1,3 +1,158 @@
+function addAllListeners() {
+    $("#topic-slider").change(function () {
+        var topic_r = $("#topic-slider").val();
+        d3.selectAll(".topic-map")
+            .transition()
+            .duration(300)
+            .attr("r", d => Math.sqrt(d.num) * 10 * topic_r);
+        $("#topic-label").text(topic_r);
+    })
+
+    // 监听滑块值的变化
+    rangeSlider.noUiSlider.on("update", function (values, handle) {
+        const min = Math.round(values[0]);
+        const max = Math.round(values[1]);
+        rangeLabel.textContent = `${min}-${max}`;
+
+        d3.selectAll(".topic-map")
+        .transition()
+        .duration(300)
+        .attr("opacity", d => {
+            if (d.num >= min && d.num <= max) return 1;
+            return 0;
+        })
+        .attr("pointer-events", d => {
+            if (d.num >= min && d.num <= max) return "all";
+            return "none";
+        });
+
+        
+        paper_field = update_fields();
+        // filter paper filed with num between min and max
+        paper_field = paper_field.filter(item => item.num >= min && item.num <= max);
+        d3.select("#tagcloud").remove();
+        draw_tag_cloud();
+        // visual_topics();
+
+    });
+    
+    $("#save").click(function () {
+        var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
+        var fileName = "{{ name|safe }}" + " GF profile.jpg";
+        downloadSvg(zoomSvg, fileName);
+    })
+    // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
+    document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);
+    $("#zoom-in").click(function() {
+        d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
+    })
+    $("#zoom-out").click(function() {
+        d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
+    })
+    $("#restore").click(function() {
+        d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+    })
+
+    // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
+    $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
+
+    // 点击按钮时的事件处理
+    $(".address-text button").click(function () {
+        // 将所有按钮的字体设为正常，透明度为0.5
+        $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
+
+        // 将点击的按钮加粗，透明度为1
+        $(this).css({ 'font-weight': 'bold', 'opacity': 1 });
+    });
+
+    window.addEventListener('resize', onFullscreenChange);
+}
+
+
+function toggleFullscreen() {
+    const container = document.getElementsByClassName("middle-column")[0];
+
+    // 检查是否已经处于全屏状态
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (!isFullscreen) {
+        // 进入全屏
+        if (container.requestFullscreen) {
+            container.requestFullscreen().then(() => {
+                document.addEventListener("fullscreenchange", onFullscreenChange);
+                document.addEventListener("keydown", onEscKeyPressed);
+            }).catch(error => {
+                console.error('Error entering fullscreen:', error);
+            });
+        } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen().then(() => {
+                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+                document.addEventListener("keydown", onEscKeyPressed);
+            }).catch(error => {
+                console.error('Error entering fullscreen:', error);
+            });
+        }
+    } else {
+        // 退出全屏
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+}
+
+
+function onFullscreenChange() {
+    // 在这里执行其他操作
+    d3.select("#mainsvg").remove();
+    d3.select("#tagcloud").remove();
+    $("#edge-info").hide();
+    $("#up-line").hide();
+    $("#down-line").hide();
+    $("#node-info").hide();
+    
+    const windowHeight = $(window).height();
+    const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
+        return sum + $(element).outerHeight();
+    }, 0);
+    mainPanalHeight = windowHeight - navigationHeight;
+    mainPanalWidth = $('.main-panel').width();
+    virtualOpacity = 0.05;
+
+    $('.main-panel').css('max-height', mainPanalHeight);
+    $('.right-column').css('max-height', mainPanalHeight * 0.98);
+
+    init_graph(viewBox, transform);
+    update_nodes();
+    paper_field = update_fields();
+    
+    draw_tag_cloud();
+    visual_topics();
+    visual_graph(polygon);
+    
+    // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
+    // $(".middle-column").css('height', maxHeight);
+    console.log(name);
+    updateSider(name);
+    // console.log('left height2', left_height);
+    // $("paper-list").css('height', maxHeight);
+
+    outline_color_change();
+    outline_thickness_change();
+}
+
+function onEscKeyPressed(event) {
+    if (event.key === "Escape") {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+}
+
+
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
@@ -61,11 +216,12 @@ function updateSider (name) {
         }
         var color = hsvToHex(nodes[i].color[0], 0.7, nodes[i].color[2]);
         var nodeId = nodes[i].id;
+        // console.log('node id', nodeId)
         var content = `
         <div style="float: left;">
             <i style="width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; display: inline-block;"></i>
         </div>
-        <div style="margin-left: 5%; margin-right: 3%; padding: 3%; margin-top: -3%; border-radius: 5px"; class="paperNode" onmouseover="highlight_node(${nodeId})" onmouseleave="reset_node()">
+        <div style="margin-left: 5%; margin-right: 3%; padding: 3%; margin-top: -3%; border-radius: 5px"; class="paperNode" onmouseover="highlight_node('${nodeId}')" onmouseleave="reset_node()">
             <div style="display: flex; justify-content: space-between; margin-bottom: 1%;">
                 <span style="margin-left: 0%;">${paperName}</span>
                 <span style="margin-right: 2%; margin-left: 5%;">${nodes[i].citationCount}</span>
@@ -314,6 +470,10 @@ function update_nodes() {
 }
 
 function update_fields() {
+
+    console.log('start updating fields');
+
+
     var self_field = [];    //该学者个人的field信息
     let field_level_val = $("#field-level").val();
     let fields = field_level_val == 1 ? field_roots : field_leaves; //该领域所有的field信息
@@ -341,6 +501,8 @@ function update_fields() {
         }
     }
     self_field.sort(op('num'));
+
+    
 
     // 处理左侧柱状图
     g.selectAll('.year-topic').remove();
@@ -378,7 +540,8 @@ function update_fields() {
             x -= year_field[j].num * 40;
             year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
         }
-        
+
+        // console.log('year_field', year_field);
         g.selectAll('circle').data(year_field).enter().append('rect')
             .attr('x', d => d.x - d.num * 40 - 29)
             .attr('y', d => d.y - 25)
@@ -540,18 +703,22 @@ function reset_field(d) {
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
 }
 
-function highlight_node(id) {
+function highlight_node(id, highlight_neighbor = false) {
+    // console.log('highlight_node', id);
     // 输入：当前node的 id
     // 找到当前节点的所有邻接点
     var adjacent_ids = [];
-    for (let i = 0; i < edges.length; i++) {
-        if (id == edges[i].source) {
-            adjacent_ids.push(edges[i].target);
-        }
-        else if (id == edges[i].target) {
-            adjacent_ids.push(edges[i].source);
+    if (highlight_neighbor) {
+        for (let i = 0; i < edges.length; i++) {
+            if (id == edges[i].source) {
+                adjacent_ids.push(edges[i].target);
+            }
+            else if (id == edges[i].target) {
+                adjacent_ids.push(edges[i].source);
+            }
         }
     }
+    
     // 改变当前节点颜色和相邻节点
     let fillColorVal = $("#fill-color").val();
     let outlineColorVal = $("#outline-color").val();
@@ -591,25 +758,13 @@ function highlight_node(id) {
                 }
             }
         })
-        // .attr('stroke-dasharray', d => {
-        //     if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-        //         if (outlineThicknessVal == 0)   return null;
-        //         else if (outlineThicknessVal == 2) {
-        //             if (d.citationCount == -1)  return '5,2';
-        //             else    return null;
-        //         }
-        //     }
-        // });
+
     // 改变当前节点与其相邻节点间线的颜色为红色
     d3.selectAll('.reference')
         .attr('stroke', d => {
             if (d.target == id || d.source == id)   return 'red';
             else    return d3.rgb(200, 200, 200);
         })
-        // .attr('stroke-dasharray', d => {
-        //     if (d.target == id || d.source == id)   return null;
-        //     else    return '5.2';
-        // });
     for (let i = 0; i < edges.length; i++) {
         if (edges[i].source != id && edges[i].target != id) {
             edges[i].flag = 1;
@@ -640,9 +795,7 @@ function reset_node() {
     outline_thickness_change();
     d3.selectAll('.reference')
         .attr('stroke', d => probToColor(d.extends_prob))
-        .attr('stroke-width', d => probToWidth(d.extends_prob))
-        // .attr('stroke', 'black')
-        .attr('stroke-dasharray', null);
+        .attr('stroke-width', d => probToWidth(d.extends_prob));
     
     for (let i = 0; i < nodes.length; i++) {
         nodes[i].flag = 0;
@@ -666,9 +819,6 @@ function visual_topics() {
 
     // console.log('overall field', overall_field);
     // set the ranges of rangeSlider
-
-    let rangeSlider = document.getElementById("range-slider");
-
     var minNum = d3.min(paper_field, d => d.num);
     var maxNum = d3.max(paper_field, d => d.num);
 
@@ -836,7 +986,7 @@ function visual_graph(polygon) {
     .on('click', function () {
         var id = d3.select(this).attr('id');    //当前节点id
 
-        highlight_node(id);
+        highlight_node(id, true);
 
         $("#paper-list").hide();
         $("#edge-info").hide();
@@ -965,7 +1115,6 @@ function visual_graph(polygon) {
         d3.select(this)
             .attr("stroke", "red")
             .attr("stroke-width", 10)
-            .attr("stroke-dasharray", null)
             .attr('cursor', 'pointer');
     })
     .on('click', function () {
@@ -1020,15 +1169,6 @@ function visual_graph(polygon) {
                     }
                 }
             })
-            // .attr('stroke-dasharray', d => {
-            //     if (d.id != source && d.id != target) {
-            //         if (outlineThicknessVal == 0)   return null;
-            //         else if (outlineThicknessVal == 2) {
-            //             if (d.citationCount == -1)  return '5,2';
-            //             else    return null;
-            //         }
-            //     }
-            // });
 
         d3.selectAll('.reference').data(edges)
             .attr('stroke', d => {
@@ -1039,10 +1179,6 @@ function visual_graph(polygon) {
                 if (d.id == id) return 10;
                 else    return 2;
             })
-            // .attr('stroke-dasharray', d => {
-            //     if (d.flag == 2)   return null;
-            //     else    return '5.2';
-            // });
 
         let year_topics = [];
         for (let i = 0; i < nodes.length; i++) {
@@ -1101,10 +1237,7 @@ function visual_graph(polygon) {
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-width", d => probToWidth(d.extends_prob))
-            // .attr("stroke-dasharray", d => {
-            //     if (d.flag == 1)    return '5.2';
-            //     else    return null;
-            // });
+            
     });
 
     $(document).click(function(event) {
@@ -1162,8 +1295,7 @@ function outline_thickness_change() {
     let outlineThicknessVal = $("#outline-thickness").val();
     if (outlineThicknessVal == 0) {
         d3.selectAll(".paper")
-            .attr('stroke-width', 1)
-            .attr('stroke-dasharray', null);
+            .attr('stroke-width', 1);
     }
     else if (outlineThicknessVal == 1) {
         d3.selectAll('.paper').data(nodes)
@@ -1181,14 +1313,6 @@ function outline_thickness_change() {
     }
     else if (outlineThicknessVal == 2) {
         d3.selectAll('.paper').data(nodes)
-            // .attr('stroke-dasharray', d => {
-            //     if (d.citationCount == -1) {
-            //         return '5,2';
-            //     }
-            //     else {
-            //         return null;
-            //     }
-            // })
             .attr('stroke-width', d => {
                 if (d.citationCount <= 10) {
                     return 1;
