@@ -6,7 +6,7 @@
 
 ```
 # 数据准备：将现有csv同步到本文件夹中
-rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv .
+rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv/ csv/
 # 环境搭建:
 pip install -r requirements.txt
 运行命令（端口可自行指定）：
