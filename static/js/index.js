@@ -385,6 +385,7 @@ function draw_tag_cloud() {
         maxFontSize *= 0.9;
         // console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
+    console.log(wordPosition)
 
     // console.log('wordPosition: ', wordPosition, maxFontSize);
     const words = wordCloud.selectAll("g")

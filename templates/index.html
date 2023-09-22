@@ -40,51 +40,53 @@
                 <ul class="address" style="padding-top: 0px;">
                     <li>
                         <ul class="address-text">
-                            <li style="width: 3%; float: left; height: 15px;"></li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px;">remove surveys</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">remove isolated node</li>
-                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 1.5%;">filter by core paper</li>
-                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 0.5%;">filter by extend-type</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">node outline color</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -0.5%;">node outline thickness</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 1.8%;">node fill color</li>
-                            <li style="width: 12%; color: #777; float: left; height: 15px;">paper topic hierarchy</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 0.7%;">node max width</li>
-                            <li style="width: 0%; float: right; height: 15px;"></li>
+                            <li style="width: 2%; float: left; height: 13px; font-size: 12.5px !important;"></li>
+                            <li style="width: 11%; color: #777; float: left; height: 13px; font-size: 12.5px !important;">remove survey papers</li>
+                            <li style="width: 11%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: -1%;">remove isolated papers</li>
+                            <li style="width: 12%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 0%;">only show core papers</li>
+                            <li style="width: 12%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 0%;">only show extend citations</li>
+                            <li style="width: 9%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 0%;">node outline color</li>
+                            <li style="width: 9%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 1%;">node outline thickness</li>
+                            <li style="width: 9%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 1.8%;">node fill color</li>
+                            <li style="width: 9%; color: #777; float: left; height: 13px; font-size: 12.5px !important;">paper topic hierarchy</li>
+                            <li style="width: 9%; color: #777; float: left; height: 13px; font-size: 12.5px !important; margin-left: 1.7%;">node max width</li>
+                            <li style="width: 1%; float: right; height: 13px; font-size: 12.5px !important;"></li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 3.4%; float: left;"></li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                            <li style="width: 3%; float: left;"></li>
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 1%;">
                                 <select id="remove-survey" class="form-select" name="removeSurvey" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
-                                <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                                <select id="mode" class="form-select" value="1" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="0">Yes</option>
                                     <option value="1">No</option>
                                 </select>
                             </li>
-                            <li style="width: 10%; float: left; color: #777;">
-                                <input style="display: inline-block; width: 60%;" id="range-node" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1">
-                                <span id="node-value" style="display: inline-block; color: #333;">>=0.5</span>
+                            <li style="width: 13%; float: left; color: #777;">
+                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
+                                <input style="display: inline-block; width: 60%; " id="range-node" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1">
+                                <span id="node-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.5 prob.</span>
                                 <script type='text/javascript'>
                                     $("#range-node").change(function () {
                                         var value = $("#range-node").val();
-                                        $("#node-value").text(">=" + value);
+                                        $("#node-value").text("≥" + value + " prob.");
                                     })
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-left: 1.5%;">
+                            <li style="width: 13%; float: left; color: #777;">
+                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
                                 <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1">
-                                <span id="edge-value" style="display: inline-block; color: #333;">>=0.4</span>
+                                <span id="edge-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.4 prob.</span>
                                 <script type='text/javascript'>
                                     $("#range-edge").change(function () {
                                         var value = $("#range-edge").val();
-                                        $("#edge-value").text(">=" + value);
+                                        $("#edge-value").text("≥" + value  + " prob.");
                                     })
                                 </script>
                             </li>
@@ -98,7 +100,7 @@
                                     $("#outline-color").change(outline_color_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
                                 <select id="outline-thickness" class="form-select" name="outlineThickness" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="2">paper citation</option>
                                     <option value="1">core paper prob</option>
@@ -108,7 +110,7 @@
                                     $("#outline-thickness").change(outline_thickness_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="fill-color" class="form-select" name="fillColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="0">paper topic</option>
                                     <option value="1">blue</option>
@@ -119,7 +121,7 @@
                                     $("#fill-color").change(fill_color_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
                                 <select id="field-level" class="form-select" name="fieldThreshold" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="2" selected>2</option>
                                     <option value="1">1</option>
@@ -128,7 +130,7 @@
                                     $("#field-level").change(field_level_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
                                 <select id="node-width" class="form-select" name="nodeWidth" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="0">None</option>
                                     <option value="5">5</option>
@@ -137,7 +139,6 @@
                                     <option value="20">20</option>
                                 </select>
                             </li>
-                            <li style="width: 1%; float: right;"></li>
                         </ul>
                     </li>
                 </ul>
