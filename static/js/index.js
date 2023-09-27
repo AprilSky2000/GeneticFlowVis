@@ -385,7 +385,7 @@ function draw_tag_cloud() {
         maxFontSize *= 0.9;
         // console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
-    console.log(wordPosition)
+    console.log('word position', wordPosition)
 
     // console.log('wordPosition: ', wordPosition, maxFontSize);
     const words = wordCloud.selectAll("g")
@@ -473,9 +473,7 @@ function update_nodes() {
 }
 
 function update_fields() {
-
     console.log('start updating fields');
-
 
     var self_field = [];    //该学者个人的field信息
     let field_level_val = $("#field-level").val();
@@ -504,8 +502,6 @@ function update_fields() {
         }
     }
     self_field.sort(op('num'));
-
-    
 
     // 处理左侧柱状图
     g.selectAll('.year-topic').remove();

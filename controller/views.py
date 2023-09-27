@@ -12,6 +12,11 @@ import base64
 from bs4 import BeautifulSoup
 import re
 
+all_df = {} 
+for field in ['visualization', 'acl']:
+    all_df[field] = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',',
+        names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
+
 def reference(request):
     return render(request, 'reference.html')
 
@@ -203,10 +208,10 @@ def index(request):
     field = request.GET.get("field")
     id = request.GET.get("id")
     authorRank = int(id)
-    df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',',
-                     names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
+    df = all_df[field]
     df["authorRank"].astype(int)
     author = df[df["authorRank"] == authorRank]
+    authorID = author['authorID'].iloc[0]
     name = author["name"].iloc[0]
     paperCount = author["PaperCount_field"].iloc[0]
     citationCount = author["CitationCount_field"].iloc[0]
@@ -218,14 +223,14 @@ def index(request):
     detail = authorRank + '_0_0.5_0.4_10_1'
     filename = './static/json/' + field + '/' + detail + '.json'
 
-    if os.path.exists(filename) == False:
+    if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
         # file = name.replace(' ', '') + str(authorRank)
         # 读取相应papers文件
-        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey)
+        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID)
         # 读取相应influence文件
-        links = read_links(field, authorRank, extendsProb)
+        links = read_links(field, authorRank, extendsProb, authorID)
         # 创建图
         create_partial_graph(dot, papers, links, nodeWidth)
 
@@ -252,12 +257,16 @@ def update(request):
     nodeWidth = int(nodeWidth)
     removeSurvey = int(removeSurvey)
 
+    df = all_df[field]
+    author = df[df["authorRank"] == int(authorRank)]
+    authorID = author['authorID'].iloc[0]
+
     filename = './static/json/' + field + '/' + detail + '.json'
-    if os.path.exists(filename) == False:
+    if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
-        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey)
-        links = read_links(field, authorRank, extendsProb)
+        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID)
+        links = read_links(field, authorRank, extendsProb, authorID)
 
         if mode == 1:
             create_node(dot, papers, nodeWidth)
@@ -297,8 +306,13 @@ def get_scholar(row, name):
         scholar['paperCount'] = int(row[5])
     return scholar
 
-def read_papers(field, authorRank, isKeyPaper, removeSurvey):
-    df = pd.read_csv('./csv/' + field + '/papers_' + authorRank + '.csv', sep=',', index_col=0)
+def read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID):
+    path = f'csv/{field}/papers_{authorRank}.csv'
+    if os.path.exists(f'csv/{field}/papers_{authorID}.csv'):
+        path = f'csv/{field}/papers_{authorID}.csv'
+
+    df = pd.read_csv(path, sep=',')
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df = df.fillna('')
     df["isKeyPaper"].astype(float)
     df = df[df["isKeyPaper"] >= isKeyPaper]
@@ -309,8 +323,14 @@ def read_papers(field, authorRank, isKeyPaper, removeSurvey):
     papers = df.values.tolist()
     return papers
 
-def read_links(field, authorRank, extendsProb):
-    df = pd.read_csv('./csv/' + field + '/links_' + authorRank + '.csv', sep=',', index_col=0)
+def read_links(field, authorRank, extendsProb, authorID):
+    path = f'csv/{field}/links_{authorRank}.csv'
+    if os.path.exists(f'csv/{field}/links_{authorID}.csv'):
+        path = f'csv/{field}/links_{authorID}.csv'
+
+    print('===================reading links', path)
+    df = pd.read_csv(path, sep=',')
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df['extendsProb'] = df["extendsProb"].replace('\\N', '0')
     df['extendsProb'] = df["extendsProb"].astype(float)
     df = df.where(df.notnull(), None)
