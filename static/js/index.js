@@ -384,8 +384,7 @@ function draw_tag_cloud() {
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
     }
-    console.log('word position', wordPosition)
-
+    
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
         .enter()
@@ -471,8 +470,6 @@ function update_nodes() {
 }
 
 function update_fields() {
-    console.log('start updating fields');
-
     var self_field = [];    //该学者个人的field信息
     let field_level_val = $("#field-level").val();
     let fields = field_level_val == 1 ? field_roots : field_leaves; //该领域所有的field信息

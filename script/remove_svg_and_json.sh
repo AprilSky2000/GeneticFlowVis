@@ -1,4 +1,4 @@
-rm -f /home/xfl/pyCode/GFVis/static/image/svg/acl/*
-rm -f /home/xfl/pyCode/GFVis/static/image/svg/visualization/*
-rm -f /home/xfl/pyCode/GFVis/static/json/acl/*
-rm -f /home/xfl/pyCode/GFVis/static/json/visualization/*
+rm -f ../static/image/svg/acl/*
+rm -f ../static/image/svg/visualization/*
+rm -f ../static/json/acl/*
+rm -f ../static/json/visualization/*

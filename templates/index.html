@@ -65,7 +65,7 @@
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="1">Yes</option>
-                                    <option value="0" selected>No</option>
+                                    <option value="0">No</option>
                                 </select>
                             </li>
                             <li style="width: 14%; float: left; color: #777;">
@@ -413,7 +413,7 @@
             
             var filename = `/src/json/${fieldType}/${authorID}`;
             if (fieldType == "acl") filename += '_1_0.5_0.4_10_1.json';
-            else if (fieldType == "visualization")  filename += '_0_0.5_0.4_10_1.json';
+            else if (fieldType == "visualization")  filename += '_1_0.5_0.5_10_1.json';
 
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
@@ -460,7 +460,7 @@
                 });
                 edgeSlider = document.getElementById('range-edge');
                 noUiSlider.create(edgeSlider, {
-                    start: 0.4,
+                    start: fieldType == "acl" ? 0.4 : 0.5,
                     behaviour: 'tap',
                     connect: [false, true],
                     step: 0.1,
@@ -494,6 +494,7 @@
             paramData.field = "{{ fieldType }}";
             paramData.isKeyPaper = nodeSlider.noUiSlider.get();
             paramData.extendsProb = edgeSlider.noUiSlider.get();
+            console.log(paramData.isKeyPaper, paramData.extendsProb);
 
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},

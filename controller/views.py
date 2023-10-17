@@ -227,11 +227,10 @@ def index(request):
     
     fields = get_fields(fieldType)
     authorID = str(authorID)
-    isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.4, 10, 1
+    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 1, 0.5, 0.5, 10, 1
     if fieldType == "acl":
-        detail = f'{authorID}_1_0.5_0.4_10_1'
-    elif fieldType == "visualization":
-        detail = f'{authorID}_0_0.5_0.4_10_1'
+        extendsProb = 0.4
+    detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}'
     filename = f'static/json/{fieldType}/{detail}.json'
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
@@ -242,11 +241,7 @@ def index(request):
         # 读取相应influence文件
         links = read_links(fieldType, authorID, extendsProb)
         # 创建图
-        if fieldType == "acl":
-            create_partial_graph(dot, papers, links, nodeWidth)
-        elif fieldType == "visualization":
-            create_node(dot, papers, nodeWidth)
-            create_edge(dot, papers, links)
+        create_partial_graph(dot, papers, links, nodeWidth)
 
         dot.render(directory=f"static/image/svg/{fieldType}", view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
@@ -264,7 +259,7 @@ def update(request):
     extendsProb = request.POST.get("extendsProb")
     nodeWidth = request.POST.get("nodeWidth")
     removeSurvey = request.POST.get("removeSurvey")
-    detail = f'{authorID}_{mode}_{isKeyPaper}_{extendsProb}_{nodeWidth}_{removeSurvey}'
+    detail = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}'
     mode = int(mode)
     isKeyPaper = float(isKeyPaper)
     extendsProb = float(extendsProb)
