@@ -29,7 +29,6 @@ function addAllListeners() {
         paper_field = update_fields();
         // filter paper filed with num between min and max
         paper_field = paper_field.filter(item => item.num >= min && item.num <= max);
-        // console.log(paper_field);
         d3.select("#tagcloud").remove();
         draw_tag_cloud();
         // visual_topics();
@@ -42,12 +41,7 @@ function addAllListeners() {
     edgeSlider.noUiSlider.on("change", function () {
         $("#edge-value").text("≥" + edgeSlider.noUiSlider.get() + " prob.");
         ajaxRequest();
-    })
-    
-    // $(".graph-slider").change(function () {
-    //     const value = $(".graph-slider").val();
-        
-    // })
+    });
 
     $("#save").click(function () {
         var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
@@ -390,6 +384,7 @@ function draw_tag_cloud() {
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
     }
+    console.log('word position', wordPosition)
 
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
@@ -476,6 +471,8 @@ function update_nodes() {
 }
 
 function update_fields() {
+    console.log('start updating fields');
+
     var self_field = [];    //该学者个人的field信息
     let field_level_val = $("#field-level").val();
     let fields = field_level_val == 1 ? field_roots : field_leaves; //该领域所有的field信息

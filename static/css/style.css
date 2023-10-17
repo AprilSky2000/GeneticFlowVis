@@ -118,10 +118,10 @@ ul.address-text p {
 	/* top: 10px;
 	right: 10px; */
 	/* background-color: white; */
-	padding: 5px;
-	border-radius: 5px;
-	transition: background-color 0.3s ease-in-out;
-	overflow: hidden;
+	/* padding: 5px;
+	border-radius: 5px; */
+	/* transition: background-color 0.3s ease-in-out; */
+	/* overflow: hidden; */
 	/* margin-left: 40%; */
 	right: 24%;
 }
@@ -225,7 +225,7 @@ tr:hover {
 .noUi-connect {
 	height: 6px !important;
 	border-radius: 3px !important;
-	background-color: #1e88e5 !important;
+	background-color: #40a6ff !important;
 }
 
 .noUi-base, 
@@ -235,7 +235,7 @@ input[type=range]{
 	border-radius: 3px;
 	outline: none !important;
 	-webkit-appearance: none;/*清除系统默认样式*/
-	background-color: #90caf9 !important;
+	background-color: #b3ddff !important;
 }
 /*自定义滑动控件的滑块*/
 .noUi-handle, 
@@ -331,4 +331,40 @@ input[type=range]::-webkit-slider-thumb {
 
 .question:hover .question-tip {
 	visibility: visible;
+}
+
+.d3-tip {
+	font-weight: normal !important;
+	padding: 8px !important;
+	background: rgba(0, 0, 0, 0.8) !important;
+	color: #fff;
+	border-radius: 2px !important;
+	font-size: 15px !important;
+	pointer-events: none;
+	box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* Creates a small triangle extender on the tooltip */
+  /* .d3-tip:after {
+	box-sizing: border-box;
+	display: inline;
+	font-size: 10px;
+	width: 100%;
+	line-height: 1;
+	color: rgba(0, 0, 0, 0.8);
+	content: "\25BC";
+	position: absolute;
+	text-align: center;
+  } */
+  
+  /* Style northward tooltips differently */
+  .d3-tip.n:after {
+	margin: -2px 0 0 0 !important;
+	top: 100%;
+	left: 0;
+  }
+
+.paperNode:hover {
+	background-color: #b3ddff;
+	transition: background-color 0.3s;
 }

@@ -1,0 +1,11 @@
+--2023-09-18 19:22:14--  http://www.jms.org.cn:8081/jms/CN/article/downloadArticleFile.do?attachType=PDF
+Resolving www.jms.org.cn (www.jms.org.cn)... 114.113.227.67
+Connecting to www.jms.org.cn (www.jms.org.cn)|114.113.227.67|:8081... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘downloadArticleFile.do?attachType=PDF’
+
+downloadArticleFile.do?attachType=PDF                        [<=>                                                                                                                                ]       0  --.-KB/s               downloadArticleFile.do?attachType=PDF                        [ <=>                                                                                                                               ]   3.10K  --.-KB/s    in 0s      
+
+2023-09-18 19:22:14 (275 MB/s) - ‘downloadArticleFile.do?attachType=PDF’ saved [3171]
+
