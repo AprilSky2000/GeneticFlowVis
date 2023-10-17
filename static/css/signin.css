@@ -44,7 +44,8 @@ select {
     width: 300%;
     /* max-width: 600px; */
     padding: 15px;
-    margin: 0 auto;
+    margin-top: -10%;
+    margin-bottom: -10%;
 }
 .form-signin .checkbox {
     font-weight: 400;

@@ -1,0 +1,21 @@
+<head>
+    <title>Changelog</title>
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
+    <script src="/src/js/jquery.min.js"></script>
+</head>
+
+<html>
+    <div id="changelog" style="margin-left: 10%; margin-right: 10%; margin-top: 2%;"></div>
+    <script>
+        $(function () {
+            var logList = {{ changelogList|safe }};
+            for (let i = logList.length - 1; i >= 0; i--) {
+                var versionID = logList[i]["versionID"],
+                    date = logList[i]["date"],
+                    updateContent = logList[i]["updateContent"];
+                var content = `<h1>${versionID} (${date})</h1><hr /><p style="font-size: 20px;">${updateContent}</p><br />`;
+                $("#changelog").append(content);
+            }
+        });
+    </script>
+</html>

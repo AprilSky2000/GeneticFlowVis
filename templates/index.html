@@ -64,31 +64,21 @@
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0">Yes</option>
-                                    <option value="1" selected>No</option>
+                                    <option value="1">Yes</option>
+                                    <option value="0" selected>No</option>
                                 </select>
                             </li>
                             <li style="width: 14%; float: left; color: #777;">
                                 <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
-                                <input style="display: inline-block; width: 60%; " id="range-node" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1">
+                                <div id="range-node" style="display: inline-block; width: 60%;"></div>
+                                <!-- <input style="display: inline-block; width: 60%;" id="range-node" class="graph-slider" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1"> -->
                                 <span id="node-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.5 prob.</span>
-                                <script type='text/javascript'>
-                                    $("#range-node").change(function () {
-                                        var value = $("#range-node").val();
-                                        $("#node-value").text("≥" + value + " prob.");
-                                    })
-                                </script>
                             </li>
                             <li style="width: 14%; float: left; color: #777;">
                                 <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
-                                <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1">
+                                <div id="range-edge" style="display: inline-block; width: 60%;"></div>
+                                <!-- <input style="display: inline-block; width: 60%;" id="range-edge" class="graph-slider" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1"> -->
                                 <span id="edge-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.4 prob.</span>
-                                <script type='text/javascript'>
-                                    $("#range-edge").change(function () {
-                                        var value = $("#range-edge").val();
-                                        $("#edge-value").text("≥" + value  + " prob.");
-                                    })
-                                </script>
                             </li>
                             <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.7%;">
                                 <select id="outline-color" class="form-select" name="outlineColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
@@ -158,7 +148,7 @@
                     <li>
                         <ul class="address-text">
                             <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
-                            <li style="color: #333;" id="authorRank">{{ name }}</li>
+                            <li style="color: #333;">{{ name }}</li>
                         </ul>
                     </li>
                     <li>
@@ -409,26 +399,27 @@
         
         $(function () {
             $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
-            const authorRank = "{{ authorRank }}";
+            const authorID = "{{ authorID }}";
             name = "{{ name }}";
             const fields = {{ fields|safe }};
-            const field = "{{ field }}";
+            const fieldType = "{{ fieldType }}";
             field_roots = fields[0];
             field_leaves = fields[1];
-            if (field == "acl") {
+            if (fieldType == "acl") {
                 $("#field-level option[value='1']").remove();
                 $("#field-level option[value='2']").text(1);
-                $("#mode").val(0);
+                $("#mode").val(1);
             }
             
-            var filename = '/src/json/' + field + '/' + String(authorRank);
-            if (field == "acl") filename += '_1_0.5_0.4_10_1.json';
-            else if (field == "visualization")  filename += '_0_0.5_0.4_10_1.json';
+            var filename = `/src/json/${fieldType}/${authorID}`;
+            if (fieldType == "acl") filename += '_1_0.5_0.4_10_1.json';
+            else if (fieldType == "visualization")  filename += '_0_0.5_0.4_10_1.json';
+
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
                 nodes = data[2];            //论文节点
                 edges = data[3];            //path
-                polygon = data[4];    //箭头
+                polygon = data[4];          //箭头
                 const params = data[0];
                 viewBox = params[0];
                 transform = params[1];
@@ -439,7 +430,7 @@
                     edges[i]['flag'] = 0;
                 }
                 for (let i = 0; i < field_roots.length; i++) {
-                    field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
+                    field_roots[i][2] = String(field_roots[i][2]).replaceAll('_', ' ');
                 }
                 for (let i = 0; i < field_leaves.length; i++) {
                     field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
@@ -456,6 +447,28 @@
                     },
                     step: 1
                 });
+                nodeSlider = document.getElementById('range-node');
+                noUiSlider.create(nodeSlider, {
+                    start: 0.5,
+                    behaviour: 'tap',
+                    connect: [false, true],
+                    step: 0.1,
+                    range: {
+                        'min': 0,
+                        'max': 1.0
+                    }
+                });
+                edgeSlider = document.getElementById('range-edge');
+                noUiSlider.create(edgeSlider, {
+                    start: 0.4,
+                    behaviour: 'tap',
+                    connect: [false, true],
+                    step: 0.1,
+                    range: {
+                        'min': 0,
+                        'max': 1.0
+                    }
+                });
                 
                 onFullscreenChange();
 
@@ -469,7 +482,7 @@
 
     <!--ajax提交表单-->
     <script type="text/javascript">
-        $("#mode, #range-node, #range-edge, #node-width, #remove-survey").change(function() {
+        function ajaxRequest() {
             var paramData = {};
             var formData = $("#update-info").serialize();
             formData = formData.split("&");
@@ -477,9 +490,11 @@
                 const temp = formData[i].split('=');
                 paramData[temp[0]] = temp[1];
             }
-            paramData.authorRank = "{{ authorRank }}"
-            paramData.field = "{{ field }}";
-            console.log(paramData);
+            paramData.authorID = "{{ authorID }}"
+            paramData.field = "{{ fieldType }}";
+            paramData.isKeyPaper = nodeSlider.noUiSlider.get();
+            paramData.extendsProb = edgeSlider.noUiSlider.get();
+
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},
                 type: "POST",
@@ -491,10 +506,9 @@
                     $("#abstract, #citation-context, #timeline").empty();
                     $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
                     d3.tip().destroy();
-                    var detail = param['detail'];
-                    var field = param['field'];
-                    var filename = '/src/json/' + field + '/' + detail + '.json';
-                    console.log(filename);
+                    var detail = param['detail'],
+                        fieldType = param['fieldType'];
+                    var filename = `/src/json/${fieldType}/${detail}.json`;
                     d3.json(filename).then( data => {
                         years = data[1];
                         nodes = data[2];
@@ -511,7 +525,8 @@
                     });
                 },
             });
-        });
+        }
+        $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
     </script>
 
 </body>

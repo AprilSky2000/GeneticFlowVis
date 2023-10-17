@@ -30,10 +30,10 @@
 
 				<input id="authorInput" name="name" type="text" class="form-control" placeholder="Please enter the scholar name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
             </div>
-			<div id="note" style="margin-top: -0.8%;"></div>
+			<!-- <div id="note" style="margin-top: -0.8%;"></div> -->
 			<br />
             <div style="display: inline;">
-				<a id="listLink" class="btn btn-primary" href="/list?field={{ field }}" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043; margin-right: 10px;">Scholar List</a>
+				<a id="listLink" class="btn btn-primary" href="/list?field={{ fieldType }}" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043; margin-right: 10px;">Scholar List</a>
 				<a id="searchLink" class="btn btn-primary" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043;">Scholar Search</a>
 				<script>
 					$("#listLink")
@@ -46,10 +46,12 @@
 			</div>
 			<br />
 			<br />
-			<p class="mt-5 text-muted" style="margin-bottom:0.5%">© 2023-2024<a href=" " target="_blank" style="margin-left: 2em;">京ICP备2022000473号-2</a></p>
-			<p style="white-space: pre-wrap; text-align: center;">Please send any enquiry/feedback to: <b>geneticflowcontact@gmail.com</b>,
+			<br />
+			<p class="mt-5 text-muted">@ {{ versionID }}<a href="/changelog" style="margin-left: 2em;">ChangeLog</a></p>
+			<p style="white-space: pre-wrap; text-align: center; margin-bottom: -3%;">Please send any enquiry/feedback to: <b>geneticflowcontact@gmail.com</b>,
 and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more details.
 			</p>
+			<p class="mt-5 text-muted" style="margin-bottom:0.5%">© 2023-2024<a href=" " target="_blank" style="margin-left: 2em;">京ICP备2022000473号-2</a></p>
 		</form>
 		<script type="text/javascript">
 			// $("#listLink").click(function(event) {
@@ -65,7 +67,7 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 			// 		window.location.href = "list/?field=" + field;
 			// 	}
 			// })
-			var field = "{{ field }}";
+			var fieldType = "{{ fieldType }}";
 
 			function scholarSearch(event) {
 				event.preventDefault();
@@ -75,16 +77,16 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 				}
 				else {
 					$("#error").empty();
-					window.location.href = "/list?field=" + field + "&name=" +name;
+					window.location.href = "/list?field=" + fieldType + "&name=" +name;
 				}
 			}
 			
-			if (field == 'acl') {
+			if (fieldType == 'acl') {
 				$("#scholar-field").text("NLP Scholar");
 			}
-			else if (field == 'visualization') {
+			else if (fieldType == 'visualization') {
 				$("#scholar-field").text("Visualization" + " Scholar");
-				$("#note").append(`<p style="font-size: 12px; color: #808080;">It was found that due to the incompleteness of MAG's "visualization" category, about 22% visualization papers is missing in our system, a new version will be online to fix this by Oct. 20, 2023.</p>`);
+				// $("#note").append(`<p style="font-size: 12px; color: #808080;">It was found that due to the incompleteness of MAG's "visualization" category, about 22% visualization papers is missing in our system, a new version will be online to fix this by Oct. 20, 2023.</p>`);
 			}
 			$("#searchLink").click(scholarSearch);
 

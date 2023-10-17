@@ -16,30 +16,38 @@ all_df = {}
 authorID2field = {}
 authorID2suffix = {}
 for field in ['visualization', 'acl']:
-    all_df[field] = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',',
-        names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
+    all_df[field] = pd.read_csv(f"csv/{field}/top_field_authors.csv", sep=',')
 
 def reference(request):
     return render(request, 'reference.html')
 
 def front(request):
-    return render(request, 'front.html', {'error': ''})
+    df = pd.read_csv("csv/version.csv", sep=',')
+    versionID = df.iloc[-1]['versionID']
+    return render(request, 'front.html', {'error': '', 'versionID': versionID})
 
 def search(request):
     field = request.GET.get("field", None)
     if field:
-        return render(request, 'search.html', {'error': '', 'field': field})
+        df = pd.read_csv("csv/version.csv", sep=',')
+        versionID = df.iloc[-1]['versionID']
+        return render(request, 'search.html', {'error': '', 'fieldType': field, 'versionID': versionID})
+
+def changelog(request):
+    df = pd.read_csv("csv/version.csv", sep=',')
+    df_list = df.to_dict(orient='records')
+    return render(request, 'changelog.html', {'changelogList': df_list})
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
-    initYear = 2021
+    initYear = 2023
     publicationTime = []
     if len(papers) != 0:
         for paper in papers:
             year = int(paper[2])
             if year < initYear:
                 initYear = year
-        publicationTime = [i for i in range(initYear, 2022)]
+        publicationTime = [i for i in range(initYear, 2024)]
 
     # 根据已有年份对论文重新分类，每个年份的论文构成一个子图，分成subgraph()
     papers = sorted(papers, key=lambda x:int(x[2]))
@@ -176,12 +184,11 @@ def get_polygon(edges):
         polygon.append(d)
     return polygon
 
-def write_d3_data(field, detail, papers, influence):
+def write_d3_data(fieldType, detail, papers, influence):
     # cmd = "dot -Ksfdp -Ebundle=0.9 ./static/image/svg/" + detail + " -Tsvg -o ./templates/" + detail + ".html"
-    # print(cmd)
     # os.system(cmd)
     # filename = './templates/' + detail + '.html'
-    filename = "./static/image/svg/" + field + '/' + detail + ".svg"
+    filename = f'static/image/svg/{fieldType}/{detail}.svg'
     soup = BeautifulSoup(open(filename))
     nodes = soup.select('.node')
     edges = soup.select('.edge')
@@ -198,7 +205,7 @@ def write_d3_data(field, detail, papers, influence):
     graph = [viewBox, transform]
 
     data = json.dumps([graph, yearData, nodeData, edgeData, polygon], indent=4, separators=(',', ': '))
-    filename = './static/json/' + field + '/' + detail + '.json'
+    filename = f'static/json/{fieldType}/{detail}.json'
     # make the directory if it doesn't exist already
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
@@ -207,120 +214,114 @@ def write_d3_data(field, detail, papers, influence):
     f.close()
 
 def index(request):
-    field = request.GET.get("field")
+    fieldType = request.GET.get("field")
     id = request.GET.get("id")
-    authorRank = int(id)
-    df = all_df[field]
-    df["authorRank"].astype(int)
-    author = df[df["authorRank"] == authorRank]
-    authorID = author['authorID'].iloc[0]
+    authorID = int(id)
+    df = all_df[fieldType]
+    df["authorID"].astype(int)
+    author = df[df["authorID"] == authorID]
     name = author["name"].iloc[0]
     paperCount = author["PaperCount_field"].iloc[0]
     citationCount = author["CitationCount_field"].iloc[0]
     hIndex = author["hIndex_field"].iloc[0]
     
-    fields = get_fields(field)
-    authorRank = str(authorRank)
+    fields = get_fields(fieldType)
+    authorID = str(authorID)
     isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.4, 10, 1
-    if field == "acl":
-        detail = authorRank + '_1_0.5_0.4_10_1'
-    elif field == "visualization":
-        detail = authorRank + '_0_0.5_0.4_10_1'
-    filename = './static/json/' + field + '/' + detail + '.json'
+    if fieldType == "acl":
+        detail = f'{authorID}_1_0.5_0.4_10_1'
+    elif fieldType == "visualization":
+        detail = f'{authorID}_0_0.5_0.4_10_1'
+    filename = f'static/json/{fieldType}/{detail}.json'
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
-        # file = name.replace(' ', '') + str(authorRank)
         # 读取相应papers文件
-        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID)
+        papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
         # 读取相应influence文件
-        links = read_links(field, authorRank, extendsProb, authorID)
+        links = read_links(fieldType, authorID, extendsProb)
         # 创建图
-        if field == "acl":
+        if fieldType == "acl":
             create_partial_graph(dot, papers, links, nodeWidth)
-        elif field == "visualization":
+        elif fieldType == "visualization":
             create_node(dot, papers, nodeWidth)
             create_edge(dot, papers, links)
 
-        dot.render(directory="./static/image/svg/" + field, view=False)
+        dot.render(directory=f"static/image/svg/{fieldType}", view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
-        write_d3_data(field, detail, papers, links)
+        write_d3_data(fieldType, detail, papers, links)
 
     return render(request, "index.html",
-                  {'authorRank': authorRank, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'field': field})
+                  {'authorID': authorID, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'fieldType': fieldType})
 
 def update(request):
-    authorRank = request.POST.get("authorRank")
-    field = request.POST.get("field")
+    fieldType = request.POST.get("field")
+    authorID = request.POST.get("authorID")
     mode = request.POST.get("mode")
     isKeyPaper = request.POST.get("isKeyPaper")
     extendsProb = request.POST.get("extendsProb")
     nodeWidth = request.POST.get("nodeWidth")
     removeSurvey = request.POST.get("removeSurvey")
-    detail = str(authorRank) + '_' + mode + '_' + isKeyPaper + '_' + extendsProb + '_' + nodeWidth + '_' + removeSurvey
+    detail = f'{authorID}_{mode}_{isKeyPaper}_{extendsProb}_{nodeWidth}_{removeSurvey}'
     mode = int(mode)
     isKeyPaper = float(isKeyPaper)
     extendsProb = float(extendsProb)
     nodeWidth = int(nodeWidth)
     removeSurvey = int(removeSurvey)
 
-    df = all_df[field]
-    author = df[df["authorRank"] == int(authorRank)]
-    authorID = author['authorID'].iloc[0]
-
-    filename = './static/json/' + field + '/' + detail + '.json'
+    filename = f'static/json/{fieldType}/{detail}.json'
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
-        papers = read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID)
-        links = read_links(field, authorRank, extendsProb, authorID)
+        papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
+        links = read_links(fieldType, authorID, extendsProb)
 
         if mode == 1:
+            create_partial_graph(dot, papers, links, nodeWidth)
+        else:
             create_node(dot, papers, nodeWidth)
             create_edge(dot, papers, links)
-        else:
-            create_partial_graph(dot, papers, links, nodeWidth)
 
-        dot.render(directory="./static/image/svg/" + field, view=False)
+        dot.render(directory=f"static/image/svg/{fieldType}", view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
-        write_d3_data(field, detail, papers, links)
+        write_d3_data(fieldType, detail, papers, links)
 
-    param = {}
-    param['detail'] = detail
-    param['field'] = field
+    param = {'detail': detail, 'fieldType': fieldType}
     return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
 
 def showlist(request):
-    field = request.GET.get("field")
+    fieldType = request.GET.get("field")
+    print(fieldType)
     name = request.GET.get("name", None)
-    df = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',', header=None)
+    df = pd.read_csv(f'csv/{fieldType}/top_field_authors.csv', sep=',')
     data = df.values.tolist()
     scholarList = [get_scholar(row, name) for row in data if get_scholar(row, name) != {}]
     if len(scholarList) == 0:
-        error = 'No author named ' + name # 错误信息
-        return render(request, 'search.html', {'error': error, 'field': field})
+        error = 'No author named ' + name               # 错误信息
+        df = pd.read_csv("csv/version.csv", sep=',')
+        versionID = df.iloc[-1]['versionID']
+        return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
-        return render(request, "list.html", {'scholarList': scholarList, 'field': field})
+        return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})
 
 def get_scholar(row, name):
     scholar = {}
     if name == None or (name != None and name.lower() in str(row[2]).lower()):
-        scholar['authorRank'] = int(row[6])
+        # scholar['authorRank'] = int(row[6])
+        scholar['authorID'] = int(row[0])
         scholar['name'] = str(row[2])
         scholar['citationCount'] = int(row[7])
         scholar['hIndex'] = int(row[8])
         scholar['paperCount'] = int(row[5])
     return scholar
 
-def read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID):
-    path = f'csv/{field}/papers_{authorRank}.csv'
-    if os.path.exists(f'csv/{field}/papers_{authorID}.csv'):
-        path = f'csv/{field}/papers_{authorID}.csv'
-    df = pd.read_csv(path, sep=',')
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
+    path = f'csv/{fieldType}/papers/{authorID}.csv'
+
+    df = pd.read_csv(path, sep=',', index_col=0)
     df = df.fillna('')
     df["isKeyPaper"].astype(float)
     df = df[df["isKeyPaper"] >= isKeyPaper]
@@ -331,14 +332,11 @@ def read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID):
     papers = df.values.tolist()
     return papers
 
-def read_links(field, authorRank, extendsProb, authorID):
-    path = f'csv/{field}/links_{authorRank}.csv'
-    if os.path.exists(f'csv/{field}/links_{authorID}.csv'):
-        path = f'csv/{field}/links_{authorID}.csv'
-
-    print('===================reading links', path)
+def read_links(fieldType, authorID, extendsProb):
+    path = f'csv/{fieldType}/links/{authorID}.csv'
+    if os.path.exists(path) == False:
+        return []
     df = pd.read_csv(path, sep=',')
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df['extendsProb'] = df["extendsProb"].replace('\\N', '0')
     df['extendsProb'] = df["extendsProb"].astype(float)
     df = df.where(df.notnull(), None)
@@ -348,9 +346,10 @@ def read_links(field, authorRank, extendsProb, authorID):
     links = df.values.tolist()
     return links
 
-def get_fields(field):
-    df_roots = pd.read_csv("./csv/" + field + "/field_roots.csv", sep=',')
+def get_fields(fieldType):
+    path = f'csv/{fieldType}/'
+    df_roots = pd.read_csv(os.path.join(path, "field_roots.csv"), sep=',')
     roots = df_roots.values.tolist()
-    df_leaves = pd.read_csv("./csv/" + field + "/field_leaves.csv", sep=',')
+    df_leaves = pd.read_csv(os.path.join(path, "field_leaves.csv"), sep=',')
     leaves = df_leaves.values.tolist()
     return [roots, leaves]

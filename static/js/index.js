@@ -6,7 +6,7 @@ function addAllListeners() {
             .duration(300)
             .attr("r", d => Math.sqrt(d.num) * 10 * topic_r);
         $("#topic-label").text(topic_r);
-    })
+    });
 
     // 监听滑块值的变化
     rangeSlider.noUiSlider.on("update", function (values, handle) {
@@ -25,7 +25,6 @@ function addAllListeners() {
             if (d.num >= min && d.num <= max) return "all";
             return "none";
         });
-
         
         paper_field = update_fields();
         // filter paper filed with num between min and max
@@ -33,25 +32,33 @@ function addAllListeners() {
         d3.select("#tagcloud").remove();
         draw_tag_cloud();
         // visual_topics();
-
     });
-    
+
+    nodeSlider.noUiSlider.on("change", function () {
+        $("#node-value").text("≥" + nodeSlider.noUiSlider.get() + " prob.");
+        ajaxRequest();
+    });
+    edgeSlider.noUiSlider.on("change", function () {
+        $("#edge-value").text("≥" + edgeSlider.noUiSlider.get() + " prob.");
+        ajaxRequest();
+    });
+
     $("#save").click(function () {
         var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
-        var fileName = "{{ name|safe }}" + " GF profile.jpg";
+        var fileName = name + " GF profile.jpg";
         downloadSvg(zoomSvg, fileName);
-    })
+    });
     // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
     document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);
     $("#zoom-in").click(function() {
         d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
-    })
+    });
     $("#zoom-out").click(function() {
         d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
-    })
+    });
     $("#restore").click(function() {
         d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-    })
+    });
 
     // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
     $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
@@ -67,7 +74,6 @@ function addAllListeners() {
 
     window.addEventListener('resize', onFullscreenChange);
 }
-
 
 function toggleFullscreen() {
     const container = document.getElementsByClassName("middle-column")[0];
@@ -102,11 +108,11 @@ function toggleFullscreen() {
     }
 }
 
-
 function onFullscreenChange() {
     // 在这里执行其他操作
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
+    d3.select("#topic-map-svg").remove();
     $("#edge-info").hide();
     $("#up-line").hide();
     $("#down-line").hide();
@@ -126,16 +132,17 @@ function onFullscreenChange() {
     init_graph(viewBox, transform);
     update_nodes();
     paper_field = update_fields();
-    
-    draw_tag_cloud();
-    visual_topics();
+
+    if (nodes.length > 0) {
+        draw_tag_cloud();
+        visual_topics();
+    }
     visual_graph(polygon);
     
     // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
     // $(".middle-column").css('height', maxHeight);
-    console.log(name);
     updateSider(name);
-    // console.log('left height2', left_height);
+
     // $("paper-list").css('height', maxHeight);
 
     outline_color_change();
@@ -151,7 +158,6 @@ function onEscKeyPressed(event) {
         }
     }
 }
-
 
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
@@ -179,8 +185,9 @@ function updateSider (name) {
     $("#citing-papers").css("height", left_height * 1.03);
     // $("abstract").css("height", screenHeight / 3.4);
 
-    const nodesNum = nodes.length;
-    const edgesNum = edges.length - years.length + 1;
+    var nodesNum = nodes.length,
+        edgesNum = edges.length - years.length + 1;
+    if (years.length == 0)  edgesNum = 0;
     $('#node-num').text(nodesNum);
     $('#edge-num').text(edgesNum);
 
@@ -195,9 +202,7 @@ function updateSider (name) {
         <b style="margin-left: 0%; font-size:16px;">Paper Name</b>
         <b style="margin-right: 1%; margin-left: 5%; font-size:16px;">#Citation</b>
     </div>`);
-    // console.log('nodes', nodes);
     for (let i = 0; i < nodes.length; i++) {
-        // console.log(nodes[i].name);
         const paperName = String(nodes[i].name);
         const paperVenu = String(nodes[i].venu);
         const paperYear = String(nodes[i].year);
@@ -283,8 +288,6 @@ function hsvToHex(h, s, v) {
     const green = toHex(g);
     const blue = toHex(b);
 
-    // console.log("#" + red + green + blue);
-
     return "#" + red + green + blue;
 }
 
@@ -332,7 +335,6 @@ function calculateWordPosition(sortedData, maxFontSize) {
             }
             currentLineHeight += currentLine[0].height + emptySpace;
             if (currentLineHeight + height > svgHeight) {
-                // console.log(currentLineHeight, height, svgHeight)
                 return null;
             }
             wordPosition.push(currentLine);
@@ -366,8 +368,6 @@ function calculateWordPosition(sortedData, maxFontSize) {
 function draw_tag_cloud() {
     let svgWidth = $(".middle-column").width();
     let svgHeight = $(".middle-column").height() * 0.25;
-    // console.log('svgWidth: ', svgWidth);
-    // console.log('svgHeight: ', svgHeight);
 
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", svgWidth)
@@ -383,11 +383,9 @@ function draw_tag_cloud() {
     
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.9;
-        // console.log("height overflow! change maxFontSize to ", maxFontSize);
     }
     console.log('word position', wordPosition)
 
-    // console.log('wordPosition: ', wordPosition, maxFontSize);
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
         .enter()
@@ -540,7 +538,6 @@ function update_fields() {
             year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
         }
 
-        // console.log('year_field', year_field);
         g.selectAll('circle').data(year_field).enter().append('rect')
             .attr('x', d => d.x - d.num * 40 - 29)
             .attr('y', d => d.y - 25)
@@ -568,7 +565,6 @@ function highlight_field(d, that) {
     let field_id = d.id;
     // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
     // let field_color = hsvToColor(d.color);
-    // console.log('highlight field', d, field_color);
     // topic_map_tip.show(d);
 
     tip.show(d);
@@ -576,14 +572,12 @@ function highlight_field(d, that) {
     // if d is an item in paper_field
     // if (d.hasOwnProperty('num')) {
     //     let word = wordPosition.flat().find(item => item.id == d.id);
-    //     console.log('word', word);
     //     tip.show(word);
     // }
 
     // // if d is an item in wordPosition
     // if (d.hasOwnProperty('ratio')) {
     //     let field = paper_field.find(item => item.id == d.id);
-    //     console.log('field', field);
     //     tip.show(field);
     // }
 
@@ -599,7 +593,6 @@ function highlight_field(d, that) {
     //     .style("opacity", 1);
     // d3.select(`.overall-topic-tip`).show(d);
 
-    // console.log('show tooltip', d, tooltip);
     d3.select(`#text_${d.id}`)
         .attr('font-weight', 'bold');
         // .attr("x", d => d.x + d.width * 0.02);
@@ -703,7 +696,6 @@ function reset_field(d) {
 }
 
 function highlight_node(id, highlight_neighbor = false) {
-    // console.log('highlight_node', id);
     // 输入：当前node的 id
     // 找到当前节点的所有邻接点
     var adjacent_ids = [];
@@ -814,9 +806,8 @@ function visual_topics() {
     const topic_margin1 = 35;
     const topic_margin2 = 20;
 
-    d3.selectAll("#topic-map-svg").remove();
+    d3.select("#topic-map-svg").remove();
 
-    // console.log('overall field', overall_field);
     // set the ranges of rangeSlider
     var minNum = d3.min(paper_field, d => d.num);
     var maxNum = d3.max(paper_field, d => d.num);
@@ -824,11 +815,11 @@ function visual_topics() {
     rangeSlider.noUiSlider.updateOptions({
         range: {
             'min': minNum - 1,
-            'max': maxNum
+            'max': maxNum + 1
         }
     });
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
-    rangeSlider.noUiSlider.set([minNum - 1, maxNum]);
+    rangeSlider.noUiSlider.set([minNum - 1, maxNum + 1]);
 
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
@@ -1401,7 +1392,7 @@ function sugiyama(years, nodes, edges) {
         });
         layers.push(l);
     });
-    // console.log(layers);
+    
     var Gp = new Array;
     let cnt = 0;
     edges.forEach(edge => {
@@ -1429,5 +1420,4 @@ function sugiyama(years, nodes, edges) {
             }
         }
     });
-    // console.log(layers);
 }
