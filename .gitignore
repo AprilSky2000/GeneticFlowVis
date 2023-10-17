@@ -6,3 +6,4 @@ GFVis/__pycache__
 static/json
 controller/__pycache__
 static/image/svg
+!csv/version.csv
