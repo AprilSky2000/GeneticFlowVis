@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup
 import re
 
 all_df = {} 
+authorID2field = {}
+authorID2suffix = {}
 for field in ['visualization', 'acl']:
     all_df[field] = pd.read_csv("./csv/" + field + "/top_field_authors.csv", sep=',',
         names=["authorID", "rank", "name", "PaperCount", "CitationCount", "PaperCount_field", "authorRank", "CitationCount_field", "hIndex_field", "FellowType"])
@@ -220,7 +222,10 @@ def index(request):
     fields = get_fields(field)
     authorRank = str(authorRank)
     isKeyPaper, extendsProb, nodeWidth, removeSurvey = 0.5, 0.4, 10, 1
-    detail = authorRank + '_0_0.5_0.4_10_1'
+    if field == "acl":
+        detail = authorRank + '_1_0.5_0.4_10_1'
+    elif field == "visualization":
+        detail = authorRank + '_0_0.5_0.4_10_1'
     filename = './static/json/' + field + '/' + detail + '.json'
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
@@ -232,7 +237,11 @@ def index(request):
         # 读取相应influence文件
         links = read_links(field, authorRank, extendsProb, authorID)
         # 创建图
-        create_partial_graph(dot, papers, links, nodeWidth)
+        if field == "acl":
+            create_partial_graph(dot, papers, links, nodeWidth)
+        elif field == "visualization":
+            create_node(dot, papers, nodeWidth)
+            create_edge(dot, papers, links)
 
         dot.render(directory="./static/image/svg/" + field, view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
@@ -310,7 +319,6 @@ def read_papers(field, authorRank, isKeyPaper, removeSurvey, authorID):
     path = f'csv/{field}/papers_{authorRank}.csv'
     if os.path.exists(f'csv/{field}/papers_{authorID}.csv'):
         path = f'csv/{field}/papers_{authorID}.csv'
-
     df = pd.read_csv(path, sep=',')
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df = df.fillna('')

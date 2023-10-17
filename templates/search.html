@@ -28,8 +28,9 @@
 					</div>
 				</div>
 
-				<input id="authorInput" name="name" type="text" class="form-control" placeholder="Please enter the author's name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
+				<input id="authorInput" name="name" type="text" class="form-control" placeholder="Please enter the scholar name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
             </div>
+			<div id="note" style="margin-top: -0.8%;"></div>
 			<br />
             <div style="display: inline;">
 				<a id="listLink" class="btn btn-primary" href="/list?field={{ field }}" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043; margin-right: 10px;">Scholar List</a>
@@ -83,6 +84,7 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 			}
 			else if (field == 'visualization') {
 				$("#scholar-field").text("Visualization" + " Scholar");
+				$("#note").append(`<p style="font-size: 12px; color: #808080;">It was found that due to the incompleteness of MAG's "visualization" category, about 22% visualization papers is missing in our system, a new version will be online to fix this by Oct. 20, 2023.</p>`);
 			}
 			$("#searchLink").click(scholarSearch);
 

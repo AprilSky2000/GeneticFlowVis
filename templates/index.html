@@ -151,7 +151,7 @@
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
                             <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Basic Info</p>
+                                <p>Scholar Info</p>
                             </li>
                         </ul>
                     </li>
@@ -372,13 +372,7 @@
                     </li>
                     <li>
                         <ul class="address-text citation-context-minus-height">
-                            <li style="width: 40%;"><b style="margin-left: 25%;">extend type</b></li>
-                            <li id="extend-type" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text citation-context-minus-height">
-                            <li style="width: 40%;"><b style="margin-left: 25%;">extend prob</b></li>
+                            <li style="width: 40%;"><b style="margin-left: 25%;">extend-type prob.</b></li>
                             <li id="extend-prob" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
                         </ul>
                     <li>
@@ -423,10 +417,13 @@
             field_leaves = fields[1];
             if (field == "acl") {
                 $("#field-level option[value='1']").remove();
-                $("#field-level option[value='2']").text(1)
+                $("#field-level option[value='2']").text(1);
+                $("#mode").val(0);
             }
             
-            var filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.4_10_1.json';
+            var filename = '/src/json/' + field + '/' + String(authorRank);
+            if (field == "acl") filename += '_1_0.5_0.4_10_1.json';
+            else if (field == "visualization")  filename += '_0_0.5_0.4_10_1.json';
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
                 nodes = data[2];            //论文节点

@@ -1210,7 +1210,6 @@ function visual_graph(polygon) {
         for (var i = 0; i < edges.length; i++) {
             if (edges[i].source == source && edges[i].target == target) {
                 $('#citation-context').text(edges[i].citation_context);
-                $('#extend-type').text(String(edges[i].flag));
                 $('#extend-prob').text(String(edges[i].extends_prob));
                 break;
             }
