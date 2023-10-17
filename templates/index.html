@@ -29,7 +29,7 @@
     <div class="container-fluid">
         <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
-                <a href="https://genetic-flow.com/"><img src="/src/image/logo-index.jpg" width="288" height="64"></a>
+                <a href="/"><img src="/src/image/logo-index.jpg" width="288" height="64"></a>
             </div>
             <div class="clearfix"></div>
         </div>
@@ -40,53 +40,45 @@
                 <ul class="address" style="padding-top: 0px;">
                     <li>
                         <ul class="address-text">
-                            <li style="width: 3%; float: left; height: 15px;"></li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px;">remove surveys</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">remove isolated node</li>
-                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 1.5%;">filter by core paper</li>
-                            <li style="width: 11%; color: #777; float: left; height: 15px; margin-left: 0.5%;">filter by extend-type</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -1%;">node outline color</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: -0.5%;">node outline thickness</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 1.8%;">node fill color</li>
-                            <li style="width: 12%; color: #777; float: left; height: 15px;">paper topic hierarchy</li>
-                            <li style="width: 10%; color: #777; float: left; height: 15px; margin-left: 0.7%;">node max width</li>
-                            <li style="width: 0%; float: right; height: 15px;"></li>
+                            <li style="width: 2%; float: left; height: 14px; font-size: 13px !important;"></li>
+                            <li style="width: 11%; color: #777; float: left; height: 14px; font-size: 13px !important;">remove survey papers</li>
+                            <li style="width: 11%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: -1.5%;">remove isolated papers</li>
+                            <li style="width: 13%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">only show core papers</li>
+                            <li style="width: 13%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">only show extend citations</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: -0.5%;">node outline color</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node outline thickness</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node fill color</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">paper topic hierarchy</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node max width</li>
+                            <li style="width: 1%; float: right; height: 14px; font-size: 13px !important;"></li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li style="width: 3.4%; float: left;"></li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                            <li style="width: 3%; float: left;"></li>
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 1%;">
                                 <select id="remove-survey" class="form-select" name="removeSurvey" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0">Yes</option>
-                                    <option value="1">No</option>
+                                    <option value="1">Yes</option>
+                                    <option value="0" selected>No</option>
                                 </select>
                             </li>
-                            <li style="width: 10%; float: left; color: #777;">
-                                <input style="display: inline-block; width: 60%;" id="range-node" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1">
-                                <span id="node-value" style="display: inline-block; color: #333;">>=0.5</span>
-                                <script type='text/javascript'>
-                                    $("#range-node").change(function () {
-                                        var value = $("#range-node").val();
-                                        $("#node-value").text(">=" + value);
-                                    })
-                                </script>
+                            <li style="width: 14%; float: left; color: #777;">
+                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
+                                <div id="range-node" style="display: inline-block; width: 60%;"></div>
+                                <!-- <input style="display: inline-block; width: 60%;" id="range-node" class="graph-slider" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1"> -->
+                                <span id="node-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.5 prob.</span>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-left: 1.5%;">
-                                <input style="display: inline-block; width: 60%;" id="range-edge" type="range" name="extendsProb" value="0.5" min="0" max="1" step="0.1">
-                                <span id="edge-value" style="display: inline-block; color: #333;">>=0.5</span>
-                                <script type='text/javascript'>
-                                    $("#range-edge").change(function () {
-                                        var value = $("#range-edge").val();
-                                        $("#edge-value").text(">=" + value);
-                                    })
-                                </script>
+                            <li style="width: 14%; float: left; color: #777;">
+                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
+                                <div id="range-edge" style="display: inline-block; width: 60%;"></div>
+                                <!-- <input style="display: inline-block; width: 60%;" id="range-edge" class="graph-slider" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1"> -->
+                                <span id="edge-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.4 prob.</span>
                             </li>
                             <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.7%;">
                                 <select id="outline-color" class="form-select" name="outlineColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
@@ -98,7 +90,7 @@
                                     $("#outline-color").change(outline_color_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
                                 <select id="outline-thickness" class="form-select" name="outlineThickness" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="2">paper citation</option>
                                     <option value="1">core paper prob</option>
@@ -108,16 +100,18 @@
                                     $("#outline-thickness").change(outline_thickness_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
+                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="fill-color" class="form-select" name="fillColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="1">paper topic</option>
-                                    <option value="0">none</option>
+                                    <option value="0">paper topic</option>
+                                    <option value="1">blue</option>
+                                    <option value="2">isKeyPaper</option>
+                                    <option value="3">citationCount</option>
                                 </select>
                                 <script type="text/javascript">
                                     $("#fill-color").change(fill_color_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                            <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
                                 <select id="field-level" class="form-select" name="fieldThreshold" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="2" selected>2</option>
                                     <option value="1">1</option>
@@ -126,7 +120,7 @@
                                     $("#field-level").change(field_level_change);
                                 </script>
                             </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
+                            <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
                                 <select id="node-width" class="form-select" name="nodeWidth" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="0">None</option>
                                     <option value="5">5</option>
@@ -135,7 +129,6 @@
                                     <option value="20">20</option>
                                 </select>
                             </li>
-                            <li style="width: 1%; float: right;"></li>
                         </ul>
                     </li>
                 </ul>
@@ -148,14 +141,14 @@
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
                             <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Basic Info</p>
+                                <p>Scholar Info</p>
                             </li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
                             <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
-                            <li style="color: #333;" id="authorRank">{{ name }}</li>
+                            <li style="color: #333;">{{ name }}</li>
                         </ul>
                     </li>
                     <li>
@@ -207,60 +200,18 @@
                             <div id="topic-distribution"></div>
                             
                             <div class="slider-container">
-                                <label for="topic-slider" style="font-size: 12px;">Size:</label>
+                                <label for="topic-slider" style="margin-right: 3%;">Size:</label>
                                 <input id="topic-slider" class="topic-slider"  type="range" value="1" min="0" max="2" step="0.01">
-                                <span id="topic-label" style="font-size: 12px;">0.5</span>
+                                <span id="topic-label" style="margin-left: 3%;">0.5</span>
                             </div>
                             
                             <div class="slider-container">
-                                <label for="range-slider" style="font-size: 12px;">Range:</label>
+                                <label for="range-slider" style="margin-right: 3%;">Range:</label>
                                 <!-- <input type="range" id="range-slider" min="0" max="100" value="0" multiple>
                                  -->
                                 <div id="range-slider" style="width:80%"></div>
-                                <span id="range-label" style="font-size: 12px;">0-100</span>
+                                <span id="range-label" style="margin-left: 3%;">0-100</span>
                             </div>
-
-                            <script>
-                                $("#topic-slider").change(function () {
-                                    var topic_r = $("#topic-slider").val();
-                                    d3.selectAll(".topic-map")
-                                        .transition()
-                                        .duration(300)
-                                        .attr("r", d => Math.sqrt(d.num) * 10 * topic_r);
-                                    $("#topic-label").text(topic_r);
-                                })
-
-                                const rangeSlider = document.getElementById("range-slider");
-                                const rangeLabel = document.getElementById("range-label");
-
-                                noUiSlider.create(rangeSlider, {
-                                    start: [0, 100], // 初始值
-                                    connect: true,   // 连接两个滑块
-                                    range: {
-                                        'min': 0,
-                                        'max': 100
-                                    },
-                                    step: 1
-                                });
-
-                                // 监听滑块值的变化
-                                rangeSlider.noUiSlider.on("update", function (values, handle) {
-                                    const min = Math.round(values[0]);
-                                    const max = Math.round(values[1]);
-                                    rangeLabel.textContent = `${min}-${max}`;
-
-                                    d3.selectAll(".topic-map")
-                                        .transition()
-                                        .duration(300)
-                                        .attr("opacity", d => {
-                                            if (d.num >= min && d.num <= max) {
-                                                return 1;
-                                            } else {
-                                                return 0.2;
-                                            }
-                                        });
-                                });
-                            </script>
                         </div>
                     </li>
                 </ul>
@@ -275,106 +226,6 @@
                     <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
                 </div>
-                <script type="text/javascript">
-                    function toggleFullscreen() {
-                        const container = document.getElementsByClassName("middle-column")[0];
-                        if (container.requestFullscreen) {
-                            container.requestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("fullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
-                        } else if (container.webkitRequestFullscreen) {
-                            container.webkitRequestFullscreen().then(() => {
-                                // 在全屏状态变化后测量宽度
-                                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-                                // 监听ESC键按下事件
-                                document.addEventListener("keydown", onEscKeyPressed);
-                            }).catch(error => {
-                                console.error('Error entering fullscreen:', error);
-                            });
-                        }
-                    }
-
-                    function onFullscreenChange() {
-                        // 在这里执行其他操作
-                        d3.select("#mainsvg").remove();
-                        d3.select("#tagcloud").remove();
-                        
-                        const windowHeight = $(window).height();
-                        const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
-                            return sum + $(element).outerHeight();
-                        }, 0);
-                        mainPanalHeight = windowHeight - navigationHeight;
-                        mainPanalWidth = $('.main-panel').width();
-
-                        $('.main-panel').css('max-height', mainPanalHeight);
-                        $('.right-column').css('max-height', mainPanalHeight * 0.98);
-
-                        init_graph(viewBox, transform);
-                        update_nodes();
-                        paper_field = update_fields();
-                        draw_tag_cloud(paper_field);
-                        visual_topics(paper_field);
-                        visual_graph(polygon);
-                        
-                        // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
-                        // $(".middle-column").css('height', maxHeight);
-                        console.log(name);
-                        updateSider(name);
-                        // console.log('left height2', left_height);
-                        // $("paper-list").css('height', maxHeight);
-
-                        outline_color_change();
-                        outline_thickness_change();
-                    }
-
-                    function onEscKeyPressed(event) {
-                        if (event.key === "Escape") {
-                            if (document.exitFullscreen) {
-                                document.exitFullscreen();
-                            } else if (document.webkitExitFullscreen) {
-                                document.webkitExitFullscreen();
-                            }
-                        }
-                    }
-
-                    $(document).ready(function() {
-                        $("#save").click(function () {
-                            var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
-                            var fileName = "{{ name|safe }}" + " GF profile.jpg";
-                            downloadSvg(zoomSvg, fileName);
-                        })
-                        // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
-                        document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);
-                        $("#zoom-in").click(function() {
-                            d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 1.1);
-                        })
-                        $("#zoom-out").click(function() {
-                            d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
-                        })
-                        $("#restore").click(function() {
-                            d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-                        })
-
-                        // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
-                        $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
-
-                        // 点击按钮时的事件处理
-                        $(".address-text button").click(function () {
-                            // 将所有按钮的字体设为正常，透明度为0.5
-                            $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
-
-                            // 将点击的按钮加粗，透明度为1
-                            $(this).css({ 'font-weight': 'bold', 'opacity': 1 });
-                        });
-
-                        window.addEventListener('resize', onFullscreenChange);
-                    });
-                </script>
 
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
@@ -450,8 +301,26 @@
                     </li>
                     <li>
                         <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 25.5%;">authors</b></li>
+                            <li id="paper-authors" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">venue</b></li>
+                            <li id="paper-venue" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">year</b></li>
                             <li id="paper-year" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
+                            <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">#citation</b></li>
+                            <li id="paper-citation" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
@@ -493,6 +362,12 @@
                     </li>
                     <li>
                         <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%;"><b style="margin-left: 25%;">extend-type prob.</b></li>
+                            <li id="extend-prob" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    <li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
                             <li style="width: 40%"><b style="margin-left: 25%;">cited paper</b></li>
                             <li id="source-paper" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
                         </ul>
@@ -521,25 +396,30 @@
     <!--初始js-->
     <script type="text/javascript">
         // text1 paperLabel; text2 paperCount; text3 year; text4 field
+        
         $(function () {
             $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
-            const authorRank = "{{ authorRank }}";
+            const authorID = "{{ authorID }}";
             name = "{{ name }}";
             const fields = {{ fields|safe }};
-            const field = "{{ field }}";
+            const fieldType = "{{ fieldType }}";
             field_roots = fields[0];
             field_leaves = fields[1];
-            
-            var filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.5_10_1.json';
-            if (field == "acl") {
-                $("#edge-value").text(">=0.4");
-                filename = '/src/json/' + field + '/' + String(authorRank) + '_0_0.5_0.4_10_1.json';
+            if (fieldType == "acl") {
+                $("#field-level option[value='1']").remove();
+                $("#field-level option[value='2']").text(1);
+                $("#mode").val(1);
             }
+            
+            var filename = `/src/json/${fieldType}/${authorID}`;
+            if (fieldType == "acl") filename += '_1_0.5_0.4_10_1.json';
+            else if (fieldType == "visualization")  filename += '_0_0.5_0.4_10_1.json';
+
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
                 nodes = data[2];            //论文节点
                 edges = data[3];            //path
-                polygon = data[4];    //箭头
+                polygon = data[4];          //箭头
                 const params = data[0];
                 viewBox = params[0];
                 transform = params[1];
@@ -550,42 +430,71 @@
                     edges[i]['flag'] = 0;
                 }
                 for (let i = 0; i < field_roots.length; i++) {
-                    field_roots[i][2] = field_roots[i][2].replaceAll('_', ' ');
+                    field_roots[i][2] = String(field_roots[i][2]).replaceAll('_', ' ');
                 }
                 for (let i = 0; i < field_leaves.length; i++) {
                     field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
                 }
+
+                rangeSlider = document.getElementById("range-slider");
+                rangeLabel = document.getElementById("range-label");
+                noUiSlider.create(rangeSlider, {
+                    start: [0, 100], // 初始值
+                    connect: true,   // 连接两个滑块
+                    range: {
+                        'min': 0,
+                        'max': 100
+                    },
+                    step: 1
+                });
+                nodeSlider = document.getElementById('range-node');
+                noUiSlider.create(nodeSlider, {
+                    start: 0.5,
+                    behaviour: 'tap',
+                    connect: [false, true],
+                    step: 0.1,
+                    range: {
+                        'min': 0,
+                        'max': 1.0
+                    }
+                });
+                edgeSlider = document.getElementById('range-edge');
+                noUiSlider.create(edgeSlider, {
+                    start: 0.4,
+                    behaviour: 'tap',
+                    connect: [false, true],
+                    step: 0.1,
+                    range: {
+                        'min': 0,
+                        'max': 1.0
+                    }
+                });
                 
-                // init_graph(viewBox, transform);
-                // update_nodes();
-                // var paper_field = update_fields();
-                // draw_tag_cloud(paper_field);
-                // visual_topics(paper_field);
-                // visual_graph(polygon);
-                // updateSider(name);
-                // outline_color_change();
-                // outline_thickness_change();
                 onFullscreenChange();
 
                 $("#overall-topic-map").hide();
                 $("#paper-topic-map").show();
                 // sugiyama(years, nodes, edges);
+                addAllListeners();
             });
-        })
+        });
     </script>
 
     <!--ajax提交表单-->
     <script type="text/javascript">
-        $("#mode, #range-node, #range-edge, #node-width, #remove-survey").change(function() {
+        function ajaxRequest() {
             var paramData = {};
             var formData = $("#update-info").serialize();
             formData = formData.split("&");
             for (let i = 1; i < formData.length; i++) {
                 const temp = formData[i].split('=');
-                paramData[temp[0]] = temp[1]
+                paramData[temp[0]] = temp[1];
             }
-            paramData.authorRank = "{{ authorRank }}"
-            paramData.field = "{{ field }}";
+            paramData.authorID = "{{ authorID }}"
+            paramData.field = "{{ fieldType }}";
+            paramData.isKeyPaper = nodeSlider.noUiSlider.get();
+            paramData.extendsProb = edgeSlider.noUiSlider.get();
+
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},
                 type: "POST",
@@ -597,10 +506,9 @@
                     $("#abstract, #citation-context, #timeline").empty();
                     $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
                     d3.tip().destroy();
-                    var detail = param['detail'];
-                    var field = param['field'];
-                    var filename = '/src/json/' + field + '/' + detail + '.json';
-                    console.log(filename);
+                    var detail = param['detail'],
+                        fieldType = param['fieldType'];
+                    var filename = `/src/json/${fieldType}/${detail}.json`;
                     d3.json(filename).then( data => {
                         years = data[1];
                         nodes = data[2];
@@ -617,7 +525,8 @@
                     });
                 },
             });
-        });
+        }
+        $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
     </script>
 
 </body>

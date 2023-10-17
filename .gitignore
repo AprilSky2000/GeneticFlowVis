@@ -2,5 +2,6 @@ csv
 nohup.out
 __pycache__
 controller/__pycache__
+GFVis/__pycache__
 static/json
 static/image/svg
