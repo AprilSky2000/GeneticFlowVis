@@ -405,10 +405,9 @@
             const fieldType = "{{ fieldType }}";
             field_roots = fields[0];
             field_leaves = fields[1];
-            if (fieldType == "acl") {
+            if (fieldType != "visualization") {
                 $("#field-level option[value='1']").remove();
                 $("#field-level option[value='2']").text(1);
-                $("#mode").val(1);
             }
             
             var filename = `/src/json/${fieldType}/${authorID}`;
@@ -416,7 +415,7 @@
                 $("#edge-value").text("≥0.4 prob.");
                 filename += '_1_0.5_0.4_10_1.json';
             }
-            else if (fieldType == "visualization")  filename += '_1_0.5_0.5_10_1.json';
+            else    filename += '_1_0.5_0.5_10_1.json';
 
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点

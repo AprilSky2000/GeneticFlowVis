@@ -1,93 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Search</title>
-        <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
-		<!-- Bootstrap core CSS -->
-		<link href="/src/css/bootstrap.min.css" rel="stylesheet">
-		<!-- Custom styles for this template -->
-		<link href="/src/css/signin.css" rel="stylesheet">
-		<script src="/src/js/jquery.min.js"></script>
-	</head>
+<head>
+	<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Search</title>
+	<link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+	<!-- Bootstrap core CSS -->
+	<link href="/src/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Custom styles for this template -->
+	<link href="/src/css/signin.css" rel="stylesheet">
+	<script src="/src/js/jquery.min.js"></script>
+</head>
 
-	<body class="text-center">
-		<form class="form-signin">
-            {%csrf_token%}
-			<a href="/"><img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="390" height="140.4"></a>
-			<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
-            <br />
-			<p id="error" style="color: red">{{ error }}</p>
-            <div style="display: flex; width: 60%; margin-left: 20%; margin-bottom: 1%;">
-				<!-- <img src="/src/image/search.png" style="order: -1; height: 38px;"> -->
-				<div class="card" style="background-color: #f5f5f5; height: 50px; width: 30%; border-top-left-radius: 24px; border-bottom-left-radius: 24px;">
-					<div id="scholar-field" class="card-body" style="padding-top: 13px; border-right: none;">
-						{{ field }} Scholar
-					</div>
+<body class="text-center">
+	<form class="form-signin">
+		{%csrf_token%}
+		<a href="/"><img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="390" height="140.4"></a>
+		<!--h1 class="h3 mb-3 font-weight-normal" style="margin-left: -15%; margin-right: -15%;">Please enter the author's name</h1-->
+		<br />
+		<p id="error" style="color: red">{{ error }}</p>
+		<div style="display: flex; width: 60%; margin-left: 20%; margin-bottom: 1%;">
+			<!-- <img src="/src/image/search.png" style="order: -1; height: 38px;"> -->
+			<div class="card" style="background-color: #f5f5f5; height: 50px; width: 30%; border-top-left-radius: 24px; border-bottom-left-radius: 24px;">
+				<div id="scholar-field" class="card-body" style="padding-top: 13px; border-right: none;">
+					{{ field }} Scholar
 				</div>
-
-				<input id="authorInput" name="name" type="text" class="form-control" placeholder="Please enter the scholar name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
-            </div>
-			<!-- <div id="note" style="margin-top: -0.8%;"></div> -->
-			<br />
-            <div style="display: inline;">
-				<a id="listLink" class="btn btn-primary" href="/list?field={{ fieldType }}" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043; margin-right: 10px;">Scholar List</a>
-				<a id="searchLink" class="btn btn-primary" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043;">Scholar Search</a>
-				<script>
-					$("#listLink")
-						.on("mouseover", () => $("#listLink").css("border-color", "#a9a9a9"))
-						.on("mouseout", () => $("#listLink").css("border-color", "#f5f5f5"));
-					$("#searchLink")
-						.on("mouseover", () => $("#searchLink").css("border-color", "#a9a9a9"))
-						.on("mouseout", () => $("#searchLink").css("border-color", "#f5f5f5"));
-				</script>
 			</div>
-			<br />
-			<br />
-			<br />
-			<p class="mt-5 text-muted">@ {{ versionID }}<a href="/changelog" style="margin-left: 2em;">ChangeLog</a></p>
-			<p style="white-space: pre-wrap; text-align: center; margin-bottom: -3%;">Please send any enquiry/feedback to: <b>geneticflowcontact@gmail.com</b>,
-and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more details.
-			</p>
-			<p class="mt-5 text-muted" style="margin-bottom:0.5%">© 2023-2024<a href=" " target="_blank" style="margin-left: 2em;">京ICP备2022000473号-2</a></p>
-		</form>
-		<script type="text/javascript">
-			// $("#listLink").click(function(event) {
-			// 	event.preventDefault();		// form表单当button在里面时，会默认发送GET请求
-			// 	var field = $("input[name='field']:checked").val();
-			// 	$("#error").empty();
-			// 	// 当跳转失败停留在原页面时，url现在已经发生改变，
-			// 	// 很奇怪的是此时不管发送什么请求window.location.href都会带上"list/"这个后缀，所以只能判断此时url是否包括它，包括就删去
-			//  if (window.location.href.includes("list/")) {
-			// 		window.location.href = "?field=" + field;
-			// 	}
-			// 	else {
-			// 		window.location.href = "list/?field=" + field;
-			// 	}
-			// })
-			var fieldType = "{{ fieldType }}";
 
-			function scholarSearch(event) {
-				event.preventDefault();
-				name = $(".form-control").val();
-				if (name == '') {
-					$("#error").text("Please input the name");
-				}
-				else {
-					$("#error").empty();
-					window.location.href = "/list?field=" + fieldType + "&name=" +name;
-				}
+			<input id="authorInput" name="name" type="text" class="form-control" placeholder="Please enter the scholar name" autofocus="" style="height: 50px; width: 70%; border-top-right-radius: 24px; border-bottom-right-radius: 24px;">
+		</div>
+		<!-- <div id="note" style="margin-top: -0.8%;"></div> -->
+		<br />
+		<div style="display: inline;">
+			<a id="listLink" class="btn btn-primary" href="/list?field={{ fieldType }}" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043; margin-right: 10px;">Scholar List</a>
+			<a id="searchLink" class="btn btn-primary" style="background-color: #f5f5f5; border-color: #f5f5f5; color: #3c4043;">Scholar Search</a>
+			<script>
+				$("#listLink")
+					.on("mouseover", () => $("#listLink").css("border-color", "#a9a9a9"))
+					.on("mouseout", () => $("#listLink").css("border-color", "#f5f5f5"));
+				$("#searchLink")
+					.on("mouseover", () => $("#searchLink").css("border-color", "#a9a9a9"))
+					.on("mouseout", () => $("#searchLink").css("border-color", "#f5f5f5"));
+			</script>
+		</div>
+		<br />
+		<br />
+		<br />
+		<p class="mt-5 text-muted">@ {{ versionID }}<a href="/changelog" style="margin-left: 2em;">ChangeLog</a></p>
+		<p style="white-space: pre-wrap; text-align: center; margin-bottom: -3%;">Please send any enquiry/feedback to: <b>geneticflowcontact@gmail.com</b>,
+and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more details.
+		</p>
+		<p class="mt-5 text-muted" style="margin-bottom:0.5%">© 2023-2024<a href=" " target="_blank" style="margin-left: 2em;">京ICP备2022000473号-2</a></p>
+	</form>
+	<script type="text/javascript">
+		// $("#listLink").click(function(event) {
+		// 	event.preventDefault();		// form表单当button在里面时，会默认发送GET请求
+		// 	var field = $("input[name='field']:checked").val();
+		// 	$("#error").empty();
+		// 	// 当跳转失败停留在原页面时，url现在已经发生改变，
+		// 	// 很奇怪的是此时不管发送什么请求window.location.href都会带上"list/"这个后缀，所以只能判断此时url是否包括它，包括就删去
+		//  if (window.location.href.includes("list/")) {
+		// 		window.location.href = "?field=" + field;
+		// 	}
+		// 	else {
+		// 		window.location.href = "list/?field=" + field;
+		// 	}
+		// })
+		function scholarSearch(event) {
+			event.preventDefault();
+			name = $(".form-control").val();
+			if (name == '') {
+				$("#error").text("Please input the name");
 			}
+			else {
+				console.log(name);
+				$("#error").empty();
+				window.location.href = "/list?field=" + fieldType + "&name=" +name;
+			}
+		}
+		
+		$(function () {
+			fieldType = "{{ fieldType }}";
+			// TODO 增加新领域
+			const fieldDict = {
+				acl: "NLP",
+				visualization: "Visualization",
+				database: "Database"
+			};
+			$("#scholar-field").text(`${fieldDict[fieldType]} Scholar`);
 			
-			if (fieldType == 'acl') {
-				$("#scholar-field").text("NLP Scholar");
-			}
-			else if (fieldType == 'visualization') {
-				$("#scholar-field").text("Visualization" + " Scholar");
-				// $("#note").append(`<p style="font-size: 12px; color: #808080;">It was found that due to the incompleteness of MAG's "visualization" category, about 22% visualization papers is missing in our system, a new version will be online to fix this by Oct. 20, 2023.</p>`);
-			}
 			$("#searchLink").click(scholarSearch);
 
 			$('form').on('submit', function(event) {
@@ -97,6 +99,7 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 			$("#authorInput").on('keydown', function(event) {
 				if (event.key === 'Enter') scholarSearch(event); 
 			});
-		</script>
-	</body>
+		});
+	</script>
+</body>
 </html>

@@ -25,7 +25,7 @@
             <div class="clearfix"></div>
         </div>
         <div class="banner-info" style="margin-left: 8%;">
-            <nav aria-label="Page navigation" style="margin-top: -0.5%; margin-bottom: -1%;">
+            <nav id="nav-pagination" aria-label="Page navigation" style="margin-top: -0.5%; margin-bottom: -1%;">
                 <ul class="pagination" id="pagination"></ul>
             </nav>
             <div style="float: left; width: 95%;">
@@ -106,25 +106,35 @@
                     displayData(i);
                 });
                 listItem.append(link);
+                if (totalPages == 1) {
+                    $('#nav-pagination').remove();
+                    break;
+                }
                 $('#pagination').append(listItem);
             }
             displayData(1);
         }
 
         $(function () {
+            // TODO
+            const fieldDict = {
+				acl: "NLP",
+				visualization: "Visualization",
+				database: "Database"
+			};
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
             var fieldlabel, questionContent;
-            
-            if (fieldType == "visualization") {
-                fieldlabel = "Visualization";
-                questionContent = "The scholar metrics below are obtained from all the publications tagged as visualization papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.";
-            }
-            else if (fieldType == "acl") {
-                fieldlabel = "NLP";
+
+            fieldlabel = fieldDict[fieldType];
+            if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";
             }
+            else {
+                questionContent = `The scholar metrics below are obtained from all the publications tagged as ${fieldType} papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.`;
+            }
+            
             var content = `
             <div class="question">
                 <i class="fa-solid fa-circle-question hover-text"></i>

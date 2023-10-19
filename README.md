@@ -24,3 +24,11 @@ pkill -f "runserver 0.0.0.0:9001"
 conda activate python3.7
 nohup python manage.py runserver 0.0.0.0:9001 2>&1 &
 ```
+
+增加新领域：
+
+```
+1. search.html, list.html中field字典需要加入新领域；
+2. front.html需要加入新的封面和对应跳转链接；
+3. 运行script中的update_version.py，加入新版本的说明
+```

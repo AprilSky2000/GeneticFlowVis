@@ -12,12 +12,6 @@ import base64
 from bs4 import BeautifulSoup
 import re
 
-all_df = {} 
-authorID2field = {}
-authorID2suffix = {}
-for field in ['visualization', 'acl']:
-    all_df[field] = pd.read_csv(f"csv/{field}/top_field_authors.csv", sep=',')
-
 def reference(request):
     return render(request, 'reference.html')
 
@@ -217,7 +211,7 @@ def index(request):
     fieldType = request.GET.get("field")
     id = request.GET.get("id")
     authorID = int(id)
-    df = all_df[fieldType]
+    df = pd.read_csv(f"csv/{fieldType}/top_field_authors.csv", sep=',')
     df["authorID"].astype(int)
     author = df[df["authorID"] == authorID]
     name = author["name"].iloc[0]
@@ -289,7 +283,6 @@ def update(request):
 
 def showlist(request):
     fieldType = request.GET.get("field")
-    print(fieldType)
     name = request.GET.get("name", None)
     df = pd.read_csv(f'csv/{fieldType}/top_field_authors.csv', sep=',')
     data = df.values.tolist()
