@@ -910,8 +910,6 @@ function visual_graph(polygon) {
     // }
     // ellipse.call(d3.drag().on("drag", dragged));
 
-    // .attr('stroke-width', d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
-
     const lines = g.selectAll('.reference').data(edges).enter().append('path')
         .attr('fill', 'none')
         .attr('stroke', d => probToColor(d.extends_prob))
@@ -1264,10 +1262,10 @@ function outline_color_change() {
     else if (outlineColorVal == 2) {
         d3.selectAll('.paper').data(nodes)
             .attr('stroke', d => {
-                if (d.citationCount < 10) {
+                if (d.citationCount < 50) {
                     return 'black';
                 }
-                else if (d.citationCount < 50) {
+                else if (d.citationCount < 100) {
                     return 'pink';
                 }
                 else {
@@ -1304,7 +1302,7 @@ function outline_thickness_change() {
                     return 1;
                 }
                 else if (d.citationCount <= 50) {
-                    return (d.citationCount - 10) / 15 + 1;
+                    return (d.citationCount - 10) * 9 / 40 + 1;
                 }
                 else {
                     return 10;
