@@ -708,7 +708,6 @@ function highlight_node(id, highlight_neighbor = false) {
     }
     
     // 改变当前节点颜色和相邻节点
-    let fillColorVal = $("#fill-color").val();
     let outlineColorVal = $("#outline-color").val();
     let outlineThicknessVal = $("#outline-thickness").val();
     g.selectAll(".paper").data(nodes)
@@ -725,8 +724,8 @@ function highlight_node(id, highlight_neighbor = false) {
                     else    return 'black';
                 }
                 else if (outlineColorVal == 2) {
-                    if (d.citationCount < 10)   return 'black';
-                    else if (d.citationCount < 50)  return 'pink';
+                    if (d.citationCount < 50)   return 'black';
+                    else if (d.citationCount < 100)  return '#8B0000';
                     else    return 'red';
                 }
             }
@@ -740,12 +739,12 @@ function highlight_node(id, highlight_neighbor = false) {
                     else    return 1;
                 }
                 else if (outlineThicknessVal == 2) {
-                    if (d.citationCount <= 10)  return 1;
-                    else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
+                    if (d.citationCount <= 50)  return 3;
+                    // else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
                     else    return 10;
                 }
             }
-        })
+        });
 
     // 改变当前节点与其相邻节点间线的颜色为红色
     d3.selectAll('.reference')
@@ -1134,8 +1133,8 @@ function visual_graph(polygon) {
                         else    return 'black';
                     }
                     else if (outlineColorVal == 2) {
-                        if (d.citationCount < 10)   return 'black';
-                        else if (d.citationCount < 50)  return 'pink';
+                        if (d.citationCount < 50)   return 'black';
+                        else if (d.citationCount < 100)  return '#8B0000';
                         else    return 'red';
                     }
                 }
@@ -1149,8 +1148,8 @@ function visual_graph(polygon) {
                         else    return 1;
                     }
                     else if (outlineThicknessVal == 2) {
-                        if (d.citationCount <= 10)  return 1;
-                        else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
+                        if (d.citationCount <= 50)  return 3;
+                        // else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
                         else    return 10;
                     }
                 }
@@ -1242,72 +1241,51 @@ function visual_graph(polygon) {
 
 function outline_color_change() {
     let outlineColorVal = $("#outline-color").val();
-    if (outlineColorVal == 0) {
-        d3.selectAll(".paper").attr('stroke', 'black');
-    }
-    else if (outlineColorVal == 1) {
-        d3.selectAll('.paper').data(nodes)
-            .attr('stroke', d => {
-                if (d.isKeyPaper == 1) {
-                    return 'red';
-                }
-                else if (d.isKeyPaper >= 0.5) {
-                    return 'pink';
-                }
-                else {
-                    return 'black';
-                }
-            });
-    }
-    else if (outlineColorVal == 2) {
-        d3.selectAll('.paper').data(nodes)
-            .attr('stroke', d => {
-                if (d.citationCount < 50) {
-                    return 'black';
-                }
-                else if (d.citationCount < 100) {
-                    return 'pink';
-                }
-                else {
-                    return 'red';
-                }
-            });
+    switch(outlineColorVal) {
+        case '0':
+            d3.selectAll(".paper").attr('stroke', 'black');
+            break;
+        case '1':
+            d3.selectAll('.paper').data(nodes)
+                .attr('stroke', d => {
+                    if (d.isKeyPaper == 1)  return 'red';
+                    else if (d.isKeyPaper >= 0.5)   return '#8B0000';
+                    else    return 'black';
+                });
+            break;
+        case '2':
+            d3.selectAll('.paper').data(nodes)
+                .attr('stroke', d => {
+                    if (d.citationCount < 50)   return 'black';
+                    else if (d.citationCount < 100) return '#8B0000';
+                    else    return 'red';
+                });
+            break;
     }
 }
 
 function outline_thickness_change() {
     let outlineThicknessVal = $("#outline-thickness").val();
-    if (outlineThicknessVal == 0) {
-        d3.selectAll(".paper")
-            .attr('stroke-width', 1);
-    }
-    else if (outlineThicknessVal == 1) {
-        d3.selectAll('.paper').data(nodes)
-            .attr('stroke-width', d => {
-                if (d.isKeyPaper == 1) {
-                    return 10;
-                }
-                else if (d.isKeyPaper >= 0.5) {
-                    return 5;
-                }
-                else {
-                    return 1;
-                }
-            });
-    }
-    else if (outlineThicknessVal == 2) {
-        d3.selectAll('.paper').data(nodes)
-            .attr('stroke-width', d => {
-                if (d.citationCount <= 10) {
-                    return 1;
-                }
-                else if (d.citationCount <= 50) {
-                    return (d.citationCount - 10) * 9 / 40 + 1;
-                }
-                else {
-                    return 10;
-                }
-            });
+    switch(outlineThicknessVal) {
+        case '0':
+            d3.selectAll(".paper").attr('stroke-width', 1);
+            break;
+        case '1':
+            d3.selectAll('.paper').data(nodes)
+                .attr('stroke-width', d => {
+                    if (d.isKeyPaper == 1)  return 10;
+                    else if (d.isKeyPaper >= 0.5)   return 5;
+                    else    return 1;
+                });
+            break;
+        case '2':
+            d3.selectAll('.paper').data(nodes)
+                .attr('stroke-width', d => {
+                    if (d.citationCount <= 50)  return 3;
+                    // else if (d.citationCount <= 50) return (d.citationCount - 10) * 9 / 40 + 1;
+                    else    return 10;
+                });
+            break;
     }
 }
 
