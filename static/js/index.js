@@ -145,8 +145,9 @@ function onFullscreenChange() {
 
     // $("paper-list").css('height', maxHeight);
 
-    outline_color_change();
-    outline_thickness_change();
+    d3.selectAll('.paper').data(nodes)
+        .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount))
+        .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
 }
 
 function onEscKeyPressed(event) {
@@ -325,10 +326,9 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let size = ratio * maxFontSize;
         let height = ratio * lineHeight;
         let opacity = ratio * 0.8 + 0.1;
-        let shortName = d.name.split(" ").slice(0, 2).join(' ');
+        let shortName = d.name.split("_").slice(0, 2).join(' ');
         // let width = size * shortName.length * 0.5;
         let width = textSize(shortName, size).width * 1.06;
-
         if (currentLineWidth + width > svgWidth) {
             for (const word of currentLine) {
                 word.x += (svgWidth - currentLineWidth) / 2;
@@ -457,13 +457,21 @@ function init_graph (viewBox, transform) {
 function update_nodes() {
     let fieldLevelVal = $("#field-level").val();
     for (let i = 0; i < nodes.length; i++) {
+        // fields为当前是顶层field还是底层field，topic为当前论文在1层/2层情况下对应的topicID
         let topic = parseInt(nodes[i].topic);
         let fields = field_leaves;
         if (fieldLevelVal == 1) {
             topic = parseInt(field_leaves[topic][8]);
             fields = field_roots;
         }
+
+        // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
+        
+        // 如果当前节点被点击，需要修改paper信息中的展示的topic-word
+        if (nodes[i].status == 1) {
+            $("#paper-field").text(fields[topic][2].split('_').join(', '));
+        }
     }
     // sort nodes by citationCount
     nodes.sort((a, b) =>  b.citationCount - a.citationCount);
@@ -678,8 +686,8 @@ function reset_field(d) {
         .attr('fill-opacity', 1);
     //恢复节点填充色和边缘色
     g.selectAll(".paper").data(nodes)
-        .attr('fill-opacity', 1);
-    outline_color_change();
+        .attr('fill-opacity', 1)
+        .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount));
     //恢复边的颜色
     g.selectAll(".reference")
         .attr('stroke', d => probToColor(d.extends_prob))
@@ -692,8 +700,14 @@ function reset_field(d) {
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
 }
 
-function highlight_node(id, highlight_neighbor = false) {
-    // 输入：当前node的 id
+function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
+
+    // 将被点击节点的状态设为1，未被点击的设为2
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id == id)  nodes[i].status = 1;
+        else    nodes[i].status = 2;
+    }
+
     // 找到当前节点的所有邻接点
     var adjacent_ids = [];
     if (highlight_neighbor) {
@@ -708,42 +722,18 @@ function highlight_node(id, highlight_neighbor = false) {
     }
     
     // 改变当前节点颜色和相邻节点
-    let outlineColorVal = $("#outline-color").val();
-    let outlineThicknessVal = $("#outline-thickness").val();
     g.selectAll(".paper").data(nodes)
         .attr("fill-opacity", d => {
             if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
                 return virtualOpacity;
         })
         .attr('stroke', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-                if (outlineColorVal == 0)   return "black";
-                else if (outlineColorVal == 1) {
-                    if (d.isKeyPaper == 1)  return 'red';
-                    else if (d.isKeyPaper >= 0.5)   return 'pink';
-                    else    return 'black';
-                }
-                else if (outlineColorVal == 2) {
-                    if (d.citationCount < 50)   return 'black';
-                    else if (d.citationCount < 100)  return '#8B0000';
-                    else    return 'red';
-                }
-            }
+            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+                return updateOutlineColor(d.isKeyPaper, d.citationCount);
         })
         .attr('stroke-width', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1) {
-                if (outlineThicknessVal == 0)   return 1;
-                else if (outlineThicknessVal == 1) {
-                    if (d.isKeyPaper == 1)  return 10;
-                    else if (d.isKeyPaper >= 0.5)   return 5;
-                    else    return 1;
-                }
-                else if (outlineThicknessVal == 2) {
-                    if (d.citationCount <= 50)  return 3;
-                    // else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
-                    else    return 10;
-                }
-            }
+            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+                return updateOutlineThickness(d.isKeyPaper, d.citationCount);
         });
 
     // 改变当前节点与其相邻节点间线的颜色为红色
@@ -751,13 +741,13 @@ function highlight_node(id, highlight_neighbor = false) {
         .attr('stroke', d => {
             if (d.target == id || d.source == id)   return 'red';
             else    return d3.rgb(200, 200, 200);
-        })
+        });
     for (let i = 0; i < edges.length; i++) {
         if (edges[i].source != id && edges[i].target != id) {
-            edges[i].flag = 1;
+            edges[i].status = 1;
         }
         else {
-            edges[i].flag = 2;
+            edges[i].status = 2;
         }
     }
     // 将当前节点及其邻接点所对应year的topic显示出来
@@ -776,19 +766,20 @@ function highlight_node(id, highlight_neighbor = false) {
 }
 
 function reset_node() {
-    g.selectAll('.paper').data(nodes).attr('fill-opacity', 1);
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
-    outline_color_change();
-    outline_thickness_change();
+    g.selectAll('.paper').data(nodes)
+        .attr('fill-opacity', 1)
+        .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount))
+        .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
     d3.selectAll('.reference')
         .attr('stroke', d => probToColor(d.extends_prob))
         .attr('stroke-width', d => probToWidth(d.extends_prob));
     
     for (let i = 0; i < nodes.length; i++) {
-        nodes[i].flag = 0;
+        nodes[i].status = 0;
     }
     for (let i = 0; i < edges.length; i++) {
-        edges[i]['flag'] = 0;
+        edges[i].status = 0;
     }
 }
 
@@ -998,7 +989,7 @@ function visual_graph(polygon) {
 
                 let topic = parseInt(nodes[i].topic);
                 topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-                $('#paper-field').text(String(fields[topic][2]).split(' '));
+                $('#paper-field').text(fields[topic][2].split('_').join(', '));
                 $('#abstract').text(nodes[i].abstract);
             }
         }
@@ -1110,54 +1101,30 @@ function visual_graph(polygon) {
 
         for (let i = 0; i < edges.length; i++) {
             if (edges[i].source == source && edges[i].target == target) {
-                edges[i].flag = 2;
+                edges[i].status = 2;
             }
             else {
-                edges[i].flag = 1;
+                edges[i].status = 1;
             }
         }
 
         // 改变边的起点和终点颜色
-        let outlineColorVal = $("#outline-color").val();
-        let outlineThicknessVal = $("#outline-thickness").val();
         g.selectAll(".paper").data(nodes)
             .attr("fill-opacity", d => {
                 if (d.id != source && d.id != target) return virtualOpacity;
             })
             .attr('stroke', d => {
-                if (d.id == source || d.id == target) {
-                    if (outlineColorVal == 0)   return "black";
-                    else if (outlineColorVal == 1) {
-                        if (d.isKeyPaper == 1)  return 'red';
-                        else if (d.isKeyPaper >= 0.5)   return 'pink';
-                        else    return 'black';
-                    }
-                    else if (outlineColorVal == 2) {
-                        if (d.citationCount < 50)   return 'black';
-                        else if (d.citationCount < 100)  return '#8B0000';
-                        else    return 'red';
-                    }
-                }
+                if (d.id == source || d.id == target)
+                    return updateOutlineColor(d.isKeyPaper, d.citationCount);
             })
             .attr('stroke-width', d => {
-                if (d.id == source || d.id == target) {
-                    if (outlineThicknessVal == 0)   return 1;
-                    else if (outlineThicknessVal == 1) {
-                        if (d.isKeyPaper == 1)  return 10;
-                        else if (d.isKeyPaper >= 0.5)   return 5;
-                        else    return 1;
-                    }
-                    else if (outlineThicknessVal == 2) {
-                        if (d.citationCount <= 50)  return 3;
-                        // else if (d.citationCount <= 50) return (d.citationCount - 10) / 15 + 1;
-                        else    return 10;
-                    }
-                }
+                if (d.id == source || d.id == target)
+                    return updateOutlineThickness(d.isKeyPaper, d.citationCount);
             })
 
         d3.selectAll('.reference').data(edges)
             .attr('stroke', d => {
-                if (d.flag == 2)   return 'red';
+                if (d.status == 2)   return 'red';
                 else    return d3.rgb(200, 200, 200);
             })
             .attr('stroke-width', d => {
@@ -1214,8 +1181,8 @@ function visual_graph(polygon) {
     .on('mouseout', function () {
         d3.select(this)
             .attr("stroke", d => {
-                if (d.flag == 1)    return d3.rgb(200, 200, 200);
-                else if (d.flag == 2)   return "red";
+                if (d.status == 1)    return d3.rgb(200, 200, 200);
+                else if (d.status == 2)   return "red";
                 else    return probToColor(d.extends_prob);
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
@@ -1239,54 +1206,47 @@ function visual_graph(polygon) {
     });
 }
 
-function outline_color_change() {
+function updateOutlineColor(isKeyPaper, citationCount) {
+    var outlineColor;
     let outlineColorVal = $("#outline-color").val();
     switch(outlineColorVal) {
         case '0':
-            d3.selectAll(".paper").attr('stroke', 'black');
+            outlineColor = 'black';
             break;
         case '1':
-            d3.selectAll('.paper').data(nodes)
-                .attr('stroke', d => {
-                    if (d.isKeyPaper == 1)  return 'red';
-                    else if (d.isKeyPaper >= 0.5)   return '#8B0000';
-                    else    return 'black';
-                });
+            if (isKeyPaper == 1)  outlineColor = 'red';
+            else if (isKeyPaper >= 0.5)   outlineColor = 'pink';
+            else    outlineColor = 'black';
             break;
         case '2':
-            d3.selectAll('.paper').data(nodes)
-                .attr('stroke', d => {
-                    if (d.citationCount < 50)   return 'black';
-                    else if (d.citationCount < 100) return '#8B0000';
-                    else    return 'red';
-                });
+            if (citationCount < 50)   outlineColor = 'black';
+            else if (citationCount < 100) outlineColor = 'pink';
+            else    outlineColor = 'red';
             break;
     }
+    return outlineColor;
 }
 
-function outline_thickness_change() {
+
+function updateOutlineThickness(isKeyPaper, citationCount) {
+    var outlineThickness;
     let outlineThicknessVal = $("#outline-thickness").val();
     switch(outlineThicknessVal) {
         case '0':
-            d3.selectAll(".paper").attr('stroke-width', 1);
+            outlineThickness = 1;
             break;
         case '1':
-            d3.selectAll('.paper').data(nodes)
-                .attr('stroke-width', d => {
-                    if (d.isKeyPaper == 1)  return 10;
-                    else if (d.isKeyPaper >= 0.5)   return 5;
-                    else    return 1;
-                });
+            if (isKeyPaper == 1)  outlineThickness = 10;
+            else if (isKeyPaper >= 0.5)   outlineThickness = 5;
+            else    outlineThickness = 1;
             break;
         case '2':
-            d3.selectAll('.paper').data(nodes)
-                .attr('stroke-width', d => {
-                    if (d.citationCount <= 50)  return 3;
-                    // else if (d.citationCount <= 50) return (d.citationCount - 10) * 9 / 40 + 1;
-                    else    return 10;
-                });
+            if (citationCount <= 50)  outlineThickness = 3;
+            // else if (citationCount <= 50) outlineThickness = (citationCount - 10) * 9 / 40 + 1;
+            else    outlineThickness = 10;
             break;
     }
+    return outlineThickness;
 }
 
 function getFillColorFunc() {
@@ -1326,11 +1286,11 @@ function getFillColorFunc() {
                 }
             };
             break;
-        }
+    }
     return fillColor;
 }
 
-function fill_color_change() {
+function updateFillColor() {
     let fillColorVal = $("#fill-color").val();
     if (fillColorVal == 0) {
         paper_field = update_fields();
@@ -1350,8 +1310,8 @@ function fill_color_change() {
     }
 }
 
-function field_level_change() {
-    fill_color_change();
+function updateFieldLevel() {
+    updateFillColor();
 }
 
 function sugiyama(years, nodes, edges) {

@@ -87,7 +87,7 @@
                                     <option value="0">none</option>
                                 </select>
                                 <script type="text/javascript">
-                                    $("#outline-color").change(outline_color_change);
+                                    $("#outline-color").change(updateOutlineColor);
                                 </script>
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
@@ -97,7 +97,7 @@
                                     <option value="0">none</option>
                                 </select>
                                 <script type="text/javascript">
-                                    $("#outline-thickness").change(outline_thickness_change);
+                                    $("#outline-thickness").change(updateOutlineThickness);
                                 </script>
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
@@ -108,7 +108,7 @@
                                     <option value="3">citationCount</option>
                                 </select>
                                 <script type="text/javascript">
-                                    $("#fill-color").change(fill_color_change);
+                                    $("#fill-color").change(updateFillColor);
                                 </script>
                             </li>
                             <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
@@ -117,7 +117,7 @@
                                     <option value="1">1</option>
                                 </select>
                                 <script>
-                                    $("#field-level").change(field_level_change);
+                                    $("#field-level").change(updateFieldLevel);
                                 </script>
                             </li>
                             <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
@@ -425,17 +425,14 @@
                 const params = data[0];
                 viewBox = params[0];
                 transform = params[1];
+                // 正常情况下node状态为0，但发生点击事件时，被点击的点状态为1，没有被点击的点状态为0
                 for (let i = 0; i < nodes.length; i++) {
-                    nodes[i]['flag'] = 0;
+                    nodes[i]['status'] = 0;
                 }
+                // 正常情况下，edge状态为0，但发生点击事件时，需要区分高亮的边和没有高亮的边
+                // 没有高亮的边状态为1，高亮的边状态为2
                 for (let i = 0; i < edges.length; i++) {
-                    edges[i]['flag'] = 0;
-                }
-                for (let i = 0; i < field_roots.length; i++) {
-                    field_roots[i][2] = String(field_roots[i][2]).replaceAll('_', ' ');
-                }
-                for (let i = 0; i < field_leaves.length; i++) {
-                    field_leaves[i][2] = field_leaves[i][2].replaceAll('_', ' ');
+                    edges[i]['status'] = 0;
                 }
 
                 rangeSlider = document.getElementById("range-slider");
@@ -520,7 +517,7 @@
                         const viewBox = params[0];
                         const transform = params[1];
                         for (let i = 0; i < nodes.length; i++) {
-                            nodes[i]['flag'] = 0;
+                            nodes[i]['status'] = 0;
                         }
                         name = "{{name}}";
                         onFullscreenChange();
