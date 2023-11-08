@@ -375,7 +375,7 @@ async function updateTop(spanId, value) {
     document.getElementById(spanId).textContent = value;
     topN = parseInt(document.getElementById("tophIndexSlider").value);
     // 构建新的URL
-    let newUrl = `/degree_distribution?topN=${topN}&field=${field}`;
+    let newUrl = `/degree?topN=${topN}&field=${field}`;
     // 重定向到新的URL
     window.location.href = newUrl;
 }
