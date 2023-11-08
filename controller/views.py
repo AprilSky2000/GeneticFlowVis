@@ -11,26 +11,103 @@ import operator
 import base64
 from bs4 import BeautifulSoup
 import re
+from collections import defaultdict
+from django.utils.safestring import mark_safe
+from django.core import serializers
+
+version_df = pd.read_csv("csv/version.csv", sep=',')
+versionID = version_df.iloc[-1]['versionID']
+field2authors = {}
+
+authorID2fellow = defaultdict(str)
+fellow_df = pd.read_csv("csv/award_authors.csv", sep=',', dtype={'MAGID': str})
+for index, row in fellow_df.iterrows():
+    authorID = row['MAGID']
+    if authorID and authorID != 'NULL':
+        authorID2fellow[authorID] += str(row['type']) + ':' + str(row['year']) + ','
 
 def reference(request):
     return render(request, 'reference.html')
 
 def front(request):
-    df = pd.read_csv("csv/version.csv", sep=',')
-    versionID = df.iloc[-1]['versionID']
     return render(request, 'front.html', {'error': '', 'versionID': versionID})
 
 def search(request):
-    field = request.GET.get("field", None)
-    if field:
-        df = pd.read_csv("csv/version.csv", sep=',')
-        versionID = df.iloc[-1]['versionID']
-        return render(request, 'search.html', {'error': '', 'fieldType': field, 'versionID': versionID})
+    field = request.GET.get("field")
+    return render(request, 'search.html', {'error': '', 'fieldType': field, 'versionID': versionID})
 
 def changelog(request):
-    df = pd.read_csv("csv/version.csv", sep=',')
-    df_list = df.to_dict(orient='records')
+    df_list = version_df.to_dict(orient='records')
     return render(request, 'changelog.html', {'changelogList': df_list})
+
+def to_number(x):
+    try:
+        return float(x)
+    except:
+        return 0.0
+
+
+def load_author(field, authorID):
+    filename = f'static/json/{field}/authors/{authorID}.json'
+    if os.path.exists(filename):
+        return
+    nodes = {}
+    edges = []
+    # print(authorID, authorID2fellow.get(authorID, ''))
+    links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv')
+    for index, row in links_df.iterrows():
+        edges.append({
+            'source': row['childrenID'],
+            'target': row['parentID'],
+            'prob': to_number(row['extendsProb'])
+        })
+
+    papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv')
+    for index, row in papers_df.iterrows():
+        nodes[row['paperID']] = float(row['isKeyPaper'])
+    dic = {
+        'nodes': nodes,
+        'edges': edges
+    }
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, 'w') as f:
+        json.dump(dic, f, indent=4, sort_keys=True, ensure_ascii=False)
+
+
+def degree(request):
+    field = request.GET.get("field")
+    topN = int(request.GET.get("topN", 200))
+
+    df = pd.read_csv(f'csv/{field}/top_field_authors.csv')
+    df['authorID'] = df['authorID'].astype(str)
+    # sort df by 'hIndex_field' desc
+    df = df.sort_values(by='hIndex_field', ascending=False)
+    fellow = df['fellow'].head(topN) if 'fellow' in df.columns else None
+    df = df[['authorID', 'name', 'PaperCount_field', 'hIndex_field']]
+    df.columns = ['authorID', 'name', 'paperCount', 'hIndex']
+    df = df.head(topN)
+
+    authors = field2authors.setdefault(field, {})
+    for index, row in df.iterrows():
+        authorID = row['authorID']
+        if authorID not in authors:
+            authors[authorID] = load_author(field, authorID)
+
+    if fellow is None:
+        df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
+    else:
+        df['fellow'] = fellow.fillna('', inplace=False)
+    # keys = list(topAuthors.keys())
+    # print('load complete', df, keys, authorID2fellow)
+    return render(request, 'degree.html', {
+        'field': field,
+        'versionID': versionID,
+        'authorsData': mark_safe(json.dumps(df.values.tolist())),  # 直接传递 Python 对象
+        # 'topAuthors': mark_safe(json.dumps(topAuthors)),
+        'topN': topN
+    })
+
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
@@ -209,10 +286,9 @@ def write_d3_data(fieldType, detail, papers, influence):
 
 def index(request):
     fieldType = request.GET.get("field")
-    id = request.GET.get("id")
-    authorID = int(id)
+    authorID = request.GET.get("id")
     df = pd.read_csv(f"csv/{fieldType}/top_field_authors.csv", sep=',')
-    df["authorID"].astype(int)
+    df['authorID'] = df['authorID'].astype(str)
     author = df[df["authorID"] == authorID]
     name = author["name"].iloc[0]
     paperCount = author["PaperCount_field"].iloc[0]
@@ -220,7 +296,6 @@ def index(request):
     hIndex = author["hIndex_field"].iloc[0]
     
     fields = get_fields(fieldType)
-    authorID = str(authorID)
     mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 1, 0.5, 0.5, 10, 1
     if fieldType == "acl":
         extendsProb = 0.4
@@ -289,8 +364,6 @@ def showlist(request):
     scholarList = [get_scholar(row, name) for row in data if get_scholar(row, name) != {}]
     if len(scholarList) == 0:
         error = 'No author named ' + name               # 错误信息
-        df = pd.read_csv("csv/version.csv", sep=',')
-        versionID = df.iloc[-1]['versionID']
         return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
         return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})

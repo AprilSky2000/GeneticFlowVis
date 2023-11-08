@@ -1,0 +1,2435 @@
+original_author_name,year,type,MAGID,ARCID
+"Joakim Nivre",2021,2,NULL,NULL
+"Qun Liu",2021,2,NULL,NULL
+"Luke Zettlemoyer",2021,2,NULL,NULL
+"Anette Frank",2021,2,NULL,NULL
+"Joyce Chai",2021,2,NULL,NULL
+"Eneko Agirre",2021,2,NULL,NULL
+"Chengqing Zong",2021,2,NULL,NULL
+"Amanda Stent",2021,2,NULL,NULL
+"Philip Cohen",2020,2,NULL,NULL
+"Pascale Fung",2020,2,NULL,NULL
+"Iryna Gurevych",2020,2,NULL,NULL
+"Dan Jurafsky",2020,2,NULL,NULL
+"Hermann Ney",2020,2,2293758362,NULL
+"Philip Resnik",2020,2,NULL,NULL
+"Donia Scott",2020,2,NULL,NULL
+"Noah Smith",2020,2,NULL,NULL
+"Kam-Fai Wong",2020,2,NULL,NULL
+"Barbara Grosz",2019,2,NULL,NULL
+"Graeme Hirst",2019,2,NULL,NULL
+"Mirella Lapata",2019,2,NULL,NULL
+"Hang Li",2019,2,NULL,NULL
+"Paola Merlo",2019,2,NULL,NULL
+"Michael Strube",2019,2,NULL,NULL
+"Robert Dale",2018,2,NULL,NULL
+"Jason Eisner",2018,2,NULL,NULL
+"Mari Ostendorf",2018,2,2046206377,NULL
+"Dragomir Radev",2018,2,NULL,NULL
+"Ellen Riloff",2018,2,NULL,NULL
+"Regina Barzilay",2017,2,NULL,NULL
+"Ralph Grishman",2017,2,NULL,NULL
+"Lillian Lee",2017,2,NULL,NULL
+"Diane Litman",2017,2,NULL,NULL
+"Fernando Pereira",2017,2,2117274611,NULL
+"Stuart Shieber",2017,2,NULL,NULL
+"Bonnie J. Dorr",2016,2,NULL,NULL
+"Marilyn Walker",2016,2,NULL,NULL
+"Haifeng Wang",2016,2,NULL,NULL
+"Ralph Weischedel",2016,2,NULL,NULL
+"Claire Cardie",2015,2,NULL,NULL
+"Kenneth Church",2015,2,NULL,NULL
+"Salim Roukos",2015,2,NULL,NULL
+"Janyce Wiebe",2015,2,NULL,NULL
+"Walter Daelemans",2014,2,NULL,NULL
+"Kevin Knight",2014,2,NULL,NULL
+"Daniel Marcu",2014,2,NULL,NULL
+"Raymond Mooney",2014,2,NULL,NULL
+"Martha Palmer",2014,2,NULL,NULL
+"Junichi Tsujii",2014,2,NULL,NULL
+"Dekang Lin",2013,2,NULL,NULL
+"Candace Sidner",2013,2,NULL,NULL
+"Ido Dagan",2013,2,NULL,NULL
+"David Yarowsky",2013,2,NULL,NULL
+"Hwee Tou Ng",2012,2,NULL,NULL
+"Dan Roth",2012,2,NULL,NULL
+"Richard Sproat",2012,2,NULL,NULL
+"Bonnie Webber",2012,2,NULL,NULL
+"Nicoletta Calzolari",2011,2,NULL,NULL
+"Eugene Charniak",2011,2,NULL,NULL
+"Michael Collins",2011,2,NULL,NULL
+"Eva Hajičová",2011,2,NULL,NULL
+"Julia Hirschberg",2011,2,1983359683,NULL
+"Eduard Hovy",2011,2,NULL,NULL
+"Mark Johnson",2011,2,NULL,NULL
+"Aravind Joshi",2011,2,NULL,NULL
+"Ronald M. Kaplan",2011,2,NULL,NULL
+"Lauri Karttunen",2011,2,NULL,NULL
+"Christopher D. Manning",2011,2,NULL,NULL
+"Mitch Marcus",2011,2,NULL,NULL
+"Yuji Matsumoto",2011,2,NULL,NULL
+"Kathleen R. McKeown",2011,2,NULL,NULL
+"Robert L. Mercer",2011,2,NULL,NULL
+"Robert C. Moore",2011,2,NULL,NULL
+"Dekai Wu",2011,2,NULL,NULL
+"James M. Adams",1994,1,NULL,NULL
+"Frances E. Allen",1994,1,NULL,NULL
+"Franz Leopold Alt",1994,1,NULL,NULL
+"William F. Atchison",1994,1,NULL,NULL
+"Richard H. Austing",1994,1,NULL,NULL
+"Kenneth E. Batcher",1994,1,NULL,NULL
+"C. Gordon Bell",1994,1,NULL,NULL
+"Michael W. Blasgen",1994,1,NULL,NULL
+"Danny Bobrow",1994,1,NULL,NULL
+"David Reeves Boggs",1994,1,NULL,NULL
+"Lorraine Borman",1994,1,NULL,NULL
+"Charles L. Bradshaw",1994,1,NULL,NULL
+"Daniel S. Bricklin",1994,1,NULL,NULL
+"Frederick P. Brooks Jr.",1994,1,NULL,NULL
+"Douglas K. Brotz",1994,1,NULL,NULL
+"Richard R. Burton",1994,1,NULL,NULL
+"Richard G. Canning",1994,1,NULL,NULL
+"Walter M. Carlson",1994,1,NULL,NULL
+"Vinton G. Cerf",1994,1,2029905547,NULL
+"Donald D. Chamberlin",1994,1,NULL,NULL
+"Edgar F. Codd",1994,1,NULL,NULL
+"Edward G. Coffman",1994,1,NULL,NULL
+"Fernando J. Corbató",1994,1,NULL,NULL
+"Harvey G. Cragon",1994,1,NULL,NULL
+"Thomas A. D'Auria",1994,1,NULL,NULL
+"Thomas A. DeFanti",1994,1,2034849075,NULL
+"Peter J. Denning",1994,1,2069086639,NULL
+"Jack B. Dennis",1994,1,NULL,NULL
+"L Peter Deutsch",1994,1,NULL,NULL
+"Edsger W. Dijkstra",1994,1,2137842401,NULL
+"J. Presper Eckert",1994,1,NULL,NULL
+"Peter Elias",1994,1,NULL,NULL
+"Gerald L. Engel",1994,1,NULL,NULL
+"John H. Esbin",1994,1,NULL,NULL
+"Bob O. Evans",1994,1,NULL,NULL
+"Tse-Yun Feng",1994,1,NULL,NULL
+"Aaron Finerman",1994,1,NULL,NULL
+"Robert W. Floyd",1994,1,NULL,NULL
+"Michael J. Flynn",1994,1,NULL,NULL
+"Robert Frankston",1994,1,NULL,NULL
+"Frank L. Friedman",1994,1,NULL,NULL
+"Bernard A. Galler",1994,1,NULL,NULL
+"C. W. Gear",1994,1,NULL,NULL
+"Adele J. Goldberg",1994,1,NULL,NULL
+"Calvin C. Gotlieb",1994,1,NULL,NULL
+"Susan L. Graham",1994,1,NULL,NULL
+"Jim Gray",1994,1,2131537204,NULL
+"Cordell Green",1994,1,NULL,NULL
+"David Gries",1994,1,1980295760,NULL
+"Carl Hammer",1994,1,NULL,NULL
+"Richard Hamming",1994,1,NULL,NULL
+"David Harel",1994,1,427806604,NULL
+"Fred H. Harris",1994,1,NULL,NULL
+"Juris Hartmanis",1994,1,327575412,NULL
+"Danny Hillis",1994,1,NULL,NULL
+"John Hopcroft",1994,1,NULL,NULL
+"Tom Hull",1994,1,NULL,NULL
+"J. N. Hume",1994,1,NULL,NULL
+"Harry Douglas Huskey",1994,1,NULL,NULL
+"William Kahan",1994,1,NULL,NULL
+"Ronald M. Kaplan",1994,1,NULL,NULL
+"Richard M. Karp",1994,1,NULL,NULL
+"Donald Knuth",1994,1,2137000881,NULL
+"David J. Kuck",1994,1,NULL,NULL
+"Thomas Eugene Kurtz",1994,1,NULL,NULL
+"Ray Kurzweil",1994,1,NULL,NULL
+"Butler W. Lampson",1994,1,NULL,NULL
+"Stephen S. Lavenberg",1994,1,NULL,NULL
+"Joshua Lederberg",1994,1,NULL,NULL
+"John A. Lee",1994,1,NULL,NULL
+"Meir M. Lehman",1994,1,2614290841,NULL
+"Bruce G. Lindsay",1994,1,NULL,NULL
+"Joyce Currie Little",1994,1,NULL,NULL
+"Chung Laung Liu",1994,1,NULL,NULL
+"M. Stuart Lynn",1994,1,NULL,NULL
+"Herbert Maisel",1994,1,NULL,NULL
+"Zohar Manna",1994,1,2146370811,NULL
+"John McCarthy",1994,1,2121245618,NULL
+"Edward J. McCluskey",1994,1,NULL,NULL
+"Daniel D. McCracken",1994,1,NULL,NULL
+"Paul R. McJones",1994,1,NULL,NULL
+"A J Milner",1994,1,NULL,NULL
+"Jack Minker",1994,1,250356191,NULL
+"Roger Michael Needham",1994,1,NULL,NULL
+"Peter G. Neumann",1994,1,2129006352,NULL
+"Monroe M. Newborn",1994,1,NULL,NULL
+"John Kenneth Ousterhout",1994,1,NULL,NULL
+"Susan S. Owicki",1994,1,NULL,NULL
+"David Lorge Parnas",1994,1,88694571,NULL
+"David A. Patterson",1994,1,2098984663,NULL
+"William B. Poucher",1994,1,NULL,NULL
+"Anthony Ralston",1994,1,NULL,NULL
+"Ronald L. Rivest",1994,1,695545146,NULL
+"Azriel Rosenfeld",1994,1,2149857775,NULL
+"Jeff Rulifson",1994,1,NULL,NULL
+"Jean E. Sammet",1994,1,651606667,NULL
+"Dana Scott",1994,1,NULL,NULL
+"Daniel Siewiorek",1994,1,NULL,NULL
+"Herbert A. Simon",1994,1,NULL,NULL
+"Barbara B. Simons",1994,1,NULL,NULL
+"Martha E. Sloan",1994,1,NULL,NULL
+"Donald R. Slutz",1994,1,NULL,NULL
+"Burton J. Smith",1994,1,NULL,NULL
+"Richard E. Stearns",1994,1,NULL,NULL
+"Thomas B. Steel",1994,1,NULL,NULL
+"Guy L. Steele",1994,1,NULL,NULL
+"Harold S. Stone",1994,1,NULL,NULL
+"Michael Stonebraker",1994,1,1998938290,NULL
+"William Strecker",1994,1,NULL,NULL
+"Bjarne Stroustrup",1994,1,179039431,NULL
+"Patrick Suppes",1994,1,NULL,NULL
+"Gerald Sussman",1994,1,NULL,NULL
+"Ivan Sutherland",1994,1,NULL,NULL
+"Edward A. Taft",1994,1,NULL,NULL
+"Robert E. Tarjan",1994,1,350567680,NULL
+"Robert William Taylor",1994,1,NULL,NULL
+"Charles P. Thacker",1994,1,NULL,NULL
+"Irving L. Traiger",1994,1,NULL,NULL
+"Joseph Traub",1994,1,NULL,NULL
+"Allen B. Tucker",1994,1,NULL,NULL
+"Andries van Dam",1994,1,2149961428,NULL
+"Willis Howard Ware",1994,1,NULL,NULL
+"Stuart Wecker",1994,1,NULL,NULL
+"Ben Wegbreit",1994,1,NULL,NULL
+"Eric A. Weiss",1994,1,NULL,NULL
+"David John Wheeler",1994,1,NULL,NULL
+"Maurice Vincent Wilkes",1994,1,NULL,NULL
+"Shmuel Winograd",1994,1,NULL,NULL
+"Niklaus Wirth",1994,1,2327738716,NULL
+"Seymour J. Wolfson",1994,1,NULL,NULL
+"William Allan Wulf",1994,1,NULL,NULL
+"L. A. Zadeh",1994,1,NULL,NULL
+"Stephen W. Dunwell",1994,1,NULL,NULL
+"Paul W. Abrahams",1995,1,NULL,NULL
+"Robert L. Ashenhurst",1995,1,NULL,NULL
+"Alan H. Barr",1995,1,NULL,NULL
+"Lawrence Bernstein",1995,1,NULL,NULL
+"Grady Booch",1995,1,64567716,NULL
+"David H. Brandin",1995,1,NULL,NULL
+"Richard P. Brent",1995,1,NULL,NULL
+"Loren C. Carpenter",1995,1,NULL,NULL
+"Edwin Catmull",1995,1,NULL,NULL
+"Robert Lee Constable",1995,1,2059506051,NULL
+"Dorothy E. Denning",1995,1,NULL,NULL
+"David J. DeWitt",1995,1,1979791317,NULL
+"Larry E. Druffel",1995,1,NULL,NULL
+"Erwin Engeler",1995,1,NULL,NULL
+"Stuart I. Feldman",1995,1,NULL,NULL
+"Henry Fuchs",1995,1,2196043388,NULL
+"Zvi Galil",1995,1,NULL,NULL
+"M. R. Garey",1995,1,NULL,NULL
+"Myron Ginsberg",1995,1,NULL,NULL
+"John B. Goodenough",1995,1,NULL,NULL
+"Donald P. Greenberg",1995,1,2086033821,NULL
+"Herbert R. J. Grosch",1995,1,NULL,NULL
+"Bertram Herzog",1995,1,NULL,NULL
+"Harold J. Highland",1995,1,2166638240,NULL
+"Lance J. Hoffman",1995,1,NULL,NULL
+"Oscar H. Ibarra",1995,1,2268403478,NULL
+"David S. Johnson",1995,1,NULL,NULL
+"Cliff B. Jones",1995,1,2142468959,NULL
+"Kenneth W. Kennedy",1995,1,NULL,NULL
+"Won Kim",1995,1,2116124413,NULL
+"S. Rao Kosaraju",1995,1,NULL,NULL
+"Richard E. Ladner",1995,1,1505021651,NULL
+"S. Lakshmivarahan",1995,1,NULL,NULL
+"Ed Lazowska",1995,1,NULL,NULL
+"Nancy G. Leveson",1995,1,NULL,NULL
+"Jay Misra",1995,1,NULL,NULL
+"Jürg Nievergelt",1995,1,NULL,NULL
+"Anthony G. Oettinger",1995,1,NULL,NULL
+"Franco P. Preparata",1995,1,NULL,NULL
+"Roy Rada",1995,1,NULL,NULL
+"Daniel J. Rosenkrantz",1995,1,NULL,NULL
+"Gerard Salton",1995,1,NULL,NULL
+"Fred B. Schneider",1995,1,2106636992,NULL
+"Larry Snyder",1995,1,NULL,NULL
+"Norihisa Suzuki",1995,1,NULL,NULL
+"Jeffrey D. Ullman",1995,1,2289364316,NULL
+"Chris S. Wallace",1995,1,NULL,NULL
+"Peter Wegner",1995,1,2024290158,NULL
+"John R. White",1995,1,NULL,NULL
+"J. Turner Whitted",1995,1,NULL,NULL
+"Gio Wiederhold",1995,1,1988326922,NULL
+"Chak-Kuen Wong",1995,1,NULL,NULL
+"Andrew C. Yao",1995,1,NULL,NULL
+"Paul R. Young",1995,1,NULL,NULL
+"William Richards Adrion",1996,1,NULL,NULL
+"Alfred V. Aho",1996,1,NULL,NULL
+"Narendra Ahuja",1996,1,2129011837,NULL
+"Kurt Akeley",1996,1,NULL,NULL
+"Ruzena Bajcsy",1996,1,1601293841,NULL
+"Gregor von Bochmann",1996,1,2093074657,NULL
+"Anita Borg",1996,1,NULL,NULL
+"B. Chandrasekaran",1996,1,NULL,NULL
+"Bernard Chazelle",1996,1,NULL,NULL
+"Narsingh Deo",1996,1,NULL,NULL
+"George G. Dodd",1996,1,NULL,NULL
+"José Luis Encarnação",1996,1,NULL,NULL
+"Jeanne Ferrante",1996,1,NULL,NULL
+"Michael J. Fischer",1996,1,NULL,NULL
+"Dennis J. Frailey",1996,1,NULL,NULL
+"Robert M. Graham",1996,1,NULL,NULL
+"Michael A. Harrison",1996,1,2304366500,NULL
+"Philip Heidelberger",1996,1,NULL,NULL
+"Mary Jane Irwin",1996,1,NULL,NULL
+"Jeffrey M. Jaffe",1996,1,NULL,NULL
+"Raj Jain",1996,1,NULL,NULL
+"Anita K. Jones",1996,1,NULL,NULL
+"Randy H. Katz",1996,1,2246122413,NULL
+"Maria M. Klawe",1996,1,NULL,NULL
+"Lawrence H. Landweber",1996,1,NULL,NULL
+"Michael E. Lesk",1996,1,NULL,NULL
+"Henry M. Levy",1996,1,NULL,NULL
+"Barbara H. Liskov",1996,1,NULL,NULL
+"Richard R. Muntz",1996,1,NULL,NULL
+"Richard E. Nance",1996,1,NULL,NULL
+"Takao Nishizeki",1996,1,NULL,NULL
+"Bryan T. Preas",1996,1,NULL,NULL
+"T. R. N. Rao",1996,1,NULL,NULL
+"Edward M. Reingold",1996,1,NULL,NULL
+"John R. Rice",1996,1,2119205101,NULL
+"Arnold L. Rosenberg",1996,1,2169735298,NULL
+"Sartaj K. Sahni",1996,1,NULL,NULL
+"Hanan Samet",1996,1,89934235,NULL
+"John E. Savage",1996,1,NULL,NULL
+"Ravi Sethi",1996,1,NULL,NULL
+"Mary M. Shaw",1996,1,2141334907,NULL
+"Abraham Silberschatz",1996,1,2251809919,NULL
+"John A. Stankovic",1996,1,NULL,NULL
+"Larry Stockmeyer",1996,1,NULL,NULL
+"Andrew S. Tanenbaum",1996,1,2068854845,NULL
+"Mary K. Vernon",1996,1,NULL,NULL
+"Uzi Vishkin",1996,1,NULL,NULL
+"Jeffrey S. Vitter",1996,1,118037170,NULL
+"Anthony I. Wasserman",1996,1,2199033490,NULL
+"Mark Wegman",1996,1,NULL,NULL
+"Fred W. Weingarten",1996,1,NULL,NULL
+"Ian Witten",1996,1,2163446563,NULL
+"Marshall C. Yovits",1996,1,NULL,NULL
+"Ian F. Akyildiz",1997,1,NULL,NULL
+"Jean-Loup Baer",1997,1,NULL,NULL
+"Victor R. Basili",1997,1,2011353662,NULL
+"Roger R. Bate",1997,1,NULL,NULL
+"Barry W. Boehm",1997,1,NULL,NULL
+"Imrich Chlamtac",1997,1,NULL,NULL
+"J. D. Couger",1997,1,NULL,NULL
+"W. Bruce Croft",1997,1,2127889770,NULL
+"Gordon B. Davis",1997,1,NULL,NULL
+"David P. Dobkin",1997,1,NULL,NULL
+"Herbert Freeman",1997,1,NULL,NULL
+"Hector Garcia-Molina",1997,1,237419955,NULL
+"Irene Greif",1997,1,NULL,NULL
+"Yuri Gurevich",1997,1,2154094381,NULL
+"John L. Hennessy",1997,1,NULL,NULL
+"Zvi Kedem",1997,1,NULL,NULL
+"Richard A. Kemmerer",1997,1,NULL,NULL
+"H. W. Lawson",1997,1,NULL,NULL
+"Der-Tsai Lee",1997,1,NULL,NULL
+"Richard J. Lipton",1997,1,NULL,NULL
+"Nancy A. Lynch",1997,1,NULL,NULL
+"Daniel A. Menasce",1997,1,NULL,NULL
+"Raymond E. Miller",1997,1,NULL,NULL
+"Ronald H. Perrott",1997,1,NULL,NULL
+"Nicholas Pippenger",1997,1,NULL,NULL
+"Vaughan R. Pratt",1997,1,NULL,NULL
+"John H. Reif",1997,1,2051256779,NULL
+"Raymond Reiter",1997,1,NULL,NULL
+"Paul Schneck",1997,1,NULL,NULL
+"Robert Sedgewick",1997,1,NULL,NULL
+"Kenneth Clem Sevcik",1997,1,NULL,NULL
+"Micha Sharir",1997,1,NULL,NULL
+"Alan C. Shaw",1997,1,NULL,NULL
+"Ben Shneiderman",1997,1,668764113,NULL
+"Kenneth Steiglitz",1997,1,NULL,NULL
+"Donald F. Towsley",1997,1,NULL,NULL
+"Elaine J. Weyuker",1997,1,697582,NULL
+"Peter Widmayer",1997,1,NULL,NULL
+"Robert Wilensky",1997,1,NULL,NULL
+"Philip S. Yu",1997,1,2125104194,NULL
+"Paolo Zanella",1997,1,NULL,NULL
+"Dharma P. Agrawal",1998,1,NULL,NULL
+"Gregory R. Andrews",1998,1,NULL,NULL
+"Andrew W. Appel",1998,1,2120329599,NULL
+"Hal Berghel",1998,1,1177580883,NULL
+"James C. Browne",1998,1,2104477647,NULL
+"Robert S. Cartwright",1998,1,2305176596,NULL
+"Peter P. Chen",1998,1,NULL,NULL
+"Edmund M. Clarke",1998,1,2129477832,NULL
+"Lori A. Clarke",1998,1,NULL,NULL
+"Richard J. Cole",1998,1,NULL,NULL
+"Clarence A. Ellis",1998,1,NULL,NULL
+"Richard P. Gabriel",1998,1,NULL,NULL
+"Gopal Krishna Gupta",1998,1,2101413274,NULL
+"James Jay Horning",1998,1,NULL,NULL
+"Neil D. Jones",1998,1,2116419005,NULL
+"Aravind K. Joshi",1998,1,NULL,NULL
+"Abraham Kandel",1998,1,2115569417,NULL
+"Stephen T. Kent",1998,1,NULL,NULL
+"Simon S. Lam",1998,1,NULL,NULL
+"Kai Li",1998,1,NULL,NULL
+"David Maier",1998,1,2064546257,NULL
+"David Notkin",1998,1,477007165,NULL
+"Susan Nycum",1998,1,NULL,NULL
+"Leon J. Osterweil",1998,1,2248607981,NULL
+"P. Venkat Rangan",1998,1,NULL,NULL
+"John T. Richards",1998,1,NULL,NULL
+"Lawrence A. Rowe",1998,1,NULL,NULL
+"Barbara G. Ryder",1998,1,2139647612,NULL
+"Alan L. Selman",1998,1,NULL,NULL
+"Carlo H. Séquin",1998,1,NULL,NULL
+"Howard Jay Siegel",1998,1,NULL,NULL
+"Eugene H. Spafford",1998,1,171783842,NULL
+"Éva Tardos",1998,1,NULL,NULL
+"Richard N. Taylor",1998,1,2113585066,NULL
+"Albert J. Turner",1998,1,NULL,NULL
+"Emmerich Welzl",1998,1,NULL,NULL
+"Jeannette M. Wing",1998,1,1584891692,NULL
+"Mihalis Yannakakis",1998,1,294360276,NULL
+"Stuart H. Zweben",1998,1,NULL,NULL
+"Marc Auslander",1999,1,NULL,NULL
+"Kenneth P. Birman",1999,1,NULL,NULL
+"Ronald J. Brachman",1999,1,NULL,NULL
+"Robert T. Braden",1999,1,NULL,NULL
+"Robert L. Cook",1999,1,NULL,NULL
+"Joseph S. DeBlasi",1999,1,NULL,NULL
+"James Demmel",1999,1,NULL,NULL
+"Richard J. Fateman",1999,1,NULL,NULL
+"James D. Foley",1999,1,2193907057,NULL
+"John D. Gannon",1999,1,NULL,NULL
+"C. M. Geschke",1999,1,NULL,NULL
+"Carlo Ghezzi",1999,1,2233149120,NULL
+"Robert L. Glass",1999,1,2132308597,NULL
+"Ronald L. Graham",1999,1,NULL,NULL
+"Leonidas J. Guibas",1999,1,356043702,NULL
+"Toshihide Ibaraki",1999,1,NULL,NULL
+"Takeo Kanade",1999,1,2140539176,NULL
+"Philip M. Lewis",1999,1,NULL,NULL
+"David B. MacQueen",1999,1,NULL,NULL
+"Dianne Martin",1999,1,NULL,NULL
+"Larry Masinter",1999,1,NULL,NULL
+"Kurt Mehlhorn",1999,1,512556102,NULL
+"David L. Mills",1999,1,NULL,NULL
+"Dhiraj K. Pradhan",1999,1,NULL,NULL
+"Ahmed Sameh",1999,1,NULL,NULL
+"Pamela Samuelson",1999,1,1657786716,NULL
+"Marc Snir",1999,1,NULL,NULL
+"Richard T. Snodgrass",1999,1,699078101,NULL
+"Mary Lou Soffa",1999,1,686913843,NULL
+"Chung-Jen Tan",1999,1,NULL,NULL
+"Koji Torii",1999,1,NULL,NULL
+"David L. Waltz",1999,1,NULL,NULL
+"John Warnock",1999,1,NULL,NULL
+"Akinori Yonezawa",1999,1,660900409,NULL
+"Prithviraj Banerjee",2000,1,NULL,NULL
+"Francine Berman",2000,1,NULL,NULL
+"Laxmi N. Bhuyan",2000,1,NULL,NULL
+"Alan W. Biermann",2000,1,NULL,NULL
+"Shahid H. Bokhari",2000,1,NULL,NULL
+"Randy Bryant",2000,1,NULL,NULL
+"Peter Buneman",2000,1,2020138198,NULL
+"Stuart K. Card",2000,1,614907589,NULL
+"Michael J. Carey",2000,1,2157114695,NULL
+"Douglas E. Comer",2000,1,NULL,NULL
+"Karen Duncan",2000,1,NULL,NULL
+"Deborah Estrin",2000,1,NULL,NULL
+"Ronald Fagin",2000,1,2103086064,NULL
+"Peter A. Freeman",2000,1,2153265399,NULL
+"W. Kent Fuchs",2000,1,NULL,NULL
+"Donald J. Haderle",2000,1,NULL,NULL
+"Michael T. Heath",2000,1,NULL,NULL
+"Leonard Kleinrock",2000,1,NULL,NULL
+"Henry F. Korth",2000,1,665840641,NULL
+"Axel van Lamsweerde",2000,1,NULL,NULL
+"Raymond A. Lorie",2000,1,NULL,NULL
+"Donald W. Loveland",2000,1,NULL,NULL
+"Albert R. Meyer",2000,1,NULL,NULL
+"James H. Morris",2000,1,NULL,NULL
+"Larry L. Peterson",2000,1,NULL,NULL
+"Moshe Y. Vardi",2000,1,1970575723,NULL
+"David S. Warren",2000,1,2163362677,NULL
+"Reinhard Wilhelm",2000,1,2127844901,NULL
+"Robin J. R. Williams",2000,1,NULL,NULL
+"Willy Zwaenepoel",2000,1,NULL,NULL
+"Jacob A. Abraham",2001,1,NULL,NULL
+"Robert M. Aiken",2001,1,NULL,NULL
+"Tetsuo Asano",2001,1,NULL,NULL
+"Philip A. Bernstein",2001,1,2304774990,NULL
+"Joel S. Birnbaum",2001,1,NULL,NULL
+"Alan H. Borning",2001,1,NULL,NULL
+"Yuri Breitbart",2001,1,1985207418,NULL
+"Jin-Yi Cai",2001,1,NULL,NULL
+"David D. Clark",2001,1,2135387429,NULL
+"Susan B. Davidson",2001,1,2097328450,NULL
+"Johan de Kleer",2001,1,NULL,NULL
+"Jack Dongarra",2001,1,288512535,NULL
+"David J. Farber",2001,1,NULL,NULL
+"Joan Feigenbaum",2001,1,2167932487,NULL
+"Domenico Ferrari",2001,1,NULL,NULL
+"Sally Floyd",2001,1,NULL,NULL
+"Erol Gelenbe",2001,1,NULL,NULL
+"John P. Hayes",2001,1,NULL,NULL
+"S. Sitharama Iyengar",2001,1,2326873480,NULL
+"Ravishankar K. Iyer",2001,1,2115084254,NULL
+"Joseph F. JaJa",2001,1,NULL,NULL
+"Robert E. Kahn",2001,1,NULL,NULL
+"Sung-Mo Kang",2001,1,NULL,NULL
+"Richard B. Kieburtz",2001,1,NULL,NULL
+"Robert A. Kowalski",2001,1,2228449327,NULL
+"Jeffrey Kramer",2001,1,NULL,NULL
+"James F. Kurose",2001,1,NULL,NULL
+"Ruby B. Lee",2001,1,2331811076,NULL
+"Witold Litwin",2001,1,1969171325,NULL
+"Giovanni De Micheli",2001,1,NULL,NULL
+"Barton P. Miller",2001,1,2155251401,NULL
+"Jeffrey C. Mogul",2001,1,NULL,NULL
+"Donald A. Norman",2001,1,2144924319,NULL
+"Cherri M. Pancake",2001,1,NULL,NULL
+"Christos Papadimitriou",2001,1,2220829341,NULL
+"Donn B. Parker",2001,1,NULL,NULL
+"Janak H. Patel",2001,1,NULL,NULL
+"Yale N. Patt",2001,1,NULL,NULL
+"Ira Pohl",2001,1,NULL,NULL
+"J. Mark Pullen",2001,1,NULL,NULL
+"Prabhakar Raghavan",2001,1,2195048431,NULL
+"Raghu Ramakrishnan",2001,1,2164040783,NULL
+"Ramamritham Krithivasan",2001,1,NULL,NULL
+"John C. Reynolds",2001,1,NULL,NULL
+"George G. Robertson",2001,1,2172094290,NULL
+"Nick Roussopoulos",2001,1,258753967,NULL
+"Krishan K. Sabnani",2001,1,NULL,NULL
+"Ravi Sandhu",2001,1,1996714504,NULL
+"Hans-Jörg Schek",2001,1,2050071469,NULL
+"Richard D. Schlichting",2001,1,NULL,NULL
+"Kang G. Shin",2001,1,2160067404,NULL
+"David B. Shmoys",2001,1,NULL,NULL
+"Alan J. Smith",2001,1,NULL,NULL
+"Ralf Steinmetz",2001,1,2238793978,NULL
+"Jonathan Turner",2001,1,NULL,NULL
+"Marilyn C. Wolf",2001,1,NULL,NULL
+"Ouri Wolfson",2001,1,2175821055,NULL
+"Pamela Zave",2001,1,248253975,NULL
+"Pankaj K. Agarwal",2002,1,NULL,NULL
+"Vishwani D. Agrawal",2002,1,NULL,NULL
+"Özalp Babaoğlu",2002,1,NULL,NULL
+"Jon Crowcroft",2002,1,1970640687,NULL
+"David E. Culler",2002,1,NULL,NULL
+"William J. Dally",2002,1,NULL,NULL
+"Thomas G. Dietterich",2002,1,NULL,NULL
+"Susan J. Eggers",2002,1,NULL,NULL
+"Harold N. Gabow",2002,1,NULL,NULL
+"Ambuj Goyal",2002,1,NULL,NULL
+"Adolfo Guzmán-Arenas",2002,1,NULL,NULL
+"Joseph Halpern",2002,1,716715026,NULL
+"Wen-mei Hwu",2002,1,1183556006,NULL
+"Neil Immerman",2002,1,2036035498,NULL
+"Sidney Karin",2002,1,NULL,NULL
+"Wendy A. Kellogg",2002,1,2079158144,NULL
+"David B. Lomet",2002,1,1983664831,NULL
+"Gary L. Miller",2002,1,NULL,NULL
+"C. Mohan",2002,1,NULL,NULL
+"Jeffrey F. Naughton",2002,1,2075622585,NULL
+"Bantwal R. Rau",2002,1,NULL,NULL
+"David Salesin",2002,1,NULL,NULL
+"Mahadev Satyanarayanan",2002,1,NULL,NULL
+"Mateo Valero",2002,1,NULL,NULL
+"George Varghese",2002,1,NULL,NULL
+"Rakesh Agrawal",2003,1,2138427228,NULL
+"Mostafa Ammar",2003,1,NULL,NULL
+"Victor Bahl",2003,1,NULL,NULL
+"Bonnie Berger",2003,1,NULL,NULL
+"Elisa Bertino",2003,1,717547165,NULL
+"John M. Carroll",2003,1,2144459651,NULL
+"Richard A. DeMillo",2003,1,NULL,NULL
+"Barbara J. Grosz",2003,1,NULL,NULL
+"Brent Hailpern",2003,1,NULL,NULL
+"Jiawei Han",2003,1,2121939561,NULL
+"Mary Jean Harrold",2003,1,NULL,NULL
+"Peter E. Hart",2003,1,NULL,NULL
+"Mark A. Horowitz",2003,1,NULL,NULL
+"Paul Hudak",2003,1,2159432867,NULL
+"H. V. Jagadish",2003,1,NULL,NULL
+"Anil K. Jain",2003,1,2162010601,NULL
+"Ramesh C. Jain",2003,1,2133201272,NULL
+"Niraj K. Jha",2003,1,NULL,NULL
+"Dexter Kozen",2003,1,2041783100,NULL
+"Lin Yi-bing",2003,1,NULL,NULL
+"Kathleen McKeown",2003,1,NULL,NULL
+"Thomas P. Moran",2003,1,2135540066,NULL
+"Eugene W. Myers",2003,1,NULL,NULL
+"Craig Partridge",2003,1,NULL,NULL
+"Daniel A. Reed",2003,1,NULL,NULL
+"Stuart J. Russell",2003,1,NULL,NULL
+"William H. Sanders",2003,1,2280265749,NULL
+"Scott J. Shenker",2003,1,719828399,NULL
+"C. J. van Rijsbergen",2003,1,NULL,NULL
+"Gurindar S. Sohi",2003,1,NULL,NULL
+"Bella Bose",2004,1,NULL,NULL
+"Janis A. Bubenko Jr.",2004,1,NULL,NULL
+"Luca Cardelli",2004,1,331751290,NULL
+"Andrew A. Chien",2004,1,NULL,NULL
+"George E. Collins",2004,1,NULL,NULL
+"Joel Emer",2004,1,NULL,NULL
+"Allan Gottlieb",2004,1,NULL,NULL
+"Vicki L. Hanson",2004,1,2114468277,NULL
+"Mark D. Hill",2004,1,NULL,NULL
+"Yannis E. Ioannidis",2004,1,435837623,NULL
+"Frans Kaashoek",2004,1,NULL,NULL
+"Per-Åke Larson",2004,1,2628783441,NULL
+"Peter Lee",2004,1,2139030624,NULL
+"Paul V. Mockapetris",2004,1,NULL,NULL
+"Simon Peyton Jones",2004,1,2142246817,NULL
+"Michael D. Schroeder",2004,1,NULL,NULL
+"Stamatis Vassiliadis",2004,1,NULL,NULL
+"Benjamin W. Wah",2004,1,NULL,NULL
+"David S. Wise",2004,1,NULL,NULL
+"Richard Schantz",2004,1,NULL,NULL
+"Thomas E. Anderson",2005,1,2148869393,NULL
+"Dines Bjørner",2005,1,NULL,NULL
+"Stephen R. Bourne",2005,1,NULL,NULL
+"Rodney Brooks",2005,1,NULL,NULL
+"Surajit Chaudhuri",2005,1,2163909284,NULL
+"Keith D. Cooper",2005,1,2155786059,NULL
+"David L. Dill",2005,1,2148325455,NULL
+"Christophe Diot",2005,1,NULL,NULL
+"Michel Dubois",2005,1,NULL,NULL
+"Michael J. Franklin",2005,1,2523407221,NULL
+"Ophir Frieder",2005,1,1975479660,NULL
+"Robert Harper",2005,1,2147215243,NULL
+"Maurice Herlihy",2005,1,2068258939,NULL
+"Phokion G. Kolaitis",2005,1,720019886,NULL
+"Vipin Kumar",2005,1,2161062602,NULL
+"T. V. Lakshman",2005,1,NULL,NULL
+"Brad A. Myers",2005,1,2117127927,NULL
+"David M. Nicol",2005,1,2170784007,NULL
+"Krishna Palem",2005,1,NULL,NULL
+"Thomas W. Reps",2005,1,341386833,NULL
+"Lui Sha",2005,1,NULL,NULL
+"Mikkel Thorup",2005,1,NULL,NULL
+"Eli Upfal",2005,1,NULL,NULL
+"Umesh Vazirani",2005,1,NULL,NULL
+"Vijay Vazirani",2005,1,NULL,NULL
+"Roy Want",2005,1,NULL,NULL
+"Gerhard Weikum",2005,1,514836396,NULL
+"Daniel S. Weld",2005,1,NULL,NULL
+"Michael P. Wellman",2005,1,NULL,NULL
+"Jennifer Widom",2005,1,671527850,NULL
+"Walter Willinger",2005,1,NULL,NULL
+"David A. Wood",2005,1,NULL,NULL
+"Hui Zhang",2005,1,NULL,NULL
+"Uri C. Weiser",2005,1,NULL,NULL
+"Eric Allender",2006,1,NULL,NULL
+Arvind,2006,1,NULL,NULL
+"Mikhail J. Atallah",2006,1,1984264859,NULL
+"Ming-Syan Chen",2006,1,2111630871,NULL
+"Susan T. Dumais",2006,1,676500258,NULL
+"Usama Fayyad",2006,1,NULL,NULL
+"Matthias Felleisen",2006,1,113813022,NULL
+"Kenneth D. Forbus",2006,1,NULL,NULL
+"Phillip B. Gibbons",2006,1,2144092273,NULL
+"C. Lee Giles",2006,1,2124749556,NULL
+"Albert G. Greenberg",2006,1,NULL,NULL
+"William D. Gropp",2006,1,293862447,NULL
+"Roch Guerin",2006,1,NULL,NULL
+"John V. Guttag",2006,1,120651226,NULL
+"Laura M. Haas",2006,1,NULL,NULL
+"Alon Yitzchak Halevy",2006,1,2154833104,NULL
+"Anthony C. Hearn",2006,1,NULL,NULL
+"Thomas A. Henzinger",2006,1,2707196735,NULL
+"Norman P. Jouppi",2006,1,NULL,NULL
+"John E. Laird",2006,1,NULL,NULL
+"James R. Larus",2006,1,635023701,NULL
+"Charles E. Leiserson",2006,1,NULL,NULL
+"Ming Li",2006,1,2439529108,NULL
+"Nick McKeown",2006,1,NULL,NULL
+"J Strother Moore",2006,1,2112233366,NULL
+"Alan F. Newell",2006,1,NULL,NULL
+"Peter Norvig",2006,1,NULL,NULL
+"Dianne P. O'Leary",2006,1,NULL,NULL
+"Dan R. Olsen Jr.",2006,1,NULL,NULL
+"Kunle Olukotun",2006,1,NULL,NULL
+"M. Tamer Özsu",2006,1,NULL,NULL
+"Vern Paxson",2006,1,716133098,NULL
+"Michael L. Scott",2006,1,NULL,NULL
+"Heung Yeung Shum",2006,1,2147729234,NULL
+"Alfred Z. Spector",2006,1,NULL,NULL
+"Victor D. Vianu",2006,1,152493642,NULL
+"Marianne Winslett",2006,1,2078136799,NULL
+"Alexander L. Wolf",2006,1,NULL,NULL
+"Bryant W. York",2006,1,NULL,NULL
+"Stanley B. Zdonik",2006,1,431165649,NULL
+"Lixia Zhang",2006,1,2170506047,NULL
+"Anant Agarwal",2007,1,NULL,NULL
+"Rajeev Alur",2007,1,689646243,NULL
+"Utpal Banerjee",2007,1,NULL,NULL
+"Catriel Beeri",2007,1,NULL,NULL
+"Avrim Blum",2007,1,NULL,NULL
+"Eric A. Brewer",2007,1,NULL,NULL
+"Andrei Z. Broder",2007,1,NULL,NULL
+"Michael F. Cohen",2007,1,2156496335,NULL
+"Larry L. Constantine",2007,1,NULL,NULL
+"Danny Dolev",2007,1,1983290808,NULL
+"Rodney Graham Downey",2007,1,NULL,NULL
+"Edward A. Feigenbaum",2007,1,NULL,NULL
+"Edward W. Felten",2007,1,234653941,NULL
+"Lance Fortnow",2007,1,NULL,NULL
+"Guang R. Gao",2007,1,1909978535,NULL
+"Georg Gottlob",2007,1,1873538321,NULL
+"Richard Hull",2007,1,2157269769,NULL
+"Daniel P. Huttenlocher",2007,1,NULL,NULL
+"John C. Klensin",2007,1,NULL,NULL
+"Monica S. Lam",2007,1,2136170053,NULL
+"Marc Levoy",2007,1,2073891704,NULL
+"Bhubaneswar Mishra",2007,1,NULL,NULL
+"J. Eliot B. Moss",2007,1,2159697352,NULL
+"Rajeev Motwani",2007,1,2034912444,NULL
+"Martin Odersky",2007,1,248131350,NULL
+"Gary M. Olson",2007,1,NULL,NULL
+"David Padua",2007,1,2123005755,NULL
+"Randy Pausch",2007,1,NULL,NULL
+"Amir Pnueli",2007,1,2171343426,NULL
+"Aristides Requicha",2007,1,NULL,NULL
+"Eric S. Roberts",2007,1,NULL,NULL
+"Michael S. Scarborough",2007,1,NULL,NULL
+"Demetri Terzopoulos",2007,1,668754370,NULL
+"Donald E. Thomas",2007,1,NULL,NULL
+"Philip Wadler",2007,1,2060729710,NULL
+"Mitchell Wand",2007,1,2303035752,NULL
+"Zhang Hongjiang",2007,1,NULL,NULL
+"Viktor K. Prasanna",2007,1,2088826626,NULL
+"Martín Abadi",2008,1,NULL,NULL
+"Gregory D. Abowd",2008,1,NULL,NULL
+"Alexander S. Aiken",2008,1,NULL,NULL
+"Sanjeev Arora",2008,1,NULL,NULL
+"Hari Balakrishnan",2008,1,NULL,NULL
+"William A. S. Buxton",2008,1,2326945342,NULL
+"Kenneth L. Clarkson",2008,1,NULL,NULL
+"Jason Cong",2008,1,NULL,NULL
+"Perry Cook",2008,1,NULL,NULL
+"Stephen A. Cook",2008,1,NULL,NULL
+"Jack W. Davidson",2008,1,2138526175,NULL
+"Umeshwar Dayal",2008,1,689294964,NULL
+"Xiaotie Deng",2008,1,NULL,NULL
+"J. J. Garcia-Luna-Aceves",2008,1,NULL,NULL
+"Michel X. Goemans",2008,1,NULL,NULL
+"Patrick Hanrahan",2008,1,NULL,NULL
+"Charles H. House",2008,1,NULL,NULL
+"Watts S. Humphrey",2008,1,2079950874,NULL
+"Alan C. Kay",2008,1,NULL,NULL
+"Joseph A. Konstan",2008,1,NULL,NULL
+"Roy Levin",2008,1,NULL,NULL
+"P. Geoffrey Lowney",2008,1,NULL,NULL
+"Jitendra Malik",2008,1,NULL,NULL
+"Kathryn S. McKinley",2008,1,2115847858,NULL
+"Bertrand Meyer",2008,1,2161925446,NULL
+"John C. Mitchell",2008,1,2125383417,NULL
+"Joel Moses",2008,1,NULL,NULL
+"J. Ian Munro",2008,1,NULL,NULL
+"Judith S. Olson",2008,1,NULL,NULL
+"Lawrence C. Paulson",2008,1,2016735973,NULL
+"Hamid Pirahesh",2008,1,2213038480,NULL
+"Brian Randell",2008,1,2029293694,NULL
+"Michael K. Reiter",2008,1,2260712038,NULL
+"Jennifer Rexford",2008,1,1998722161,NULL
+"Jonathan S. Rose",2008,1,NULL,NULL
+"Mendel Rosenblum",2008,1,NULL,NULL
+"Rob A. Rutenbar",2008,1,NULL,NULL
+"Tuomas W. Sandholm",2008,1,NULL,NULL
+"Vivek Sarkar",2008,1,2164197688,NULL
+"Mark S. Squillante",2008,1,NULL,NULL
+"Per Stenström",2008,1,NULL,NULL
+"Madhu Sudan",2008,1,466258520,NULL
+"Richard Szeliski",2008,1,1989985383,NULL
+"Douglas B. Terry",2008,1,NULL,NULL
+"Hagit Attiya",2009,1,685665164,NULL
+"David F. Bacon",2009,1,2069733440,NULL
+"Ricardo A. Baeza-Yates",2009,1,528588921,NULL
+"Chandrajit L. Bajaj",2009,1,2006893438,NULL
+"Vijay P. Bhatkar",2009,1,NULL,NULL
+"José A. Blakeley",2009,1,NULL,NULL
+"Gaetano Borriello",2009,1,141796421,NULL
+"Alok Choudhary",2009,1,2147783234,NULL
+"Nell B. Dale",2009,1,NULL,NULL
+"Bruce S. Davie",2009,1,NULL,NULL
+"Jeffrey Dean",2009,1,NULL,NULL
+"Thomas Dean",2009,1,NULL,NULL
+"Bruce Randall Donald",2009,1,NULL,NULL
+"Thomas D. Erickson",2009,1,2183602536,NULL
+"Gerhard Fischer",2009,1,2176357113,NULL
+"Ian Foster",2009,1,2017222965,NULL
+"Andrew V. Goldberg",2009,1,NULL,NULL
+"Michael T. Goodrich",2009,1,2135853928,NULL
+"Venu Govindaraju",2009,1,2102146905,NULL
+"Rajiv Gupta",2009,1,2104865906,NULL
+"Joseph M. Hellerstein",2009,1,2063640528,NULL
+"Laurie J. Hendren",2009,1,2057929015,NULL
+"Urs Hölzle",2009,1,NULL,NULL
+"Farnam Jahanian",2009,1,NULL,NULL
+"Erich Kaltofen",2009,1,NULL,NULL
+"David R. Karger",2009,1,NULL,NULL
+"Arie E. Kaufman",2009,1,2132849971,NULL
+"Hans-Peter Kriegel",2009,1,2135052836,NULL
+"Maurizio Lenzerini",2009,1,1976298713,NULL
+"John C.S. Lui",2009,1,NULL,NULL
+"Dinesh Manocha",2009,1,2146473740,NULL
+"Margaret Martonosi",2009,1,NULL,NULL
+"Yossi Matias",2009,1,NULL,NULL
+"Renée J. Miller",2009,1,NULL,NULL
+"John T. Riedl",2009,1,NULL,NULL
+"Martin C. Rinard",2009,1,343541395,NULL
+"Patricia G. Selinger",2009,1,NULL,NULL
+"R. K. Shyamasundar",2009,1,NULL,NULL
+"Shang-Hua Teng",2009,1,NULL,NULL
+"Chandramohan A. Thekkath",2009,1,NULL,NULL
+"Robbert van Renesse",2009,1,NULL,NULL
+"Baba C. Vemuri",2009,1,NULL,NULL
+"Paulo Veríssimo",2009,1,NULL,NULL
+"Martin Vetterli",2009,1,2545000257,NULL
+"Kyu-Young Whang",2009,1,1933211966,NULL
+"Yorick Alexander Wilks",2009,1,NULL,NULL
+"Terry Winograd",2009,1,2091637845,NULL
+"David Abramson",2010,1,NULL,NULL
+"Sarita Adve",2010,1,NULL,NULL
+"Lorenzo Alvisi",2010,1,NULL,NULL
+"Luiz André Barroso",2010,1,NULL,NULL
+"Doug Burger",2010,1,NULL,NULL
+"Jennifer Chayes",2010,1,NULL,NULL
+"Peter M. Chen",2010,1,NULL,NULL
+"Anne Condon",2010,1,NULL,NULL
+"Mark Crovella",2010,1,NULL,NULL
+"Ron K. Cytron",2010,1,NULL,NULL
+"Michael Dahlin",2010,1,NULL,NULL
+"Amr El Abbadi",2010,1,2055247794,NULL
+"Carla S. Ellis",2010,1,NULL,NULL
+"Christos Faloutsos",2010,1,2198983026,NULL
+"Kathleen Fisher",2010,1,2134374908,NULL
+"James Goodman",2010,1,NULL,NULL
+"Wendy Hall",2010,1,2169720894,NULL
+"Jean-Pierre Hubaux",2010,1,2954918469,NULL
+"Michael I. Jordan",2010,1,NULL,NULL
+"Lydia E. Kavraki",2010,1,NULL,NULL
+"Sara Kiesler",2010,1,729699849,NULL
+"Philip N. Klein",2010,1,NULL,NULL
+"Donald Kossmann",2010,1,2242617642,NULL
+"John Launchbury",2010,1,343041661,NULL
+"Richard F. Lyon",2010,1,NULL,NULL
+"Raymond J. Mooney",2010,1,NULL,NULL
+"S. Muthukrishnan",2010,1,NULL,NULL
+"Fernando Pereira",2010,1,2117274611,NULL
+"Pavel Pevzner",2010,1,NULL,NULL
+"David S. Rosenblum",2010,1,2182166124,NULL
+"Stefan Savage",2010,1,2171030022,NULL
+"Robert B. Schnabel",2010,1,NULL,NULL
+"Daniel A. Spielman",2010,1,NULL,NULL
+"Subhash Suri",2010,1,NULL,NULL
+"Frank Wm. Tompa",2010,1,2271303423,NULL
+"Josep Torrellas",2010,1,NULL,NULL
+"Stephen Trimberger",2010,1,NULL,NULL
+"David M. Ungar",2010,1,2041937263,NULL
+"Andreas Zeller",2010,1,2106620385,NULL
+"Shumin Zhai",2010,1,2235212685,NULL
+"Dieter Rombach",2010,1,NULL,NULL
+"Serge Abiteboul",2011,1,172400696,NULL
+"Divyakant Agrawal",2011,1,2169544959,NULL
+"Ronald Baecker",2011,1,107632699,NULL
+"Thomas J. Ball",2011,1,2121300700,NULL
+"Guy Blelloch",2011,1,149058271,NULL
+"Carl Ebeling",2011,1,NULL,NULL
+"David Eppstein",2011,1,NULL,NULL
+"Geoffrey Charles Fox",2011,1,2165267828,NULL
+"George W. Furnas",2011,1,NULL,NULL
+"David K. Gifford",2011,1,NULL,NULL
+"Ramesh Govindan",2011,1,NULL,NULL
+"Baining Guo",2011,1,2153421060,NULL
+"David Heckerman",2011,1,2021640924,NULL
+"Gerard J. Holzmann",2011,1,2028047182,NULL
+"Hugues Hoppe",2011,1,2206701583,NULL
+"Christian S. Jensen",2011,1,2187435788,NULL
+"Howard J. Karloff",2011,1,NULL,NULL
+"Stephen W. Keckler",2011,1,NULL,NULL
+"Peter B. Key",2011,1,NULL,NULL
+"Scott Kirkpatrick",2011,1,NULL,NULL
+"Robert E. Kraut",2011,1,1975391153,NULL
+"Susan Landau",2011,1,NULL,NULL
+"Ming C. Lin",2011,1,NULL,NULL
+"Peter S. Magnusson",2011,1,NULL,NULL
+"Dahlia Malkhi",2011,1,NULL,NULL
+"Keith Marzullo",2011,1,NULL,NULL
+"Satoshi Matsuoka",2011,1,2164966972,NULL
+"Max Nelson",2011,1,NULL,NULL
+"Joe Mitchell",2011,1,NULL,NULL
+"Shubu Mukherjee",2011,1,NULL,NULL
+"Beng Chin Ooi",2011,1,2037466936,NULL
+"Zehra Meral Ozsoyoglu",2011,1,388475989,NULL
+"János Pach",2011,1,NULL,NULL
+"Linda Petzold",2011,1,NULL,NULL
+"Martha E. Pollack",2011,1,NULL,NULL
+"Dan Roth",2011,1,NULL,NULL
+"John W Sanguinetti",2011,1,NULL,NULL
+"Margo Seltzer",2011,1,NULL,NULL
+"Amit Singhal",2011,1,NULL,NULL
+"Diane L. Souvaine",2011,1,NULL,NULL
+"Divesh Srivastava",2011,1,2196778472,NULL
+"Dan Suciu",2011,1,1986159374,NULL
+"Dean M. Tullsen",2011,1,NULL,NULL
+"Amin Vahdat",2011,1,NULL,NULL
+"David Wetherall",2011,1,NULL,NULL
+"Frank Kenneth Zadeck",2011,1,NULL,NULL
+"Gustavo Alonso",2012,1,2122271048,NULL
+"Lars Arge",2012,1,NULL,NULL
+"Pierre Baldi",2012,1,NULL,NULL
+"Hans-J. Boehm",2012,1,NULL,NULL
+"Craig Boutilier",2012,1,NULL,NULL
+"Tracy Camp",2012,1,NULL,NULL
+"Rick Cattell",2012,1,NULL,NULL
+"Larry Davis",2012,1,NULL,NULL
+"Ahmed K. Elmagarmid",2012,1,2057816297,NULL
+"Wenfei Fan",2012,1,2132396280,NULL
+"Lixin Gao",2012,1,NULL,NULL
+"Simson Garfinkel",2012,1,2583112299,NULL
+"Garth A. Gibson",2012,1,NULL,NULL
+"Saul Greenberg",2012,1,2120666348,NULL
+"Markus Gross",2012,1,2289975239,NULL
+"David Grove",2012,1,2135926280,NULL
+"Jonathan Grudin",2012,1,2103856929,NULL
+"Rachid Guerraoui",2012,1,115057321,NULL
+"Manish Gupta",2012,1,2114032439,NULL
+"John Hershberger",2012,1,NULL,NULL
+"Andrew B. Kahng",2012,1,NULL,NULL
+"Anna R. Karlin",2012,1,NULL,NULL
+"Srinivasan Keshav",2012,1,NULL,NULL
+"Gregor Kiczales",2012,1,562619066,NULL
+"Masaru Kitsuregawa",2012,1,390930505,NULL
+"Leonid Libkin",2012,1,1971151415,NULL
+"Tova Milo",2012,1,1983463915,NULL
+"Klara Nahrstedt",2012,1,159144305,NULL
+"Joseph O'Rourke",2012,1,NULL,NULL
+"Benjamin C. Pierce",2012,1,1988947184,NULL
+"Keshav K. Pingali",2012,1,651843436,NULL
+"Andrew M. Pitts",2012,1,NULL,NULL
+"Rajeev Rastogi",2012,1,2651564987,NULL
+"Raj Reddy",2012,1,NULL,NULL
+"Keith W. Ross",2012,1,NULL,NULL
+"Karem A. Sakallah",2012,1,39739974,NULL
+"Robert Schreiber",2012,1,NULL,NULL
+"Bart Selman",2012,1,1966117383,NULL
+"Ron Shamir",2012,1,NULL,NULL
+"Yoav Shoham",2012,1,NULL,NULL
+"Joseph Sifakis",2012,1,2105927184,NULL
+"Alistair Sinclair",2012,1,NULL,NULL
+"Clifford Stein",2012,1,NULL,NULL
+"Ion Stoica",2012,1,2161479384,NULL
+"Roberto Tamassia",2012,1,237969062,NULL
+"Walter F. Tichy",2012,1,2074083528,NULL
+"Patrick Valduriez",2012,1,2223920688,NULL
+"Leslie G. Valiant",2012,1,NULL,NULL
+"Kathy Yelick",2012,1,NULL,NULL
+"Ramin Zabih",2012,1,NULL,NULL
+"Mark S. Ackerman",2013,1,NULL,NULL
+"Charu C. Aggarwal",2013,1,2146335907,NULL
+"James H. Anderson",2013,1,NULL,NULL
+"Mihir Bellare",2013,1,2052950829,NULL
+"Christine L. Borgman",2013,1,NULL,NULL
+"Stefano Ceri",2013,1,519054157,NULL
+"Krishnendu Chakrabarty",2013,1,NULL,NULL
+"Ramalingam Chellappa",2013,1,NULL,NULL
+"Ingemar J. Cox",2013,1,NULL,NULL
+"Carlos J. P. de Lucena",2013,1,2182731144,NULL
+"Rina Dechter",2013,1,294129211,NULL
+"Chip Elliott",2013,1,NULL,NULL
+"David Forsyth",2013,1,2003447161,NULL
+"Wen Gao",2013,1,2121069363,NULL
+"David Garlan",2013,1,2256096860,NULL
+"James Gosling",2013,1,NULL,NULL
+"Peter J. Haas",2013,1,2118460571,NULL
+"Marti A. Hearst",2013,1,NULL,NULL
+"Matthias Jarke",2013,1,251194211,NULL
+"Sampath Kannan",2013,1,NULL,NULL
+"David J. Kasik",2013,1,NULL,NULL
+"Dina Katabi",2013,1,NULL,NULL
+"Henry A. Kautz",2013,1,NULL,NULL
+"Jon Kleinberg",2013,1,NULL,NULL
+"Panganamala Ramana Kumar",2013,1,NULL,NULL
+"Douglas S. Lea",2013,1,NULL,NULL
+"Yoelle Maarek",2013,1,NULL,NULL
+"Christopher D. Manning",2013,1,NULL,NULL
+"Madhav Marathe",2013,1,NULL,NULL
+"John Mellor-Crummey",2013,1,NULL,NULL
+"Greg Morrisett",2013,1,683339272,NULL
+"Andrew C. Myers",2013,1,2141746463,NULL
+"Dana S. Nau",2013,1,NULL,NULL
+"Satish Rao",2013,1,NULL,NULL
+"Stephen Robertson",2013,1,2129454193,NULL
+"Timothy Roscoe",2013,1,NULL,NULL
+"Timoleon K. Sellis",2013,1,NULL,NULL
+"Dennis Shasha",2013,1,2082974086,NULL
+"Nir N. Shavit",2013,1,NULL,NULL
+"Kyuseok Shim",2013,1,2161168953,NULL
+"Padhraic Smyth",2013,1,2137074633,NULL
+"Milind Tambe",2013,1,2237142500,NULL
+"Val Tannen",2013,1,599151389,NULL
+"David P. Williamson",2013,1,NULL,NULL
+"Limsoon Wong",2013,1,2263195242,NULL
+"Moti Yung",2013,1,2097786798,NULL
+"Ellen W. Zegura",2013,1,NULL,NULL
+"Zhengyou Zhang",2013,1,2129474304,NULL
+"Yuanyuan Zhou",2013,1,NULL,NULL
+"David Zuckerman",2013,1,NULL,NULL
+"Samson Abramsky",2014,1,2147258895,NULL
+"Vikram Adve",2014,1,1990061224,NULL
+"Foto N. Afrati",2014,1,2022488008,NULL
+"Charles W. Bachman",2014,1,NULL,NULL
+"Allan Borodin",2014,1,NULL,NULL
+"Alan Bundy",2014,1,2000084407,NULL
+"Lorrie Faith Cranor",2014,1,368046975,NULL
+"Timothy A. Davis",2014,1,NULL,NULL
+"Srini Devadas",2014,1,NULL,NULL
+"Inderjit S. Dhillon",2014,1,NULL,NULL
+"Nikil D. Dutt",2014,1,NULL,NULL
+"Faith Ellen",2014,1,NULL,NULL
+"Michael D. Ernst",2014,1,2235702021,NULL
+"Adam Finkelstein",2014,1,2136484952,NULL
+"Juliana Freire",2014,1,2116519607,NULL
+"Johannes Gehrke",2014,1,2083845045,NULL
+"Eric Grimson",2014,1,NULL,NULL
+"Mark Guzdial",2014,1,NULL,NULL
+"Gernot Heiser",2014,1,NULL,NULL
+"Eric Horvitz",2014,1,1970391018,NULL
+"Thorsten Joachims",2014,1,NULL,NULL
+"Michael Kearns",2014,1,NULL,NULL
+"Valerie King",2014,1,NULL,NULL
+"Sarit Kraus",2014,1,2122497617,NULL
+"Leslie Lamport",2014,1,2096750770,NULL
+"Sharad Malik",2014,1,2156970971,NULL
+"Yishay Mansour",2014,1,NULL,NULL
+"Subhasish Mitra",2014,1,NULL,NULL
+"Michael Mitzenmacher",2014,1,1988080645,NULL
+"Robert Morris",2014,1,NULL,NULL
+"Vijaykrishnan Narayanan",2014,1,NULL,NULL
+"Shamkant B. Navathe",2014,1,2065325028,NULL
+"Jignesh M. Patel",2014,1,2155925739,NULL
+"Ranganathan Parthasarathy",2014,1,NULL,NULL
+"Omer Reingold",2014,1,NULL,NULL
+"Tom Rodden",2014,1,1980670276,NULL
+"Ronitt Rubinfeld",2014,1,NULL,NULL
+"Daniela Rus",2014,1,NULL,NULL
+"Alberto Luigi Sangiovanni-Vincentelli",2014,1,681596721,NULL
+"Henning Schulzrinne",2014,1,2469462003,NULL
+"Stuart M. Shieber",2014,1,NULL,NULL
+"Ramakrishnan Srikant",2014,1,NULL,NULL
+"Aravind Srinivasan",2014,1,NULL,NULL
+"S. Sudarshan",2014,1,NULL,NULL
+"Paul Syverson",2014,1,2051205022,NULL
+"Gene Tsudik",2014,1,465425324,NULL
+"Steve Whittaker",2014,1,2119343948,NULL
+"Anastasia Ailamaki",2015,1,2024002627,NULL
+"Nancy M. Amato",2015,1,NULL,NULL
+"David M. Blei",2015,1,NULL,NULL
+"Naehyuck Chang",2015,1,NULL,NULL
+"Hsinchun Chen",2015,1,2157743775,NULL
+"Mary Czerwinski",2015,1,2071984077,NULL
+"Giuseppe De Giacomo",2015,1,2113802512,NULL
+"Paul Dourish",2015,1,847797360,NULL
+"Cynthia Dwork",2015,1,208343995,NULL
+"Kevin Fall",2015,1,NULL,NULL
+"Babak Falsafi",2015,1,NULL,NULL
+"Michael Franz",2015,1,2061291788,NULL
+"Orna Grumberg",2015,1,1993734283,NULL
+"Ramanathan V. Guha",2015,1,NULL,NULL
+"Jayant R. Haritsa",2015,1,44170712,NULL
+"Julia Hirschberg",2015,1,1983359683,NULL
+"Piotr Indyk",2015,1,NULL,NULL
+"Tei-Wei Kuo",2015,1,NULL,NULL
+"Xavier Leroy",2015,1,2780386900,NULL
+"Chih-Jen Lin",2015,1,NULL,NULL
+"Bing Liu",2015,1,2244698799,NULL
+"Yunhao Liu",2015,1,2130996983,NULL
+"Michael George Luby",2015,1,NULL,NULL
+"Michael R. Lyu",2015,1,2227744130,NULL
+"Ueli Maurer",2015,1,2068596995,NULL
+"Patrick Drew McDaniel",2015,1,2056207806,NULL
+"Victor Miller",2015,1,NULL,NULL
+"Elizabeth Mynatt",2015,1,18171182,NULL
+"Judea Pearl",2015,1,2248165042,NULL
+"Jian Pei",2015,1,2126330539,NULL
+"Frank Pfenning",2015,1,114048148,NULL
+"Dragomir R. Radev",2015,1,NULL,NULL
+"Sriram Rajamani",2015,1,2083764764,NULL
+"Pablo Rodriguez",2015,1,NULL,NULL
+"Mooly Sagiv",2015,1,1345056057,NULL
+"Peter Schröder",2015,1,NULL,NULL
+"Assaf Schuster",2015,1,NULL,NULL
+"Kevin Skadron",2015,1,NULL,NULL
+"Wang-Chiew Tan",2015,1,2175253844,NULL
+"Santosh Vempala",2015,1,NULL,NULL
+"Tandy Warnow",2015,1,NULL,NULL
+"Michael Wooldridge",2015,1,2345025092,NULL
+"Noga Alon",2016,1,NULL,NULL
+"Paul Barford",2016,1,NULL,NULL
+"Luca Benini",2016,1,NULL,NULL
+"Ricardo Bianchini",2016,1,NULL,NULL
+"Stephen Blackburn",2016,1,2146610949,NULL
+"Dan Boneh",2016,1,201828038,NULL
+"Carla Brodley",2016,1,NULL,NULL
+"Justine Cassell",2016,1,2245648575,NULL
+"Erik Demaine",2016,1,NULL,NULL
+"Allison Druin",2016,1,935383222,NULL
+"Frédo Durand",2016,1,NULL,NULL
+"Nick Feamster",2016,1,1373210103,NULL
+"Jason Flinn",2016,1,NULL,NULL
+"William Freeman",2016,1,2112716162,NULL
+"Yolanda Gil",2016,1,2145802646,NULL
+"Robert Lee Grossman",2016,1,2095279874,NULL
+"Rajesh K. Gupta",2016,1,2180675385,NULL
+"James Hendler",2016,1,NULL,NULL
+"Monika Henzinger",2016,1,NULL,NULL
+"Tony Hey",2016,1,NULL,NULL
+"Xuedong Huang",2016,1,2153189671,NULL
+"Daniel Jackson",2016,1,2120858950,NULL
+"Robert J. K. Jacob",2016,1,NULL,NULL
+"Somesh Jha",2016,1,2193269139,NULL
+"Ravindran Kannan",2016,1,NULL,NULL
+"Anne-Marie Kermarrec",2016,1,NULL,NULL
+"Martin L. Kersten",2016,1,2117317669,NULL
+"Christos Kozyrakis",2016,1,NULL,NULL
+"Marta Kwiatkowska",2016,1,2156109015,NULL
+"James Landay",2016,1,29409133,NULL
+"K. Rustan M. Leino",2016,1,710865586,NULL
+"J. Brian Lyles",2016,1,NULL,NULL
+"Todd C. Mowry",2016,1,NULL,NULL
+"Trevor Mudge",2016,1,NULL,NULL
+"Sharon Oviatt",2016,1,2669286322,NULL
+"Venkata Padmanabhan",2016,1,NULL,NULL
+"Shwetak Patel",2016,1,2127286128,NULL
+"David Peleg",2016,1,1903060929,NULL
+"Radia Perlman",2016,1,NULL,NULL
+"Adrian Perrig",2016,1,2213385919,NULL
+"Ganesan Ramalingam",2016,1,1961305742,NULL
+"Louiqa Raschid",2016,1,285822418,NULL
+"Holly Rushmeier",2016,1,258783921,NULL
+"Michael Saks",2016,1,NULL,NULL
+"Sachin S. Sapatnekar",2016,1,NULL,NULL
+"Abigail Sellen",2016,1,1985629368,NULL
+"Sudipta Sengupta",2016,1,NULL,NULL
+"André Seznec",2016,1,NULL,NULL
+"Valerie E. Taylor",2016,1,NULL,NULL
+"Carlo Tomasi",2016,1,NULL,NULL
+"Paul van Oorschot",2016,1,2101866374,NULL
+"Manuela M. Veloso",2016,1,2108671403,NULL
+"Zhou Zhi-Hua",2016,1,2286237009,NULL
+"Lars Birkedal",2017,1,2149590827,NULL
+"Edouard Bugnion",2017,1,NULL,NULL
+"Margaret Burnett",2017,1,2115609526,NULL
+"Shih-Fu Chang",2017,1,NULL,NULL
+"Edith Cohen",2017,1,NULL,NULL
+"Dorin Comaniciu",2017,1,NULL,NULL
+"Susan M. Dray",2017,1,NULL,NULL
+"Edward A. Fox",2017,1,2159046469,NULL
+"Richard M. Fujimoto",2017,1,NULL,NULL
+"Shafi Goldwasser",2017,1,1728759264,NULL
+"Carla Gomes",2017,1,NULL,NULL
+"Martin Grohe",2017,1,NULL,NULL
+"Aarti Gupta",2017,1,2129619966,NULL
+"Venkatesan Guruswami",2017,1,NULL,NULL
+"Dan Gusfield",2017,1,NULL,NULL
+"Gregory D. Hager",2017,1,NULL,NULL
+"Steven Michael Hand",2017,1,NULL,NULL
+"Mor Harchol-Balter",2017,1,NULL,NULL
+"Laxmikant Kale",2017,1,2115450241,NULL
+"Michael Kass",2017,1,NULL,NULL
+"Angelos Dennis Keromytis",2017,1,299775663,NULL
+"Carl Kesselman",2017,1,NULL,NULL
+"Edward Knightly",2017,1,NULL,NULL
+"Craig Knoblock",2017,1,1991211814,NULL
+"Insup Lee",2017,1,2168261197,NULL
+"Wenke Lee",2017,1,2155626625,NULL
+"Li Erran Li",2017,1,NULL,NULL
+"Gabriel H. Loh",2017,1,NULL,NULL
+"Tomás Lozano-Pérez",2017,1,NULL,NULL
+"Clifford Lynch",2017,1,NULL,NULL
+"Yi Ma",2017,1,NULL,NULL
+"Andrew McCallum",2017,1,2131293038,NULL
+"Silvio Micali",2017,1,699581604,NULL
+"Andreas Moshovos",2017,1,NULL,NULL
+"Gail C. Murphy",2017,1,2100357700,NULL
+"Onur Mutlu",2017,1,NULL,NULL
+"Nuria Oliver",2017,1,NULL,NULL
+"Balaji Prabhakar",2017,1,NULL,NULL
+"Tal Rabin",2017,1,2131142900,NULL
+"K. K. Ramakrishnan",2017,1,NULL,NULL
+"Ravi Ramamoorthi",2017,1,2146115641,NULL
+"Yvonne Rogers",2017,1,2144042109,NULL
+"Yong Rui",2017,1,NULL,NULL
+"Bernhard Schölkopf",2017,1,NULL,NULL
+"Steven M. Seitz",2017,1,2134777055,NULL
+"Michael Sipser",2017,1,NULL,NULL
+"Anand Sivasubramaniam",2017,1,NULL,NULL
+"Mani B. Srivistava",2017,1,NULL,NULL
+"Alexander Vardy",2017,1,NULL,NULL
+"Geoffrey M. Voelker",2017,1,241629895,NULL
+"Martin D. F. Wong",2017,1,NULL,NULL
+"Qiang Yang",2017,1,2109031554,NULL
+"Cheng Xiang Zhai",2017,1,NULL,NULL
+"Aidong Zhang",2017,1,2228514421,NULL
+"Gul Agha",2018,1,2161553928,NULL
+"Krste Asanović",2018,1,NULL,NULL
+"N. Asokan",2018,1,NULL,NULL
+"Paul Barham",2018,1,NULL,NULL
+"Peter L. Bartlett",2018,1,NULL,NULL
+"David Basin",2018,1,2203547071,NULL
+"Elizabeth Belding",2018,1,NULL,NULL
+"Rastislav Bodik",2018,1,1115548098,NULL
+"Katy Börner",2018,1,NULL,NULL
+"Amy S. Bruckman",2018,1,NULL,NULL
+"Jan Camenisch",2018,1,2001749418,NULL
+"Adnan Darwiche",2018,1,457026902,NULL
+"André DeHon",2018,1,NULL,NULL
+"Premkumar T. Devanbu",2018,1,1481757371,NULL
+"Tamal Dey",2018,1,NULL,NULL
+"Sandhya Dwarkadas",2018,1,NULL,NULL
+"Steven K. Feiner",2018,1,252695556,NULL
+"Tim Finin",2018,1,2066282134,NULL
+"Thomas Funkhouser",2018,1,2136189631,NULL
+"Minos Garofalakis",2018,1,2089290244,NULL
+"Mario Gerla",2018,1,563121846,NULL
+"Juan E. Gilbert",2018,1,2133271327,NULL
+"Mohammad Hajiaghayi",2018,1,NULL,NULL
+"Dan Halperin",2018,1,NULL,NULL
+"Johan Håstad",2018,1,NULL,NULL
+"Tian He",2018,1,NULL,NULL
+"Wendi Heinzelman",2018,1,NULL,NULL
+"Aaron Hertzmann",2018,1,1965004193,NULL
+"Jessica Hodgins",2018,1,601642093,NULL
+"John Hughes",2018,1,2306143182,NULL
+"Charles Lee Isbell Jr.",2018,1,NULL,NULL
+"Kimberly Keeton",2018,1,NULL,NULL
+"Sanjeev Khanna",2018,1,NULL,NULL
+"Lillian Lee",2018,1,NULL,NULL
+"F. Thomson Leighton",2018,1,NULL,NULL
+"Fei-Fei Li",2018,1,NULL,NULL
+"Michael L. Littman",2018,1,NULL,NULL
+"Huan Liu",2018,1,2122391114,NULL
+"Jiebo Luo",2018,1,NULL,NULL
+"Bruce Maggs",2018,1,NULL,NULL
+"Bangalore S. Manjunath",2018,1,NULL,NULL
+"Vishal Misra",2018,1,NULL,NULL
+"Frank Mueller",2018,1,NULL,NULL
+"David Parkes",2018,1,NULL,NULL
+"Gurudatta Parulkar",2018,1,NULL,NULL
+"Toniann Pitassi",2018,1,NULL,NULL
+"Lili Qiu",2018,1,NULL,NULL
+"Matthew Roughan",2018,1,NULL,NULL
+"Amit Sahai",2018,1,2159933393,NULL
+"Alex Snoeren",2018,1,NULL,NULL
+"Gerald Tesauro",2018,1,NULL,NULL
+"Bhavani Thuraisingham",2018,1,2298201484,NULL
+"Salil Vadhan",2018,1,173843361,NULL
+"Ellen Voorhees",2018,1,NULL,NULL
+"Avi Wigderson",2018,1,31335080,NULL
+"Alec Wolman",2018,1,NULL,NULL
+"Scott Aaronson",2019,1,NULL,NULL
+"Tarek F. Abdelzaher",2019,1,1970017610,NULL
+"Saman Amarasinghe",2019,1,2083359406,NULL
+"Kavita Bala",2019,1,2050228312,NULL
+"Magdalena Bałazińska",2019,1,2345141441,NULL
+"Paul Beame",2019,1,NULL,NULL
+"Emery D. Berger",2019,1,NULL,NULL
+"Ronald F. Boisvert",2019,1,NULL,NULL
+"Christian Cachin",2019,1,2250947825,NULL
+"Brad Calder",2019,1,NULL,NULL
+"Diego Calvanese",2019,1,1987600604,NULL
+"Srdjan Capkun",2019,1,2144410870,NULL
+"Claire Cardie",2019,1,NULL,NULL
+"Timothy M. Chan",2019,1,NULL,NULL
+"K. Mani Chandy",2019,1,NULL,NULL
+"Xilin Chen",2019,1,NULL,NULL
+"Elizabeth F. Churchill",2019,1,730947879,NULL
+"Philip R. Cohen",2019,1,2145462135,NULL
+"Vincent Conitzer",2019,1,NULL,NULL
+"Noshir Contractor",2019,1,NULL,NULL
+"Matthew B. Dwyer",2019,1,2156583880,NULL
+"Elena Ferrari",2019,1,2170777979,NULL
+"Michael J. Freedman",2019,1,NULL,NULL
+"Deborah Frincke",2019,1,NULL,NULL
+"Lise Getoor",2019,1,1984940772,NULL
+"Maria L. Gini",2019,1,NULL,NULL
+"Subbarao Kambhampati",2019,1,NULL,NULL
+"Tamara G. Kolda",2019,1,NULL,NULL
+"Xiang-Yang Li",2019,1,2111415347,NULL
+"Songwu Lu",2019,1,NULL,NULL
+"Wendy Mackay",2019,1,1925449899,NULL
+"Diana Marculescu",2019,1,NULL,NULL
+"Sheila McIlraith",2019,1,NULL,NULL
+"Rada Mihalcea",2019,1,NULL,NULL
+"Robin Murphy",2019,1,2117700858,NULL
+"Marc Najork",2019,1,NULL,NULL
+"Jason Nieh",2019,1,NULL,NULL
+"Hanspeter Pfister",2019,1,2102290556,NULL
+"Timothy M. Pinkston",2019,1,NULL,NULL
+"Mihai Pop",2019,1,NULL,NULL
+"Andreas Reuter",2019,1,NULL,NULL
+"Jeffrey S. Rosenschein",2019,1,NULL,NULL
+"Srinivasan Seshan",2019,1,NULL,NULL
+"Prashant J. Shenoy",2019,1,NULL,NULL
+"Peter Shor",2019,1,NULL,NULL
+"Mona Singh",2019,1,NULL,NULL
+"Ramesh Sitaraman",2019,1,NULL,NULL
+"Dawn Song",2019,1,2131252044,NULL
+"Salvatore J. Stolfo",2019,1,2021877992,NULL
+"Dacheng Tao",2019,1,2104129307,NULL
+"Moshe Tennenholtz",2019,1,NULL,NULL
+"Giovanni Vigna",2019,1,2192390985,NULL
+"Nisheeth K. Vishnoi",2019,1,NULL,NULL
+"Darrell Whitley",2019,1,NULL,NULL
+"Yuan Xie",2019,1,NULL,NULL
+"Moustafa Amin Youssef",2019,1,NULL,NULL
+"Carlo A. Zaniolo",2019,1,2028117853,NULL
+"Lidong Zhou",2019,1,NULL,NULL
+"Wil van der Aalst",2020,1,621424736,NULL
+"Daniel Abadi",2020,1,2170206103,NULL
+"James Allan",2020,1,2097030689,NULL
+"Srinivas Aluru",2020,1,NULL,NULL
+"Andrea Arpaci-Dusseau",2020,1,NULL,NULL
+"Remzi Arpaci-Dusseau",2020,1,NULL,NULL
+"Suman Banerjee",2020,1,NULL,NULL
+"Manuel Blum",2020,1,NULL,NULL
+"Lionel Briand",2020,1,2144557644,NULL
+"David Brooks",2020,1,NULL,NULL
+"Ran Canetti",2020,1,687553606,NULL
+"John Canny",2020,1,2101610026,NULL
+"Anantha P. Chandrakasan",2020,1,NULL,NULL
+"Yao-Wen Chang",2020,1,NULL,NULL
+"Moses Charikar",2020,1,NULL,NULL
+"Yiran Chen",2020,1,NULL,NULL
+"Graham Cormode",2020,1,2190072679,NULL
+"Patrick Cousot",2020,1,2148533322,NULL
+"Mathieu Desbrun",2020,1,156043509,NULL
+"Whitfield Diffie",2020,1,NULL,NULL
+"Bonnie Dorr",2020,1,NULL,NULL
+"Nicholas Duffield",2020,1,NULL,NULL
+"Alan Edelman",2020,1,NULL,NULL
+"Thomas Eiter",2020,1,420267153,NULL
+"Cormac Flanagan",2020,1,2130341195,NULL
+"Jodi Forlizzi",2020,1,NULL,NULL
+"Dieter Fox",2020,1,2231782831,NULL
+"Sanjay Ghemawat",2020,1,NULL,NULL
+"Antonio González",2020,1,NULL,NULL
+"Andrew D. Gordon",2020,1,2101841271,NULL
+"Steven Gribble",2020,1,NULL,NULL
+"Susanne Hambrusch",2020,1,NULL,NULL
+"Martin Hellman",2020,1,NULL,NULL
+"Nicholas Higham",2020,1,NULL,NULL
+"Tony Hoare",2020,1,2159147199,NULL
+"Holger H. Hoos",2020,1,NULL,NULL
+"Ihab Ilyas",2020,1,1982738670,NULL
+"Lizy John",2020,1,NULL,NULL
+"Joost-Pieter Katoen",2020,1,2036890539,NULL
+"Nam Sung Kim",2020,1,2121754334,NULL
+"Sven Koenig",2020,1,NULL,NULL
+"David Kotz",2020,1,2043852209,NULL
+"Arvind Krishnamurthy",2020,1,NULL,NULL
+"Ravi Kumar",2020,1,2559411768,NULL
+"Brian Neil Levine",2020,1,2157465969,NULL
+"Kevin Leyton-Brown",2020,1,NULL,NULL
+"Xuelong Li",2020,1,2107070739,NULL
+"Steven H. Low",2020,1,NULL,NULL
+"Chenyang Lu",2020,1,NULL,NULL
+"Samuel Madden",2020,1,2139913828,NULL
+"Scott Mahlke",2020,1,NULL,NULL
+"David Maltz",2020,1,NULL,NULL
+"Volker Markl",2020,1,1963964406,NULL
+"Maja Matarić",2020,1,NULL,NULL
+"Filippo Menczer",2020,1,NULL,NULL
+"Jose Meseguer",2020,1,NULL,NULL
+"Meredith Ringel Morris",2020,1,2123314761,NULL
+"Nachiappan Nagappan",2020,1,2031695674,NULL
+"Radhika Nagpal",2020,1,NULL,NULL
+"Moni Naor",2020,1,1023361224,NULL
+"Chandrasekhar Narayanaswami",2020,1,NULL,NULL
+"Sam Noh",2020,1,NULL,NULL
+"Prakash Panangaden",2020,1,2216498992,NULL
+"Sethuraman Panchanathan",2020,1,2055909567,NULL
+"Manish Parashar",2020,1,NULL,NULL
+"Keshab Parhi",2020,1,741769158,NULL
+"Haesun Park",2020,1,NULL,NULL
+"Gordon Plotkin",2020,1,NULL,NULL
+"Michael O. Rabin",2020,1,NULL,NULL
+"Kui Ren",2020,1,2137211123,NULL
+"Paul Resnick",2020,1,NULL,NULL
+"Mary Beth Rosson",2020,1,151371205,NULL
+"Steven Salzberg",2020,1,NULL,NULL
+"Sanjit Arunkumar Seshia",2020,1,260128524,NULL
+"Adi Shamir",2020,1,2201755339,NULL
+"Heng Tao Shen",2020,1,2116772828,NULL
+"Amit Sheth",2020,1,2295682018,NULL
+"Adam D. Smith",2020,1,2132461468,NULL
+"Olga Sorkine-Hornung",2020,1,53636449,NULL
+"Rick Stevens",2020,1,NULL,NULL
+"Peter Stone",2020,1,2147180669,NULL
+"Yufei Tao",2020,1,2131082813,NULL
+"Leandros Tassiulas",2020,1,NULL,NULL
+"Ken Thompson",2020,1,NULL,NULL
+"Andrew Tomkins",2020,1,NULL,NULL
+"Olga Troyanskaya",2020,1,NULL,NULL
+"Matthew Turk",2020,1,2740893301,NULL
+"Toby Walsh",2020,1,2156731892,NULL
+"Wei Wang",2020,1,2981772981,NULL
+"Laurie Williams",2020,1,2175749388,NULL
+"Cathy H. Wu",2020,1,NULL,NULL
+"Shuicheng Yan",2020,1,NULL,NULL
+"Wang Yi",2020,1,2124415778,NULL
+"Michael Zyda",2020,1,357521830,NULL
+"Kun Zhou",2020,1,2463834394,NULL
+"Leonard Adleman",2021,1,NULL,NULL
+"David Bader",2021,1,2148365076,NULL
+"Meenakshi Balakrishnan",2021,1,NULL,NULL
+"Nikolaj Bjørner",2021,1,NULL,NULL
+"Mark Braverman",2021,1,NULL,NULL
+"L. Jean Camp",2021,1,2113696107,NULL
+"Edward Y. Chang",2021,1,2108840372,NULL
+"Tanzeem Choudhury",2021,1,2345003782,NULL
+"Daniel Cohen-Or",2021,1,9988965,NULL
+"Gautam Das",2021,1,2112689123,NULL
+"Anind Dey",2021,1,NULL,NULL
+"Lieven Eeckhout",2021,1,NULL,NULL
+"Martin Farach-Colton",2021,1,NULL,NULL
+"Amos Fiat",2021,1,NULL,NULL
+"Hubertus Franke",2021,1,NULL,NULL
+"Batya Friedman",2021,1,NULL,NULL
+"Evgeniy Gabrilovich",2021,1,NULL,NULL
+"Judith Gal-Ezer",2021,1,NULL,NULL
+"Deepak Ganesan",2021,1,NULL,NULL
+"Anupam Gupta",2021,1,NULL,NULL
+"Zygmunt Haas",2021,1,NULL,NULL
+"Elad Hazan",2021,1,NULL,NULL
+"Xiaobo Sharon Hu",2021,1,NULL,NULL
+"Paola Inverardi",2021,1,2242511651,NULL
+"Zachary Ives",2021,1,53579654,NULL
+"Sushil Jajodia",2021,1,2056441798,NULL
+"Ranjit Jhala",2021,1,2068611990,NULL
+"David R. Kaeli",2021,1,NULL,NULL
+"Jonathan Katz",2021,1,2237101560,NULL
+"Robert Kleinberg",2021,1,NULL,NULL
+"Thomas Lengauer",2021,1,NULL,NULL
+"Fei-Fei Li",2021,1,NULL,NULL
+"Hai Li",2021,1,NULL,NULL
+"Ninghui Li",2021,1,2165412067,NULL
+"Tie-Yan Liu",2021,1,2240541904,NULL
+"Steve Marschner",2021,1,1992278322,NULL
+"Matthew T. Mason",2021,1,NULL,NULL
+"Dale A. Miller",2021,1,2144406363,NULL
+"Elchanan Mossel",2021,1,NULL,NULL
+"Bernhard Nebel",2021,1,NULL,NULL
+"Rafail Ostrovsky",2021,1,1482108584,NULL
+"Joel Ouaknine",2021,1,NULL,NULL
+"David Z. Pan",2021,1,NULL,NULL
+"Rosalind Picard",2021,1,NULL,NULL
+"Shaz Qadeer",2021,1,1985363956,NULL
+"Glenn Ricart",2021,1,NULL,NULL
+"Tajana Rosing",2021,1,NULL,NULL
+"Robert B. Ross",2021,1,NULL,NULL
+"Szymon Rusinkiewicz",2021,1,1936126667,NULL
+"Pierangela Samarati",2021,1,2087987499,NULL
+"Sunita Sarawagi",2021,1,156875573,NULL
+"Bernt Schiele",2021,1,1620943014,NULL
+"Mubarak Ali Shah",2021,1,NULL,NULL
+"Alla Sheffer",2021,1,2009650199,NULL
+"Munindar P. Singh",2021,1,2306655439,NULL
+"Aravinda P. Sistla",2021,1,NULL,NULL
+"Scott A. Smolka",2021,1,2212808945,NULL
+"Jie Tang",2021,1,2158012360,NULL
+"Mark Tehranipoor",2021,1,1976116216,NULL
+"Luca Trevisan",2021,1,NULL,NULL
+"Wenping Wang",2021,1,NULL,NULL
+"Brent Waters",2021,1,2131229705,NULL
+"Ryen W. White",2021,1,2096583854,NULL
+"Jacob O. Wobbrock",2021,1,318516288,NULL
+"Tao Xie",2021,1,1920070090,NULL
+"Ming-Hsuan Yang",2021,1,2127109347,NULL
+"Mohammed Zaki",2021,1,2165917828,NULL
+"Ben Y. Zhao",2021,1,2166435812,NULL
+"Lin Zhong",2021,1,NULL,NULL
+"Shlomo Zilberstein",2021,1,NULL,NULL
+"Thomas Zimmermann",2021,1,2014339847,NULL
+"Bonnie Webber",2020,3,NULL,NULL
+"Ron Kaplan",2019,3,NULL,NULL
+"Mark Steedman",2018,3,NULL,NULL
+"Barbara Grosz",2017,3,NULL,NULL
+"Joan Bresnan",2016,3,NULL,NULL
+"Sheng Li",2015,3,NULL,NULL
+"Robert L. Mercer",2014,3,NULL,NULL
+"Jerry Hobbs",2013,3,NULL,NULL
+"Charles Fillmore",2012,3,NULL,NULL
+"Eugene Charniak",2011,3,NULL,NULL
+"William A. Woods",2010,3,NULL,NULL
+"Fred Jelinek",2009,3,NULL,NULL
+"Yorick Wilks",2008,3,NULL,NULL
+"Lauri Karttunen",2007,3,NULL,NULL
+"Eva Hajicova",2006,3,NULL,NULL
+"Martin Kay",2005,3,NULL,NULL
+"Karen Sparck Jones",2004,3,NULL,NULL
+"Makoto Nagao",2003,3,NULL,NULL
+"Aravind Joshi",2002,3,NULL,NULL
+"Junichi Tsujii",2021,3,NULL,NULL
+"Dan Suciu",2022,4,1986159374,NULL
+"Alon Halevy",2021,4,2154833104,NULL
+"Beng Chin Ooi",2020,4,2037466936,NULL
+"Anastasia Ailamaki",2019,4,2024002627,NULL
+"Raghu Ramakrishnan",2018,4,2164040783,NULL
+"Goetz Graefe",2017,4,2284116839,NULL
+"Gerhard Weikum",2016,4,514836396,NULL
+"Laura Haas",2015,4,2304639312,NULL
+"Martin Kersten",2014,4,2117317669,NULL
+"Stefano Ceri",2013,4,519054157,NULL
+"Bruce Lindsay",2012,4,2020635548,NULL
+"Surajit Chaudhuri",2011,4,2163909284,NULL
+"Umeshwar Dayal",2010,4,689294964,NULL
+"Masaru Kitsuregawa",2009,4,390930505,NULL
+"Moshe Y. Vardi",2008,4,1970575723,NULL
+"Jennifer Widom",2007,4,671527850,NULL
+"Jeffrey D. Ullman",2006,4,2289364316,NULL
+"Michael Carey",2005,4,2157114695,NULL
+"Ronald Fagin",2004,4,2103086064,NULL
+"Don Chamberlin",2003,4,NULL,NULL
+"Patricia Selinger",2002,4,NULL,NULL
+"Rudolf Bayer",2001,4,NULL,NULL
+"Rakesh Agrawal",2000,4,2138427228,NULL
+"Hector Garcia-Molina",1999,4,237419955,NULL
+"Serge Abiteboul",1998,4,172400696,NULL
+"David Maier",1997,4,2064546257,NULL
+"C. Mohan",1996,4,NULL,NULL
+"David DeWitt",1995,4,1979791317,NULL
+"Philip Bernstein",1994,4,2304774990,NULL
+"Jim Gray",1993,4,2131537204,NULL
+"Michael Stonebraker",1992,4,1998938290,NULL
+"Lionel Briand",2022,5,2144557644,NULL
+"Prem Devanbu",2021,5,NULL,NULL
+"Michael Ernst",2020,5,2235702021,NULL
+"Mark Harman",2019,5,2150723893,NULL
+"Andreas Zeller",2018,5,2106620385,NULL
+"Daniel Jackson",2017,5,2120858950,NULL
+"James Herbsleb",2016,5,202682525,NULL
+"Carlo Ghezzi",2015,5,2233149120,NULL
+"Alexander Wolf",2014,5,2115607830,NULL
+"David Notkin",2013,5,477007165,NULL
+"Lori Clarke",2012,5,2106467035,NULL
+"David Garlan",2011,5,2256096860,NULL
+"Mary Shaw",2011,5,2141334907,NULL
+"Erich Gamma",2010,5,NULL,NULL
+"Richard Helm",2010,5,NULL,NULL
+"Ralph Johnson",2010,5,2159634021,NULL
+"John Vlissides",2010,5,NULL,NULL
+"Richard N. Taylor",2009,5,2113585066,NULL
+"Axel van Lamsweerde",2008,5,NULL,NULL
+"Elaine J. Weyuker",2007,5,697582,NULL
+"David Harel",2006,5,427806604,NULL
+"Jeff Kramer",2005,5,2095806276,NULL
+"Jeff Magee",2005,5,2097290386,NULL
+"Nancy Leveson",2004,5,2150992688,NULL
+"Leon J. Osterweil",2003,5,2248607981,NULL
+"Gerard Holzmann",2002,5,2028047182,NULL
+"Michael Jackson",2001,5,2761218531,NULL
+"Victor Basili",2000,5,2011353662,NULL
+"Harlan Mills",1999,5,2151179467,NULL
+"Niklaus Wirth",1999,5,2327738716,NULL
+"David Parnas",1998,5,88694571,NULL
+"Barry Boehm",1997,5,2068686281,NULL
+"NELSON MORGAN",2022,6,2153557346,NULL
+"HERVÉ BOURLARD",2022,6,NULL,NULL
+"DAVID NAHAMOO",2021,6,2039775407,NULL
+"HYNEK HERMANSKY",2020,6,316105680,NULL
+"HERMANN NEY",2019,6,2293758362,NULL
+"MARI OSTENDORF",2018,6,2046206377,NULL
+"MARK YOFFE LIBERMAN",2017,6,2020807148,NULL
+"TAKEHIRO MORIYA",2016,6,2094492567,NULL
+"STEPHEN JOHN YOUNG",2015,6,NULL,NULL
+"BIING-HWANG JUANG",2014,6,2806243324,NULL
+"VICTOR ZUE",2013,6,1980755861,NULL
+"JAMES BAKER",2012,6,NULL,NULL
+"JANET BAKER",2012,6,NULL,NULL
+"JULIA HIRSCHBERG",2011,6,1983359683,NULL
+"SADAOKI FURUI",2010,6,719538715,NULL
+"JOHN MAKHOUL",2009,6,2003402953,NULL
+"RAJ REDDY",2008,6,NULL,NULL
+"ALLEN GERSHO",2007,6,201268087,NULL
+"James D. Johnston",2006,6,NULL,NULL
+"FREDERICK R. JELINEK",2005,6,2019534230,NULL
+"GUNNAR FANT",2004,6,681368066,NULL
+"KENNETH N. STEVENS",2004,6,2096589589,NULL
+"Pramod K. Varshney",2021,7,NULL,NULL
+"Charles Bouman",2021,7,NULL,NULL
+"Jose Carlos Principe",2020,7,2112831471,NULL
+"C.-C. Jay Kuo",2019,7,1250704735,NULL
+"Michael Elad",2018,7,NULL,NULL
+"Patrick Flandrin",2017,7,NULL,NULL
+"Ahmed H. Tewfik",2017,7,NULL,NULL
+"Jelena Kovacevic",2016,7,NULL,NULL
+"Bhaskar D. Rao",2016,7,2103662685,NULL
+"Li Deng",2015,7,2101552792,NULL
+"Moeness G. Amin",2014,7,NULL,NULL
+"Richard G. Baraniuk",2014,7,NULL,NULL
+"Yonina Eldar",2013,7,NULL,NULL
+"Al Hero",2013,7,NULL,NULL
+"Shih-Fu Chang",2012,7,NULL,NULL
+"Ali H. Sayed",2012,7,NULL,NULL
+"Bernd Girod",2011,7,NULL,NULL
+"Björn Ottersten",2011,7,NULL,NULL
+"Aggelos Katsaggelos",2010,7,NULL,NULL
+"José M. F. Moura",2010,7,NULL,NULL
+"K. J. Ray Liu",2009,7,NULL,NULL
+"Alan S. Willsky",2009,7,NULL,NULL
+"Harry L. Van Trees",2008,7,NULL,NULL
+"Michael Unser",2008,7,NULL,NULL
+"H. Vincent Poor",2007,7,NULL,NULL
+"Chin-hui Lee",2006,7,2163150924,NULL
+"Arye Nehorai",2006,7,NULL,NULL
+"Alan Bovik",2005,7,NULL,NULL
+"Hermann Ney",2005,7,2293758362,NULL
+"Edward J. Delp",2004,7,NULL,NULL
+"Stephen J. Young",2004,7,NULL,NULL
+"Johann Bohme",2003,7,NULL,NULL
+"Arogyaswami J. Paulraj",2003,7,NULL,NULL
+"Henrique S. Malvar",2002,7,NULL,NULL
+"Michael D. Zoltowski",2002,7,NULL,NULL
+"P. P. Vaidyanathan",2001,7,NULL,NULL
+"Martin Vetterli",2001,7,2545000257,NULL
+"Rama Chellappa",2000,7,NULL,NULL
+"Georgios B. Giannakis",2000,7,NULL,NULL
+"John R. Treichler",1999,7,NULL,NULL
+"Donald W. Tufts",1999,7,NULL,NULL
+"Biing-Hwang Juang",1998,7,2806243324,NULL
+"Hugo De Man",1998,7,NULL,NULL
+"Robert M. Gray",1997,7,NULL,NULL
+"Boaz Porat",1997,7,NULL,NULL
+"Petre Stoica",1996,7,2019767560,NULL
+"Murat Kunt",1996,7,NULL,NULL
+"Sanjit K. Mitra",1995,7,NULL,NULL
+"Teuvo Kohonen",1995,7,NULL,NULL
+"Thomas P. Barnwell, III",1994,7,2169720417,NULL
+"Louis L. Scharf",1994,7,NULL,NULL
+"John W. Woods",1993,7,NULL,NULL
+"David G. Messerschmitt",1993,7,NULL,NULL
+"S. Y. Kung",1992,7,NULL,NULL
+"R.A. Roberts",1991,7,NULL,NULL
+"R. W. Broderson",1990,7,NULL,NULL
+"B. Friedlander",1989,7,NULL,NULL
+"T. Kailath",1988,7,NULL,NULL
+"J.B. Allan",1987,7,NULL,NULL
+"T.S. Huang",1987,7,NULL,NULL
+"J. H. McClellan",1986,7,NULL,NULL
+"C. S. Burrus",1985,7,NULL,NULL
+"B. Liu",1984,7,NULL,NULL
+"L. B. Jackson",1983,7,NULL,NULL
+"J. Makhoul",1982,7,NULL,NULL
+"K. Steiglitz",1981,7,NULL,NULL
+"T. W. Parks",1980,7,NULL,NULL
+"R. W. Schafer",1979,7,NULL,NULL
+"L. R. Rabiner",1978,7,NULL,NULL
+"A.H. Gray",1977,7,NULL,NULL
+"J.F. Kaiser",1977,7,NULL,NULL
+"J.D. Markel",1977,7,NULL,NULL
+"A.V. Oppenheim",1976,7,NULL,NULL
+"C. Rader",1976,7,NULL,NULL
+"B.S. Atal",1975,7,NULL,NULL
+"J.W. Cooley",1975,7,NULL,NULL
+"B. Gold",1972,7,NULL,NULL
+"J.L. Flanagan",1971,7,NULL,NULL
+"W.W. Lang",1970,7,NULL,NULL
+"H.B. Knowles",1969,7,NULL,NULL
+"M.S. Corrington",1968,7,NULL,NULL
+"D. von Recklinghausen",1967,7,NULL,NULL
+"H. H. Scott",1965,7,NULL,NULL
+"C. D. Mee",1964,7,NULL,NULL
+"D. F. Eldridge",1963,7,NULL,NULL
+"J. K. Hilliard",1962,7,NULL,NULL
+"J. R. MacDonald",1961,7,NULL,NULL
+"W. B. Snow",1960,7,NULL,NULL
+"A. B. Bereskin",1959,7,NULL,NULL
+"P.C. Goldmark",1959,7,NULL,NULL
+"D.W. Martin",1958,7,NULL,NULL
+"M. Camras",1957,7,NULL,NULL
+"H.E. Roys",1956,7,NULL,NULL
+"H.F. Olson",1955,7,NULL,NULL
+"B.B. Bauer",1954,7,NULL,NULL
+"Bernard Gold",1997,8,NULL,NULL
+"Charles M. Rader",1997,8,NULL,NULL
+"Thomas G. Stockham",1998,8,NULL,NULL
+"Lawrence R. Rabiner",1999,8,2020830328,NULL
+"James F. Kaiser",2000,8,NULL,NULL
+"Thomas S. Huang",2001,8,2149631809,NULL
+"James W. Cooley",2002,8,NULL,NULL
+"Hans W. Schuessler",2003,8,NULL,NULL
+"Thomas W. Parks",2004,8,NULL,NULL
+"James H. McClellan",2004,8,NULL,NULL
+"Fumitada Itakura",2005,8,2158059718,NULL
+"Thomas Kailath",2006,8,NULL,NULL
+"Alan V. Oppenheim",2007,8,NULL,NULL
+"Robert M. Gray",2008,8,NULL,NULL
+"Charles Sidney Burrus",2009,8,NULL,NULL
+"Ronald Schafer",2010,8,NULL,NULL
+"Ingrid Daubechies",2011,8,NULL,NULL
+"Clifford Carter",2012,8,NULL,NULL
+"Bishnu S. Atal",2013,8,NULL,NULL
+"Thomas P. Barnwell, III",2014,8,2169720417,NULL
+"Harry L. Van Trees",2015,8,NULL,NULL
+"Louis Scharf",2016,8,NULL,NULL
+"Martin Vetterli",2017,8,2545000257,NULL
+"Bede Liu",2018,8,NULL,NULL
+"Alan Willsky",2019,8,NULL,NULL
+"Ramalingam Chellappa",2020,8,NULL,NULL
+"Emmanuel Candès",2021,8,NULL,NULL
+"Terence Tao",2021,8,NULL,NULL
+"David L. Donoho",2022,8,NULL,NULL
+"Alan J. Perlis",1966,10,NULL,NULL
+"Maurice V. Wilkes",1967,10,NULL,NULL
+"Richard Hamming",1968,10,NULL,NULL
+"Marvin Minsky",1969,10,NULL,NULL
+"James H. Wilkinson",1970,10,NULL,NULL
+"John McCarthy",1971,10,2121245618,NULL
+"Edsger Dijkstra",1972,10,NULL,NULL
+"Charles W. Bachman",1973,10,NULL,NULL
+"Donald E. Knuth",1974,10,NULL,NULL
+"Allen Newell",1975,10,NULL,NULL
+"Herbert A. Simon",1975,10,NULL,NULL
+"Michael O. Rabin",1976,10,NULL,NULL
+"Dana S. Scott",1976,10,NULL,NULL
+"John Backus",1977,10,NULL,NULL
+"Robert W. Floyd",1978,10,NULL,NULL
+"Kenneth E. Iverson",1979,10,NULL,NULL
+"C. Antony R. Hoare",1980,10,NULL,NULL
+"Edgar F. Codd",1981,10,NULL,NULL
+"Stephen A. Cook",1982,10,NULL,NULL
+"Ken Thompson",1983,10,NULL,NULL
+"Dennis M. Ritchie",1983,10,NULL,NULL
+"Niklaus Wirth",1984,10,2327738716,NULL
+"Richard M. Karp",1985,10,NULL,NULL
+"John Hopcroft",1986,10,NULL,NULL
+"Robert Tarjan",1986,10,NULL,NULL
+"John Cocke",1987,10,NULL,NULL
+"Ivan Sutherland",1988,10,NULL,NULL
+"William Morton Kahan",1989,10,NULL,NULL
+"Fernando J. Corbató",1990,10,NULL,NULL
+"Robin Milner",1991,10,2087817183,NULL
+"Butler W. Lampson",1992,10,NULL,NULL
+"Juris Hartmanis",1993,10,327575412,NULL
+"Richard E. Stearns",1993,10,NULL,NULL
+"Edward Feigenbaum",1994,10,NULL,NULL
+"Raj Reddy",1994,10,NULL,NULL
+"Manuel Blum",1995,10,NULL,NULL
+"Amir Pnueli",1996,10,2171343426,NULL
+"Douglas Engelbart",1997,10,NULL,NULL
+"James Gray",1998,10,NULL,NULL
+"Frederick Phillips Brooks，Jr．",1999,10,NULL,NULL
+"Andrew Chi-Chih Yao",2000,10,NULL,NULL
+"Ole-Johan Dahl",2001,10,NULL,NULL
+"Kristen Nygaard",2001,10,NULL,NULL
+"Ronald L. Rivest",2002,10,695545146,NULL
+"Adi Shamir",2002,10,2201755339,NULL
+"Leonard M. Adleman",2002,10,NULL,NULL
+"Alan Kay",2003,10,NULL,NULL
+"Vinton G. Cerf",2004,10,2029905547,NULL
+"Robert E. Kahn",2004,10,NULL,NULL
+"Peter Naur",2005,10,NULL,NULL
+"Frances E. Allen",2006,10,NULL,NULL
+"Edmund M. Clarke",2007,10,2129477832,NULL
+"Allen Emerson",2007,10,NULL,NULL
+"Joseph Sifakis",2007,10,2105927184,NULL
+"Barbara Liskov",2008,10,2084056563,NULL
+"Charles Thacker",2009,10,NULL,NULL
+"Leslie Valiant",2010,10,NULL,NULL
+"Judea Pearl",2011,10,2248165042,NULL
+"Shafi Goldwasser",2012,10,1728759264,NULL
+"Silvio Micali",2012,10,699581604,NULL
+"Leslie Lamport",2013,10,2096750770,NULL
+"Michael Stonebraker",2014,10,1998938290,NULL
+"Whitfield Diffie",2015,10,NULL,NULL
+"Martin Hellman",2015,10,NULL,NULL
+"Tim Berners-Lee",2016,10,NULL,NULL
+"John Hennessy",2017,10,NULL,NULL
+"David Patterson",2017,10,NULL,NULL
+"Yoshua Bengio",2018,10,NULL,NULL
+"Geoffrey Hinton",2018,10,NULL,NULL
+"Yann LeCun",2018,10,NULL,NULL
+"Patrick M. Hanrahan",2019,10,NULL,NULL
+"Edwin E. Catmull",2019,10,NULL,NULL
+"Jeffrey David Ullman",2020,10,NULL,NULL
+"Alfred Vaino Aho",2020,10,NULL,NULL
+"Jack J. Dongarra",2021,10,NULL,NULL
+"Norm Badler",2021,11,NULL,NULL
+"Brent Burley",2021,11,NULL,NULL
+"Mathieu Desbrun",2021,11,156043509,NULL
+"Doug L. James",2021,11,2155930205,NULL
+"Karen Liu",2021,11,NULL,NULL
+"Barbara Mones",2021,11,NULL,NULL
+"William Seaman",2021,11,NULL,NULL
+"Kavita Bala",2020,11,2050228312,NULL
+"Elizabeth Baron",2020,11,NULL,NULL
+"Eugene Fiume",2020,11,2466465998,NULL
+"Ming Lin",2020,11,2143233993,NULL
+"Hanspeter Pfister",2020,11,2102290556,NULL
+"Alla Sheffer",2020,11,2009650199,NULL
+"Frederick Brooks",2019,11,2097474894,NULL
+"Marie-Paule Cani",2019,11,2024013694,NULL
+"Donna Cox",2019,11,NULL,NULL
+"Markus Gross",2019,11,2289975239,NULL
+"Dinesh Manocha",2019,11,2146473740,NULL
+"Ravi Ramamoorthi",2019,11,2146115641,NULL
+"Hanan Samet",2019,11,89934235,NULL
+"Denis Zorin",2019,11,NULL,NULL
+"Ivan E. Sutherland",2018,11,NULL,NULL
+"Donald P. Greenberg",2018,11,2086033821,NULL
+"Andries van Dam",2018,11,2149961428,NULL
+"Ed Catmull",2018,11,NULL,NULL
+"José Luis Encarnação",2018,11,NULL,NULL
+"James Foley",2018,11,2193907057,NULL
+"James F. Blinn",2018,11,723800150,NULL
+"Pat Hanrahan",2018,11,2225733586,NULL
+"Tomoyuki Nishita",2018,11,2173005782,NULL
+"Nelson Max",2018,11,2189376613,NULL
+"Robert L. Cook",2018,11,NULL,NULL
+"James T. Kajiya",2018,11,NULL,NULL
+"Turner Whitted",2018,11,NULL,NULL
+"Henry Fuchs",2018,11,2196043388,NULL
+"Jessica Hodgins",2018,11,601642093,NULL
+"Lynn Hershman Leeson",2018,11,NULL,NULL
+"Roman Verostko",2018,11,NULL,NULL
+"Yoichiro Kawaguchi",2018,11,2294226407,NULL
+"Charles Csuri",2018,11,NULL,NULL
+"Jean-Pierre Hébert",2018,11,NULL,NULL
+"Manfred Mohr",2018,11,NULL,NULL
+"Lillian Schwartz",2018,11,NULL,NULL
+"Steina Vasulka",2018,11,NULL,NULL
+"Ernest A. Edmonds",2018,11,NULL,NULL
+"Monika Fleischmann",2018,11,NULL,NULL
+"Loren Carpenter",2018,11,NULL,NULL
+"Alan H. Barr",2018,11,NULL,NULL
+"John Warnock",2018,11,NULL,NULL
+"Alvy Ray Smith",2018,11,NULL,NULL
+"Kurt Akeley",2018,11,NULL,NULL
+"Marc Levoy",2018,11,2073891704,NULL
+"Przemyslaw Prusinkiewicz",2018,11,NULL,NULL
+"Michael F. Cohen",2018,11,2156496335,NULL
+"Tony DeRose",2018,11,NULL,NULL
+"David H. Salesin",2018,11,2054111979,NULL
+"David Kirk",2018,11,2432757675,NULL
+"Peter Schrӧder",2018,11,NULL,NULL
+"Hugues Hoppe",2018,11,2206701583,NULL
+"Jos Stam",2018,11,NULL,NULL
+"Thomas W. Sederberg",2018,11,NULL,NULL
+"Greg Ward",2018,11,2252024104,NULL
+"Ken Perlin",2018,11,1124562777,NULL
+"Michael Kass",2018,11,NULL,NULL
+"Richard Szeliski",2018,11,1989985383,NULL
+"Greg Turk",2018,11,2130761626,NULL
+"Holly Rushmeier",2018,11,258783921,NULL
+"Thomas Funkhouser",2018,11,2136189631,NULL
+"Steve Marschner",2018,11,1992278322,NULL
+"Fredo Durand",2018,11,NULL,NULL
+"Ramesh Raskar",2018,11,2140705446,NULL
+"Daniel Cohen-Or",2018,11,9988965,NULL
+"Elena Ferrari",2021,12,2170777979,NULL
+"Dawn Song",2020,12,2131252044,NULL
+"Wenke Lee",2019,12,2155626625,NULL
+"N. Asokan",2018,12,NULL,NULL
+"Shai Halevi",2017,12,1686185850,NULL
+"David A. Wagner",2016,12,2109123731,NULL
+"Ross J. Anderson",2015,12,2120643228,NULL
+"Moti Yung",2014,12,2097786798,NULL
+"Adrian Perrig",2013,12,2213385919,NULL
+"Ravi Sandhu",2012,12,1996714504,NULL
+"Virgil Gligor",2011,12,2633438792,NULL
+"Jan Camenisch",2010,12,2001749418,NULL
+"Jonathan Millen",2009,12,NULL,NULL
+"Dorothy Denning",2008,12,2357457453,NULL
+"Martin Abadi",2007,12,NULL,NULL
+"Michael Schroeder",2006,12,NULL,NULL
+"Whitfield Diffie",2005,12,NULL,NULL
+"Johannes Gehrke",2021,13,2083845045,NULL
+"Thorsten Joachims",2020,13,NULL,NULL
+"Charu Aggarwal",2019,13,2146335907,NULL
+"Bing Liu",2018,13,2244698799,NULL
+"Jian Pei",2017,13,2126330539,NULL
+"Philip S. Yu",2016,13,2125104194,NULL
+"Hans-Peter Kriegel",2015,13,2135052836,NULL
+"Pedro Domingos",2014,13,NULL,NULL
+"Jon Kleinberg",2013,13,NULL,NULL
+"Eamonn Keogh",2021,14,2170070822,NULL
+"Joydeep Ghosh",2020,14,2148168557,NULL
+"Jure Leskovec",2019,14,1878631932,NULL
+"Dacheng Tao",2018,14,2104129307,NULL
+"George Karypis",2017,14,219814910,NULL
+"Rajeev Rastogi",2016,14,2651564987,NULL
+"Charu Aggarwal",2015,14,2146335907,NULL
+"Jian Pei",2014,14,2126330539,NULL
+"Hans-Peter Kriegel",2013,14,2135052836,NULL
+"Jerome H. Friedman",2012,14,NULL,NULL
+"Geoff J. McLachlan",2011,14,NULL,NULL
+"Heikki Mannila",2009,14,310734946,NULL
+"Anil Jain",2008,14,2162010601,NULL
+"J. Ross Quinlan",2007,14,NULL,NULL
+"Christos Faloutsos",2006,14,2198983026,NULL
+"David Hand",2004,14,2175518357,NULL
+"Philip S. Yu",2003,14,2125104194,NULL
+"Jiawei Han",2002,14,2121939561,NULL
+"T.Y. Lin",2001,14,NULL,NULL
+"Yvonne Rogers",2022,15,2144042109,NULL
+"Scott Hudson",2021,15,2171298838,NULL
+"Susan T. Dumais",2020,15,676500258,NULL
+"Hiroshi Ishii",2019,15,2096221143,NULL
+"Steven K. Feiner",2018,15,252695556,NULL
+"Brad A. Myers",2017,15,2117127927,NULL
+"Robert E. Kraut",2016,15,1975391153,NULL
+"Jim Hollan",2015,15,NULL,NULL
+"Steve Whittaker",2014,15,2119343948,NULL
+"George G. Robertson",2013,15,2172094290,NULL
+"Dan Olsen",2012,15,2148302434,NULL
+"Terry Winograd",2011,15,2091637845,NULL
+"Lucy Suchman",2010,15,NULL,NULL
+"Sara Kiesler",2009,15,729699849,NULL
+"Bill Buxton",2008,15,NULL,NULL
+"James D. Foley",2007,15,2193907057,NULL
+"Judith Olson and Gary Olson",2006,15,2153820154,NULL
+"Tom Landauer",2005,15,NULL,NULL
+"Tom Moran",2004,15,NULL,NULL
+"John M. Carroll",2003,15,2144459651,NULL
+"Donald A. Norman",2002,15,2144924319,NULL
+"Ben Shneiderman",2001,15,668764113,NULL
+"Stuart K. Card",2000,15,614907589,NULL
+"Douglas C. Engelbart ",1998,15,NULL,NULL
+"Mark Billinghurst",2022,16,2069749540,NULL
+"Tanzeem Choudhury",2022,16,2345003782,NULL
+"Aniket Kittur",2022,16,NULL,NULL
+"Amy J. Ko",2022,16,NULL,NULL
+"Norbert A. Streitz",2022,16,2082180277,NULL
+"Jaime Teevan",2022,16,1982462162,NULL
+"Marilyn Tremaine",2022,16,NULL,NULL
+"Roel Vertegaal",2022,16,2051023350,NULL
+"Maneesh Agrawala",2021,16,718039462,NULL
+"Ann Blandford",2021,16,1784647638,NULL
+"Jeffrey Heer",2021,16,2112690490,NULL
+"Jonathan Lazar",2021,16,2128029572,NULL
+"Fabio Paternò",2021,16,NULL,NULL
+"Rosalind W. Picard",2021,16,687641213,NULL
+"Fernanda Viégas",2021,16,NULL,NULL
+"Allison Woodruff",2021,16,NULL,NULL
+"Sunny Consolvo",2020,16,NULL,NULL
+"Steven M. Drucker",2020,16,14227721,NULL
+"Jean-Daniel Fekete",2020,16,2154968417,NULL
+"Jason Hong",2020,16,2141131632,NULL
+"Kristina Höök",2020,16,NULL,NULL
+"Kasper Hornbæk",2020,16,NULL,NULL
+"Meredith Ringel Morris",2020,16,2123314761,NULL
+"Peter Wright",2020,16,2138390243,NULL
+"George Fitzmaurice",2019,16,1899877228,NULL
+"Batya Friedman",2019,16,NULL,NULL
+"Takeo Igarashi",2019,16,2152110089,NULL
+"Jennifer Mankoff",2019,16,1987134293,NULL
+"Nuria Oliver",2019,16,NULL,NULL
+"Loren Terveen",2019,16,2308719832,NULL
+"Jacob O. Wobbrock",2019,16,318516288,NULL
+"John Zimmerman",2019,16,2165294875,NULL
+"Amy S. Bruckman",2018,16,NULL,NULL
+"Sheelagh Carpendale",2018,16,2076420186,NULL
+"Ed H. Chi",2018,16,2237883256,NULL
+"Michael Muller",2018,16,2113830967,NULL
+"Albrecht Schmidt",2018,16,2688824889,NULL
+"Jean Scholtz",2018,16,2688139758,NULL
+"Andrew D. Wilson",2018,16,2105571773,NULL
+"Volker Wulf",2018,16,656307113,NULL
+"Elisabeth André",2017,16,NULL,NULL
+"Lorrie Faith Cranor",2017,16,368046975,NULL
+"Vicki L. Hanson",2017,16,2114468277,NULL
+"Marti A. Hearst",2017,16,NULL,NULL
+"Gloria Mark",2017,16,2095721151,NULL
+"Philippe Palanque",2017,16,87613993,NULL
+"Paul Resnick",2017,16,NULL,NULL
+"Thad Eugene Starner",2017,16,2038762803,NULL
+"Margaret Burnett",2016,16,2115609526,NULL
+"Elizabeth F. Churchill",2016,16,730947879,NULL
+"Allison Druin",2016,16,935383222,NULL
+"Susan R. Fussell",2016,16,302636038,NULL
+"Yves Guiard",2016,16,NULL,NULL
+"Leysia Palen",2016,16,NULL,NULL
+"Daniel M. Russell",2016,16,NULL,NULL
+"John Stasko",2016,16,2087252583,NULL
+"Stephen Brewster",2015,16,2157782254,NULL
+"Andy Cockburn",2015,16,2101644873,NULL
+"Anind K. Dey",2015,16,2111246749,NULL
+"Ernest Edmonds",2015,16,2163922885,NULL
+"Scott MacKenzie",2015,16,2206355151,NULL
+"Sharon Oviatt",2015,16,2669286322,NULL
+"Catherine Plaisant",2015,16,216611935,NULL
+"Bill Verplank",2015,16,NULL,NULL
+"John C. Tang",2014,16,2014998196,NULL
+"Jeff A. Johnson",2014,16,NULL,NULL
+"Susan Dray",2014,16,1643225831,NULL
+"Jodi L. Forlizzi",2014,16,2068668851,NULL
+"Keith Edwards",2014,16,2166870691,NULL
+"Ken Hinckley",2014,16,1560725665,NULL
+"Richard H. R. Harper",2014,16,2122843253,NULL
+"Gary Marsden",2014,16,2124313408,NULL
+"Patrick Baudisch",2013,16,2009751849,NULL
+"Alan Dix",2013,16,2304140017,NULL
+"Clarisse de Souza",2013,16,2166724364,NULL
+"Victoria Bellotti",2013,16,NULL,NULL
+"Bonnie Nardi",2013,16,2015738512,NULL
+"Rebecca E. Grinter",2013,16,504046652,NULL
+"Thomas S. Tullis",2013,16,NULL,NULL
+"Eric Horvitz",2013,16,1970391018,NULL
+"Ben Bederson",2012,16,NULL,NULL
+"Steve Benford",2012,16,2088024608,NULL
+"Hugh Dubberly",2012,16,NULL,NULL
+"Carl Gutwin",2012,16,2071700171,NULL
+"Joy Mountford",2012,16,NULL,NULL
+"Alan Newell",2012,16,2283508340,NULL
+"Yvonne Rogers",2012,16,2144042109,NULL
+"Ravin Balakrishnan",2011,16,2130130894,NULL
+"Steven Feiner",2011,16,NULL,NULL
+"Joseph Konstan",2011,16,2002483998,NULL
+"James Landay",2011,16,29409133,NULL
+"Jenny Preece",2011,16,NULL,NULL
+"Abi Sellen",2011,16,NULL,NULL
+"Dennis Wixon",2011,16,2634288744,NULL
+"Susanne Bødker",2010,16,NULL,NULL
+"Mary Czerwinski",2010,16,2071984077,NULL
+"Austin Henderson",2010,16,NULL,NULL
+"David Kieras",2010,16,528685754,NULL
+"Arnie Lund",2010,16,NULL,NULL
+"Larry Tesler",2010,16,NULL,NULL
+"Shumin Zhai",2010,16,2235212685,NULL
+"Mark Ackerman",2009,16,1979641284,NULL
+"Bill Gaver",2009,16,NULL,NULL
+"Clayton Lewis",2009,16,2137078213,NULL
+"Wendy Mackay",2009,16,1925449899,NULL
+"Aaron Marcus",2009,16,2151173061,NULL
+"Elizabeth Mynatt",2009,16,18171182,NULL
+"Tom Rodden",2009,16,1980670276,NULL
+"Gregory Abowd",2008,16,620732773,NULL
+"Paul Dourish",2008,16,847797360,NULL
+"Wendy A. Kellogg",2008,16,2079158144,NULL
+"Randy Pausch",2008,16,NULL,NULL
+"Mary Beth Rosson",2008,16,151371205,NULL
+"Steve Whittaker",2008,16,2119343948,NULL
+"Joëlle Coutaz",2007,16,NULL,NULL
+"Karen Holtzblatt",2007,16,299548734,NULL
+"Gerhard Fischer",2007,16,2176357113,NULL
+"Robert J.K. Jacob",2007,16,673017202,NULL
+"Jun Rekimoto",2007,16,1994375393,NULL
+"Christopher Schmandt",2007,16,NULL,NULL
+"Michel Beaudouin-Lafon",2006,16,2674390412,NULL
+"Scott Hudson",2006,16,2171298838,NULL
+"Hiroshi Ishii",2006,16,2096221143,NULL
+"Jakob Nielsen",2006,16,2238716427,NULL
+"Peter L. Pirolli",2006,16,NULL,NULL
+"George Robertson",2006,16,NULL,NULL
+"Ron Baecker",2005,16,NULL,NULL
+"Susan Dumais",2005,16,NULL,NULL
+"John Gould",2005,16,NULL,NULL
+"Saul Greenberg",2005,16,2120666348,NULL
+"Bonnie John",2005,16,2120182675,NULL
+"Andrew Monk",2005,16,2141456381,NULL
+"George Furnas",2004,16,NULL,NULL
+"Jonathan Grudin",2004,16,2103856929,NULL
+"William Newman",2004,16,NULL,NULL
+"Brad Myers",2004,16,NULL,NULL
+"Dan Olsen",2004,16,2148302434,NULL
+"Brian Shackel",2004,16,NULL,NULL
+"Terry Winograd",2004,16,2091637845,NULL
+"Thomas Green",2003,16,NULL,NULL
+"James D. Hollan",2003,16,400323076,NULL
+"Robert E. Kraut",2003,16,1975391153,NULL
+"Gary M. Olson",2003,16,NULL,NULL
+"Peter G. Polson",2003,16,NULL,NULL
+"William A. S. Buxton",2002,16,2326945342,NULL
+"John M. Carroll",2002,16,2144459651,NULL
+"Douglas C. Engelbart",2002,16,NULL,NULL
+"Sara Kiesler",2002,16,729699849,NULL
+"Thomas K. Landauer",2002,16,NULL,NULL
+"Lucy A. Suchman",2002,16,NULL,NULL
+"Stuart K. Card",2001,16,614907589,NULL
+"James D. Foley",2001,16,2193907057,NULL
+"Morten Kyng",2001,16,NULL,NULL
+"Thomas P. Moran",2001,16,2135540066,NULL
+"Donald A. Norman",2001,16,2144924319,NULL
+"Judith S. Olson",2001,16,NULL,NULL
+"Ben Shneiderman",2001,16,668764113,NULL
+"Doug L. James",2021,17,2155930205,NULL
+"Kavita Bala",2020,17,2050228312,NULL
+"Denis Zorin",2019,17,NULL,NULL
+"Daniel Cohen-Or",2018,17,9988965,NULL
+"Ramesh Raskar",2017,17,2140705446,NULL
+"Frédo Durand",2016,17,NULL,NULL
+"Steve Marschner",2015,17,1992278322,NULL
+"Thomas Funkhouser",2014,17,2136189631,NULL
+"Holly Rushmeier",2013,17,258783921,NULL
+"Greg Turk",2012,17,2130761626,NULL
+"Richard Szeliski",2011,17,1989985383,NULL
+"Jessica Hodgins",2010,17,601642093,NULL
+"Michael Kass",2009,17,NULL,NULL
+"Ken Perlin",2008,17,1124562777,NULL
+"Greg Ward",2007,17,2252024104,NULL
+"Thomas W. Sederberg",2006,17,NULL,NULL
+"Jos Stam",2005,17,NULL,NULL
+"Hugues Hoppe",2004,17,2206701583,NULL
+"Peter Schröder",2003,17,NULL,NULL
+"David Kirk",2002,17,2432757675,NULL
+"Andrew Witkin",2001,17,NULL,NULL
+"David H. Salesin",2000,17,2054111979,NULL
+"Tony DeRose",1999,17,NULL,NULL
+"Michael F. Cohen",1998,17,2156496335,NULL
+"Przemyslaw Prusinkiewicz",1997,17,NULL,NULL
+"Marc Levoy",1996,17,2073891704,NULL
+"Kurt Akeley",1995,17,NULL,NULL
+"Kenneth E. Torrance",1994,17,NULL,NULL
+"Pat Hanrahan",1993,17,2225733586,NULL
+"Henry Fuchs",1992,17,2196043388,NULL
+"James T. Kajiya",1991,17,NULL,NULL
+"Richard Shoup and Alvy Ray Smith",1990,17,NULL,NULL
+"John Warnock",1989,17,NULL,NULL
+"Alan H. Barr",1988,17,NULL,NULL
+"Robert Cook",1987,17,NULL,NULL
+"Turner Whitted",1986,17,NULL,NULL
+"Loren Carpenter",1985,17,NULL,NULL
+"James H. Clark",1984,17,NULL,NULL
+"James F. Blinn",1983,17,723800150,NULL
+"Robert (Bob) Harper",2021,18,2147215243,NULL
+"Hans-J. Boehm",2020,18,NULL,NULL
+"Alex Aiken",2019,18,2067453598,NULL
+"Thomas W. Reps",2017,18,341386833,NULL
+"Simon Peyton Jones",2016,18,2142246817,NULL
+"Luca Cardelli",2015,18,331751290,NULL
+"Neil Jones",2014,18,2116419005,NULL
+"Patrick and Radhia Cousot",2013,18,2148533322,NULL
+"Matthias Felleisen",2012,18,113813022,NULL
+"Sir Charles Antony Richard Hoare",2011,18,NULL,NULL
+"Gordon D. Plotkin",2010,18,2076549375,NULL
+"Rod Burstall",2009,18,NULL,NULL
+"Barbara Liskov",2008,18,2084056563,NULL
+"Niklaus Wirth",2007,18,2327738716,NULL
+"Ron Cytron",2006,18,NULL,NULL
+"Jeanne Ferrante",2006,18,NULL,NULL
+"Barry Rosen",2006,18,NULL,NULL
+"Mark Wegman",2006,18,NULL,NULL
+"Kenneth Zadeck",2006,18,NULL,NULL
+"Erich Gamma",2005,18,NULL,NULL
+"Richard Helm",2005,18,NULL,NULL
+"Ralph Johnson",2005,18,2159634021,NULL
+"John Vlissides",2005,18,NULL,NULL
+"John Backus",2004,18,NULL,NULL
+"John Reynolds",2003,18,2403193723,NULL
+"John McCarthy",2002,18,2121245618,NULL
+"Robin Milner",2001,18,2087817183,NULL
+"Susan Graham",2000,18,2138159208,NULL
+"Ken Kennedy",1999,18,2136496678,NULL
+"Fran Allen",1998,18,NULL,NULL
+"Guy Steele",1997,18,2501552208,NULL
+"Cynthia Dwork",2020,9,208343995,NULL
+"Avi Wigderson",2019,9,31335080,NULL
+"Johan Håstad",2018,9,NULL,NULL
+"Oded Goldreich",2017,9,65538393,NULL
+"Noam Nisan",2016,9,NULL,NULL
+"László Babai",2015,9,NULL,NULL
+"Richard J. Lipton",2014,9,NULL,NULL
+"Gary L. Miller",2013,9,NULL,NULL
+"Leonid Levin",2012,9,NULL,NULL
+"Ravi Kannan",2011,9,NULL,NULL
+"David S. Johnson",2010,9,NULL,NULL
+"Volker Strassen",2008,9,NULL,NULL
+"Nancy Lynch",2007,9,2180706138,NULL
+"Mihalis Yannakakis",2005,9,294360276,NULL
+"Miklos Ajtai",2003,9,NULL,NULL
+"Christos Papadimitriou",2002,9,2220829341,NULL
+"Jeffrey D. Ullman",2000,9,2289364316,NULL
+"László Lovász",1999,9,NULL,NULL
+"Leslie G. Valiant",1997,9,NULL,NULL
+"Andrew C.-C. Yao",1996,9,NULL,NULL
+"Wilhelm Röntgen",1901,19,NULL,NULL
+"Hendrik Lorentz",1902,19,NULL,NULL
+"Pieter Zeeman",1902,19,NULL,NULL
+"Antoine Henri Becquerel",1903,19,NULL,NULL
+"Pierre Curie",1903,19,NULL,NULL
+"Marie Skłodowska-Curie",1903,19,NULL,NULL
+"John William Strutt 3rd Baron Rayleigh",1904,19,NULL,NULL
+"Philipp Eduard Anton von Lenard",1905,19,NULL,NULL
+"Joseph John Thomson",1906,19,NULL,NULL
+"Albert Abraham Michelson",1907,19,NULL,NULL
+"Gabriel Lippmann",1908,19,NULL,NULL
+"Guglielmo Marconi",1909,19,NULL,NULL
+"Karl Ferdinand Braun",1909,19,NULL,NULL
+"Johannes Diderik van der Waals",1910,19,NULL,NULL
+"Wilhelm Wien",1911,19,NULL,NULL
+"Nils Gustaf Dalén",1912,19,NULL,NULL
+"Heike Kamerlingh-Onnes",1913,19,NULL,NULL
+"Max von Laue",1914,19,NULL,NULL
+"William Henry Bragg",1915,19,NULL,NULL
+"William Lawrence Bragg",1915,19,NULL,NULL
+"Charles Glover Barkla",1917,19,NULL,NULL
+"Max Planck",1918,19,NULL,NULL
+"Johannes Stark",1919,19,NULL,NULL
+"Charles Édouard Guillaume",1920,19,NULL,NULL
+"Albert Einstein",1921,19,NULL,NULL
+"Niels Bohr",1922,19,NULL,NULL
+"Robert Andrews Millikan",1923,19,NULL,NULL
+"Manne Siegbahn",1924,19,NULL,NULL
+"James Franck",1925,19,NULL,NULL
+"Gustav Ludwig Hertz",1925,19,NULL,NULL
+"Jean Baptiste Perrin",1926,19,NULL,NULL
+"Arthur Holly Compton",1927,19,NULL,NULL
+"Charles Thomson Rees Wilson",1927,19,NULL,NULL
+"Owen Willans Richardson",1928,19,NULL,NULL
+"Louis Victor Pierre Raymond 7th Duc de Broglie",1929,19,NULL,NULL
+"Chandrasekhara Venkata Raman",1930,19,NULL,NULL
+"Werner Heisenberg",1932,19,NULL,NULL
+"Erwin Schrödinger",1933,19,NULL,NULL
+"Paul Dirac",1933,19,NULL,NULL
+"James Chadwick",1935,19,NULL,NULL
+"Victor Francis Hess",1936,19,NULL,NULL
+"Carl David Anderson",1936,19,NULL,NULL
+"Clinton Joseph Davisson",1937,19,NULL,NULL
+"George Paget Thomson",1937,19,NULL,NULL
+"Enrico Fermi",1938,19,NULL,NULL
+"Ernest Lawrence",1939,19,NULL,NULL
+"Otto Stern",1943,19,NULL,NULL
+"Isidor Isaac Rabi",1944,19,NULL,NULL
+"Wolfgang Pauli",1945,19,NULL,NULL
+"Percy Williams Bridgman",1946,19,NULL,NULL
+"Edward Victor Appleton",1947,19,NULL,NULL
+"Patrick Maynard Stuart Blackett",1948,19,NULL,NULL
+"Hideki Yukawa",1949,19,NULL,NULL
+"Cecil Frank Powell",1950,19,NULL,NULL
+"John Douglas Cockcroft",1951,19,NULL,NULL
+"Ernest Thomas Sinton Walton",1951,19,NULL,NULL
+"Felix Bloch",1952,19,NULL,NULL
+"Edward Mills Purcell",1952,19,NULL,NULL
+"Frits Zernike",1953,19,NULL,NULL
+"Max Born",1954,19,NULL,NULL
+"Walther Bothe",1954,19,NULL,NULL
+"Willis Eugene Lamb",1955,19,NULL,NULL
+"Polykarp Kusch",1955,19,NULL,NULL
+"John Bardeen",1956,19,NULL,NULL
+"Walter Houser Brattain",1956,19,NULL,NULL
+"William Bradford Shockley",1956,19,NULL,NULL
+"Tsung-Dao Lee",1957,19,NULL,NULL
+"Chen-Ning Yang",1957,19,NULL,NULL
+"Pavel Alekseyevich Cherenkov",1958,19,NULL,NULL
+"Ilya Frank",1958,19,NULL,NULL
+"Igor Yevgenyevich Tamm",1958,19,NULL,NULL
+"Emilio Gino Segrè",1959,19,NULL,NULL
+"Owen Chamberlain",1959,19,NULL,NULL
+"Donald Arthur Glaser",1960,19,NULL,NULL
+"Robert Hofstadter",1961,19,NULL,NULL
+"Rudolf Ludwig Mössbauer",1961,19,NULL,NULL
+"Lev Davidovich Landau",1962,19,NULL,NULL
+"Eugene Paul Wigner",1963,19,NULL,NULL
+"Maria Goeppert-Mayer",1963,19,NULL,NULL
+"J. Hans D. Jensen",1963,19,NULL,NULL
+"Nicolay Gennadiyevich Basov",1964,19,NULL,NULL
+"Alexander Prokhorov",1964,19,NULL,NULL
+"Charles Hard Townes",1964,19,NULL,NULL
+"Richard Phillips Feynman",1965,19,NULL,NULL
+"Julian Schwinger",1965,19,NULL,NULL
+"Shin'ichirō Tomonaga",1965,19,NULL,NULL
+"Alfred Kastler",1966,19,NULL,NULL
+"Hans Albrecht Bethe",1967,19,NULL,NULL
+"Luis Walter Alvarez",1968,19,NULL,NULL
+"Murray Gell-Mann",1969,19,NULL,NULL
+"Hannes Olof Gösta Alfvén",1970,19,NULL,NULL
+"Louis Néel",1970,19,NULL,NULL
+"Dennis Gabor",1971,19,NULL,NULL
+"John Bardeen",1972,19,NULL,NULL
+"Leon Neil Cooper",1972,19,NULL,NULL
+"John Robert Schrieffer",1972,19,NULL,NULL
+"Leo Esaki",1973,19,NULL,NULL
+"Ivar Giaever",1973,19,NULL,NULL
+"Brian David Josephson",1973,19,NULL,NULL
+"Martin Ryle",1974,19,NULL,NULL
+"Antony Hewish",1974,19,NULL,NULL
+"Aage Bohr",1975,19,NULL,NULL
+"Ben Roy Mottelson",1975,19,NULL,NULL
+"Leo James Rainwater",1975,19,NULL,NULL
+"Samuel Chao Chung Ting",1976,19,NULL,NULL
+"Burton Richter",1976,19,NULL,NULL
+"Philip Warren Anderson",1977,19,NULL,NULL
+"Nevill Francis Mott",1977,19,NULL,NULL
+"John Hasbrouck Van Vleck",1977,19,NULL,NULL
+"Pyotr Leonidovich Kapitsa",1978,19,NULL,NULL
+"Arno Allan Penzias",1978,19,NULL,NULL
+"Robert Woodrow Wilson",1978,19,NULL,NULL
+"Sheldon Glashow",1979,19,NULL,NULL
+"Abdus Salam",1979,19,NULL,NULL
+"Steven Weinberg",1979,19,NULL,NULL
+"James Watson Cronin",1980,19,NULL,NULL
+"Val Logsdon Fitch",1980,19,NULL,NULL
+"Nicolaas Bloembergen",1981,19,NULL,NULL
+"Arthur Leonard Schawlow",1981,19,NULL,NULL
+"Kai Manne Börje Siegbahn",1981,19,NULL,NULL
+"Kenneth G. Wilson",1982,19,NULL,NULL
+"Subrahmanyan Chandrasekhar",1983,19,NULL,NULL
+"William Alfred Fowler",1983,19,NULL,NULL
+"Carlo Rubbia",1984,19,NULL,NULL
+"Simon van der Meer",1984,19,NULL,NULL
+"Klaus von Klitzing",1985,19,NULL,NULL
+"Ernst Ruska",1986,19,NULL,NULL
+"Gerd Binnig",1986,19,NULL,NULL
+"Heinrich Rohrer",1986,19,NULL,NULL
+"Johannes Georg Bednorz",1987,19,NULL,NULL
+"Karl Alexander Müller",1987,19,NULL,NULL
+"Leon Max Lederman",1988,19,NULL,NULL
+"Melvin Schwartz",1988,19,NULL,NULL
+"Jack Steinberger",1988,19,NULL,NULL
+"Norman Foster Ramsey Jr.",1989,19,NULL,NULL
+"Hans Georg Dehmelt",1989,19,NULL,NULL
+"Wolfgang Paul",1989,19,NULL,NULL
+"Jerome Isaac Friedman",1990,19,NULL,NULL
+"Henry Way Kendall",1990,19,NULL,NULL
+"Richard E. Taylor",1990,19,NULL,NULL
+"Pierre-Gilles de Gennes",1991,19,NULL,NULL
+"Georges Charpak",1992,19,NULL,NULL
+"Russell Alan Hulse",1993,19,NULL,NULL
+"Joseph Hooton Taylor Jr.",1993,19,NULL,NULL
+"Bertram Brockhouse",1994,19,NULL,NULL
+"Clifford Glenwood Shull",1994,19,NULL,NULL
+"Martin Lewis Perl",1995,19,NULL,NULL
+"Frederick Reines",1995,19,NULL,NULL
+"David Morris Lee",1996,19,NULL,NULL
+"Douglas D. Osheroff",1996,19,NULL,NULL
+"Robert Coleman Richardson",1996,19,NULL,NULL
+"Steven Chu",1997,19,NULL,NULL
+"Claude Cohen-Tannoudji",1997,19,NULL,NULL
+"William Daniel Phillips",1997,19,NULL,NULL
+"Robert B. Laughlin",1998,19,NULL,NULL
+"Horst Ludwig Störmer",1998,19,NULL,NULL
+"Daniel Chee Tsui",1998,19,NULL,NULL
+"Gerard 't Hooft",1999,19,NULL,NULL
+"Martinus J. G. Veltman",1999,19,NULL,NULL
+"Zhores Ivanovich Alferov",2000,19,NULL,NULL
+"Herbert Kroemer",2000,19,NULL,NULL
+"Jack St. Clair Kilby",2000,19,NULL,NULL
+"Eric Allin Cornell",2001,19,NULL,NULL
+"Carl Edwin Wieman",2001,19,NULL,NULL
+"Wolfgang Ketterle",2001,19,NULL,NULL
+"Raymond Davis Jr.",2002,19,NULL,NULL
+"Masatoshi Koshiba",2002,19,NULL,NULL
+"Riccardo Giacconi",2002,19,NULL,NULL
+"Alexei Alexeyevich Abrikosov",2003,19,NULL,NULL
+"Vitaly Lazarevich Ginzburg",2003,19,NULL,NULL
+"Anthony James Leggett",2003,19,NULL,NULL
+"David J. Gross",2004,19,NULL,NULL
+"Hugh David Politzer",2004,19,NULL,NULL
+"Frank Wilczek",2004,19,NULL,NULL
+"Roy J. Glauber",2005,19,NULL,NULL
+"John L. Hall",2005,19,NULL,NULL
+"Theodor W. Hänsch",2005,19,NULL,NULL
+"John C. Mather",2006,19,NULL,NULL
+"George F. Smoot",2006,19,NULL,NULL
+"Albert Fert",2007,19,NULL,NULL
+"Peter Grünberg",2007,19,NULL,NULL
+"Makoto Kobayashi",2008,19,NULL,NULL
+"Toshihide Maskawa",2008,19,NULL,NULL
+"Yoichiro Nambu",2008,19,NULL,NULL
+"Charles K. Kao",2009,19,NULL,NULL
+"Willard S. Boyle",2009,19,NULL,NULL
+"George E. Smith",2009,19,NULL,NULL
+"Andre Geim",2010,19,NULL,NULL
+"Konstantin Novoselov",2010,19,NULL,NULL
+"Saul Perlmutter",2011,19,NULL,NULL
+"Brian P. Schmidt",2011,19,NULL,NULL
+"Adam G. Riess",2011,19,NULL,NULL
+"Serge Haroche",2012,19,NULL,NULL
+"David J. Wineland",2012,19,NULL,NULL
+"François Englert",2013,19,NULL,NULL
+"Peter Higgs",2013,19,NULL,NULL
+"Isamu Akasaki",2014,19,NULL,NULL
+"Hiroshi Amano",2014,19,NULL,NULL
+"Shuji Nakamura",2014,19,NULL,NULL
+"Takaaki Kajita",2015,19,NULL,NULL
+"Arthur B. McDonald",2015,19,NULL,NULL
+"David J. Thouless",2016,19,NULL,NULL
+"F. Duncan M. Haldane",2016,19,NULL,NULL
+"J. Michael Kosterlitz",2016,19,NULL,NULL
+"Rainer Weiss",2017,19,NULL,NULL
+"Kip Thorne",2017,19,NULL,NULL
+"Barry Barish",2017,19,NULL,NULL
+"Arthur Ashkin",2018,19,NULL,NULL
+"Gérard Mourou",2018,19,NULL,NULL
+"Donna Strickland",2018,19,NULL,NULL
+"James Peebles",2019,19,NULL,NULL
+"Michel Mayor",2019,19,NULL,NULL
+"Didier Queloz",2019,19,NULL,NULL
+"Roger Penrose",2020,19,NULL,NULL
+"Reinhard Genzel",2020,19,NULL,NULL
+"Andrea M. Ghez",2020,19,NULL,NULL
+"Syukuro Manabe",2021,19,NULL,NULL
+"Klaus Hasselmann",2021,19,NULL,NULL
+"Giorgio Parisi",2021,19,NULL,NULL
+"Alain Aspect",2022,19,NULL,NULL
+"John Clauser",2022,19,NULL,NULL
+"Anton Zeilinger",2022,19,NULL,NULL
+"Chien-Shiung Wu",1978,20,NULL,NULL
+"George Eugene Uhlenbeck",1979,20,NULL,NULL
+"Giuseppe Occhialini",1979,20,NULL,NULL
+"Michael E. Fisher",1980,20,NULL,NULL
+"Leo P. Kadanoff",1980,20,NULL,NULL
+"Kenneth G. Wilson",1980,20,NULL,NULL
+"Freeman J. Dyson",1981,20,NULL,NULL
+"Gerard 't Hooft",1981,20,NULL,NULL
+"Victor F. Weisskopf",1981,20,NULL,NULL
+"Leon M. Lederman",1982,20,NULL,NULL
+"Martin Lewis Perl",1982,20,NULL,NULL
+"Erwin Hahn",1982,20,NULL,NULL
+"Peter B. Hirsch",1982,20,NULL,NULL
+"Theodore H. Maiman",1982,20,NULL,NULL
+"Conyers Herring",1985,20,NULL,NULL
+"Philippe Nozieres",1985,20,NULL,NULL
+"Mitchell J. Feigenbaum",1986,20,NULL,NULL
+"Albert J. Libchaber",1986,20,NULL,NULL
+"Herbert Friedman",1987,20,NULL,NULL
+"Bruno B. Rossi",1987,20,NULL,NULL
+"Riccardo Giacconi",1987,20,NULL,NULL
+"Pierre-Gilles de Gennes",1990,20,NULL,NULL
+"David J. Thouless",1990,20,NULL,NULL
+"Maurice Goldhaber",1991,20,NULL,NULL
+"Valentine L. Telegdi",1991,20,NULL,NULL
+"Joseph H. Taylor Jr.",1992,20,NULL,NULL
+"Benoît Mandelbrot",1993,20,NULL,NULL
+"Vitaly L. Ginzburg",1993,20,NULL,NULL
+"Yoichiro Nambu",1993,20,NULL,NULL
+"John Archibald Wheeler",1993,20,NULL,NULL
+"Yakir Aharonov",1998,20,NULL,NULL
+"Michael V. Berry",1998,20,NULL,NULL
+"Dan Shechtman",1999,20,NULL,NULL
+"Raymond Davis Jr.",2000,20,NULL,NULL
+"Masatoshi Koshiba",2000,20,NULL,NULL
+"Bertrand I. Halperin",2000,20,NULL,NULL
+"Anthony J. Leggett",2000,20,NULL,NULL
+"Daniel Kleppner",2005,20,NULL,NULL
+"Albert Fert",2005,20,NULL,NULL
+"Peter Grünberg",2005,20,NULL,NULL
+"John F. Clauser",2010,20,NULL,NULL
+"Alain Aspect",2010,20,NULL,NULL
+"Anton Zeilinger",2010,20,NULL,NULL
+"Maximilian Haider",2011,20,NULL,NULL
+"Harald Rose",2011,20,NULL,NULL
+"Knut Urban",2011,20,NULL,NULL
+"Jacob D. Bekenstein",2012,20,NULL,NULL
+"Peter Zoller",2013,20,NULL,NULL
+"Juan Ignacio Cirac Sasturain",2013,20,NULL,NULL
+"James D. Bjorken",2015,20,NULL,NULL
+"Robert P. Kirshner",2015,20,NULL,NULL
+"Yoseph Imry",2016,20,NULL,NULL
+"Michel Mayor",2017,20,NULL,NULL
+"Didier Queloz",2017,20,NULL,NULL
+"Charles H. Bennett",2018,20,NULL,NULL
+"Gilles Brassard",2018,20,NULL,NULL
+"Rafi Bistritzer",2020,20,NULL,NULL
+"Pablo Jarillo-Herrero",2020,20,NULL,NULL
+"Allan H. MacDonald",2020,20,NULL,NULL
+"Giorgio Parisi",2021,20,NULL,NULL
+"Anne L'Huillier",2022,20,NULL,NULL
+"Paul Corkum",2022,20,NULL,NULL
+"Ferenc Krausz",2022,20,NULL,NULL

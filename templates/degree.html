@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Degree Distribution</title>
+    <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.7.0/dist/simple-statistics.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <style>
+        #container {
+            display: flex;
+        }
+
+        /* 滚动槽 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            border-radius: 3px;
+            background: rgba(0,0,0,0.06);
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.08);
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 3px;
+            background: rgba(0,0,0,0.12);
+            -webkit-box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        #authorTable {
+            width: 30%;
+            margin-right: 2%;
+            border-collapse: collapse;
+        }
+
+        #authorTable thead, #authorTable tbody {
+            display: block;
+        }
+
+        #authorTable thead tr, #authorTable tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        #authorTable tbody {
+            max-height: 1000px;  /* Adjust this value as per your requirement */
+            overflow-y: auto;
+        }
+
+
+        #authorTable th, #authorTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #authorTable tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* 设置每列的宽度比例 */
+        #authorTable th:nth-child(1), #authorTable td:nth-child(1) { /* 第一列 */
+            width: 10%;
+        }
+        #authorTable th:nth-child(2), #authorTable td:nth-child(2) { /* 第二列 */
+            width: 20%;
+        }
+        #authorTable th:nth-child(3), #authorTable td:nth-child(3) { /* 第三列 */
+            width: 30%;
+        }
+        #authorTable th:nth-child(4), #authorTable td:nth-child(4) { /* 第一列 */
+            width: 10%;
+        }
+        #authorTable th:nth-child(5), #authorTable td:nth-child(5) { /* 第二列 */
+            width: 10%;
+        }
+        #authorTable th:nth-child(6), #authorTable td:nth-child(6) { /* 第三列 */
+            width: 20%;
+        }
+
+        #graphs {
+            width: 40%;
+        }
+
+        #indegree, #outdegree, #totaldegree {
+            width: 600px;
+            height: 350px;
+        }
+
+        #indegree-r, #outdegree-r, #totaldegree-r {
+            width: 600px;
+            height: 350px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255, 255, 255, 0.8); /* White background with opacity */
+            z-index: 1000; /* Ensure it's on top of other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .filters {
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: left;
+            max-width: 300px;
+            padding: 10px;
+            font: 14px sans-serif;
+            line-height: 20px;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;  
+            opacity: 0;  
+        }
+    </style>
+</head>
+<body>
+<div id="loadingIndicator" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+<div id="container">
+    <table id="authorTable">
+        <thead>
+            <tr>
+                <th></th>
+                <th>authorID</th>
+                <th>authorName</th>
+                <th>#paper</th>
+                <th>hIndex</th>
+                <th>fellow</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated using D3.js -->
+        </tbody>
+    </table>
+
+    <div id="graphs">
+        <!-- Add filters for node_prob and edge_prob -->
+        <div class="filters">
+            Node Probability: <input type="range" id="nodeProbSlider" value="0.5" step="0.01" min="0" max="1" oninput="updateValue('nodeProbValue', this.value)">
+            <span id="nodeProbValue" style="margin-right: 10px;">0.5</span>
+            Edge Probability: <input type="range" id="edgeProbSlider" value="0.3" step="0.01" min="0" max="1" oninput="updateValue('edgeProbValue', this.value)">
+            <span id="edgeProbValue">0.3</span>
+        </div>
+        <div class="filters">
+            Fellow Filter: <input type="text" id="fellowInput" value="1:">
+            <button onclick="filterByFellow()">Display</button>
+        </div>
+        <div class="filters">
+            Edge on filtered nodes: <input type="checkbox" id="edgeOnFilteredNodes" checked onchange="updateCheck()">
+            Filter isolated nodes: <input type="checkbox" id="filterIsolatedNodes" onchange="updateCheck()">
+        </div>
+
+        <div id="selectedAuthorsInfo" class="title"></div>
+
+        <!-- Add divs for your D3 visualizations -->
+        <div id="indegree"></div>
+        <div id="outdegree"></div>
+        <div id="totaldegree"></div>
+    
+        <!-- ... (rest of the divs for the charts) ... -->
+    </div>
+
+    <div id="graphs-r">
+        <!-- Add filters for node_prob and edge_prob -->
+        <div class="filters">
+            Top hIndex: <input type="range" id="tophIndexSlider" value="200" step="1" min="0" max="1000" oninput="updateTop('tophIndexValue', this.value)">
+            <span id="tophIndexValue" style="margin-right: 10px;">200</span>
+            X-Axis Start: <input type="range" id="xAxisSlider" value="0" step="1" min="0" max="10" oninput="updateXAxis('xAxisValue', this.value)">
+            <span id="xAxisValue">0</span>
+        </div>
+        <div class="filters">
+            Fitted Distribution Type:
+            <select id="distributionSelector">
+                <option value="exponential" selected>Exponential Distribution</option>
+                <option value="power">Power-law Distribution</option>
+                <option value="none">None</option>
+            </select>
+        </div>
+
+        <div id="otherAuthorsInfo" class="title"></div>
+
+        <!-- Add divs for your D3 visualizations -->
+        <div id="indegree-r"></div>
+        <div id="outdegree-r"></div>
+        <div id="totaldegree-r"></div>
+    
+        <!-- ... (rest of the divs for the charts) ... -->
+    </div>
+</div>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.2.2/echarts.min.js"></script>
+<script src="/src/js/jquery.min.js"></script>
+
+<script>
+
+let authorsData = [];
+let authorIDs_global = [];
+let selectedAuthors = [];
+let topAuthors = {};
+let nodeProbFilter = 0.5;
+let edgeProbFilter = 0.3;
+let frequency_global = {};
+let allAuthorsFrequency = {};
+let xAxisValue = 0;
+let fittedDistribution = 'exponential';
+let field = "{{ field }}";
+let topN = parseInt("{{ topN }}");
+let edgeOnFilteredNodes = true;
+let filterIsolatedNodes = false;
+authorsData = {{ authorsData|safe }};
+
+startLoading()
+
+async function startLoading() {
+    // document.getElementById("loadingIndicator").style.display = "none";
+    console.log('start loading')
+    $("#tophIndexValue").text(topN);
+    $("#tophIndexSlider").val(topN);
+
+    console.log(authorsData, topN, field);
+    authorIDs_global = authorsData.map(d=>d[0]);
+    await loadAuthorsData();
+    renderAuthorTable();
+    filterByFellow();
+}
+
+
+function updateTitle() {
+    document.getElementById("selectedAuthorsInfo").innerText = "Selected Authors: " + selectedAuthors.length;
+    document.getElementById("otherAuthorsInfo").innerText = "Other Authors: " + (authorIDs_global.length - selectedAuthors.length);
+}
+
+
+function printDegree(degree, verbose=true) {
+    let arr = [];
+    let sum = 0, sum_k = 0;
+    let str = ''
+    for (let k in degree) {
+        v = degree[k];
+        k = parseInt(k);
+        arr.push([k, v]);
+        sum += k * v;
+        sum_k += v;
+        str += k + ':' + v + ', ';
+    }
+    str = str.slice(0, -2);
+    let ave = (sum/sum_k).toFixed(4)
+    if (verbose) return str + ' (ave: ' + ave + ')'
+    return ' (ave: ' + ave + ')'
+}
+
+function renderAuthorTable() {
+    console.log('rendering author table', authorsData)
+
+    let table = d3.select("#authorTable").select("tbody");
+    table.selectAll("tr").remove();
+    let rows = table.selectAll("tr")
+        .data(authorsData)
+        .enter().append("tr")
+        .on("click", function(d) {
+            let checkbox = d3.select(this).select("input").node();
+            checkbox.checked = !checkbox.checked;
+            rowClicked(d[0], checkbox.checked);
+        });
+
+    rows.append("td")
+        .append("input")
+        .attr("type", "checkbox");
+
+    rows.selectAll("td.data")
+        .data(function(d) {
+            return [d[0], d[1], d[2], d[3], d[4]];
+        })
+        .enter().append("td")
+        .attr("class", "data")
+        .text(function(d) {
+            return d;
+        })
+
+    // 添加悬浮提示
+    let tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+        
+        
+    rows.on("mouseover", function(d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+        tooltip.html("author: " + d[0] + " (" + d[1] + ")"
+                    + "<br/>fellow: " + d[4]
+                    + "<br/>#node: " + allAuthorsFrequency[d[0]].node
+                    + "<br/>#edge: " + allAuthorsFrequency[d[0]].edge
+                    + "<br/>degree: " + printDegree(allAuthorsFrequency[d[0]].totaldegree)
+                    + "<br/>indegree: " + printDegree(allAuthorsFrequency[d[0]].indegree)
+                    + "<br/>outdegree: " + printDegree(allAuthorsFrequency[d[0]].outdegree)
+                    )
+            .style("left", (event.pageX) + "px")
+            .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(d) {
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    });
+    
+    let authorIDs = authorsData.map(d=>d[0]);
+    console.log('all authors', authorIDs)
+    authorIDs_global = authorIDs;
+    updateTitle();
+}
+
+
+function filterByFellow() {
+    let fellowFilter = document.getElementById("fellowInput").value;
+    selectedAuthors = authorsData.filter(author => author[4].includes(fellowFilter)).map(author => author[0]);
+    console.log('filter value:', fellowFilter)
+    updateTitle();
+
+    // Highlight the rows in the table that match the filter
+    d3.select("#authorTable").selectAll("tr").each(function(d) {
+        if (!d) return;
+        // console.log(d)
+        let row = d3.select(this);
+        let checkbox = row.select("input").node();
+        if (selectedAuthors.includes(d[0])) {
+            checkbox.checked = true;
+            row.style.backgroundColor = "#e0e0e0";  // Highlight color
+        } else {
+            checkbox.checked = false;
+            row.style.backgroundColor = "";  // Reset color
+        }
+    });
+
+    drawDistribution(selectedAuthors);
+}
+
+async function updateTop(spanId, value) {
+    document.getElementById(spanId).textContent = value;
+    topN = parseInt(document.getElementById("tophIndexSlider").value);
+    // 构建新的URL
+    let newUrl = `/degree_distribution?topN=${topN}&field=${field}`;
+    // 重定向到新的URL
+    window.location.href = newUrl;
+}
+
+async function updateValue(spanId, value) {
+    document.getElementById(spanId).textContent = value;
+    nodeProbFilter = parseFloat(document.getElementById("nodeProbSlider").value);
+    edgeProbFilter = parseFloat(document.getElementById("edgeProbSlider").value);
+    await loadAuthorsData();
+    drawDistribution(selectedAuthors);
+}
+
+async function updateCheck() {
+    edgeOnFilteredNodes = document.getElementById("edgeOnFilteredNodes").checked;
+    filterIsolatedNodes = document.getElementById("filterIsolatedNodes").checked;
+    await loadAuthorsData();
+    drawDistribution(selectedAuthors);
+}
+
+function updateXAxis(spanId, value) {
+    document.getElementById(spanId).textContent = value;
+    xAxisValue = parseInt(document.getElementById("xAxisSlider").value);
+    drawDistribution(selectedAuthors);
+}
+
+document.getElementById("distributionSelector").addEventListener("change", function(event) {
+    fittedDistribution = event.target.value;
+    // 根据选择的分布重新计算和绘制图表
+    drawDistribution(selectedAuthors);
+});
+
+
+function rowClicked(authorID, isChecked) {
+    if (isChecked) {
+        selectedAuthors.push(authorID);
+    } else {
+        const index = selectedAuthors.indexOf(authorID);
+        if (index > -1) {
+            selectedAuthors.splice(index, 1);
+        }
+    }
+    drawDistribution(selectedAuthors);
+}
+
+function computeFrequency(data) {
+    let frequency = {};
+    data.forEach(value => {
+        if (frequency[value]) {
+            frequency[value]++;
+        } else {
+            frequency[value] = 1;
+        }
+    });
+    return frequency;
+}
+
+function linearRegression(points) {
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+    let n = points[0].length;
+
+    for (let i = 0; i < n; i++) {
+        sumX += points[0][i];
+        sumY += points[1][i];
+        sumXY += points[0][i] * points[1][i];
+        sumXX += points[0][i] * points[0][i];
+        sumYY += points[1][i] * points[1][i];
+    }
+
+    let m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    let b = (sumY - m * sumX) / n;
+
+    // 计算R^2
+    let ssTot = sumYY - (sumY * sumY) / n;
+    let ssRes = sumYY - m * sumXY - b * sumY;
+    let r2 = 1 - ssRes / ssTot;
+
+    return { m: m, b: b, r2: r2 };
+}
+
+function computePowerRegression(data, k) {
+    // 拟合形如 y = a(x+k)^-b 的幂律分布
+    let x = Object.keys(data).map(Number);
+    let y = Object.values(data).map(Number);
+
+    console.log('computePowerRegression', 'x', x, 'y', y)
+
+    let firstZeroIndex = y.indexOf(0);
+    if (firstZeroIndex !== -1) {
+        x = x.slice(0, firstZeroIndex);
+        y = y.slice(0, firstZeroIndex);
+    }
+
+    // 对y进行对数变换
+    let logY = y.map(val => Math.log(val));
+
+    // 对x进行变换，并处理x+k<=0的情况
+    let transformedX = x.map(val => {
+        let shifted = val + k;
+        if (shifted <= 0) {
+            throw new Error('x+k must be greater than 0');
+        }
+        return Math.log(shifted);
+    });
+
+    // 线性回归
+    let para = linearRegression(transformedX, logY);
+
+    // 将线性回归的结果转换回原始参数
+    return { a: Math.exp(para.b), b: -para.m, k: k };
+}
+
+// function computePowerRegression(data) {
+//     console.log('data', data)
+    
+//     let x = Object.keys(data).map(Number);
+//     let y = Object.values(data).map(Number);
+
+//     if (x[0] == 0) {
+//         x.shift();
+//         y.shift();
+//     }
+
+//     let firstZeroIndex = y.indexOf(0);
+//     x = x.slice(0, firstZeroIndex);
+//     y = y.slice(0, firstZeroIndex);
+//     console.log('x', x, 'y', y)
+
+//     // 对数-对数变换
+//     let logX = x.map(val => Math.log(val));
+//     let logY = y.map(val => Math.log(val));
+
+//     // 线性回归
+//     let regression = linearRegression([logX, logY]);
+//     console.log("regression:", regression);
+//     return regression;
+// }
+
+function computeExponentialRegression(data) {
+    let x = Object.keys(data).map(Number);
+    let y = Object.values(data).map(Number);
+
+    let firstZeroIndex = y.indexOf(0);
+    x = x.slice(0, firstZeroIndex);
+    y = y.slice(0, firstZeroIndex);
+
+    // 对y进行对数变换
+    let logY = y.map(val => Math.log(val));
+
+    // 线性回归
+    let regression = linearRegression([x, logY]);
+    return regression;
+}
+
+function calculateR2(yAxisData, fittedY) {
+    // console.log('yAxisData', yAxisData, 'fittedY', fittedY)
+    // 将yAxisData中null改成0
+    for (let i = 0; i < yAxisData.length; i++) {
+        if (yAxisData[i] == null) {
+            yAxisData[i] = 0;
+        }
+    }
+    // 计算y的平均值
+    const yMean = yAxisData.reduce((acc, val) => acc + val, 0) / yAxisData.length;
+
+    // 计算总平方和SST
+    const SST = yAxisData.reduce((acc, val) => acc + (val - yMean) ** 2, 0);
+
+    // 计算残差平方和SSE
+    const SSE = yAxisData.reduce((acc, val, idx) => acc + (val - fittedY[idx]) ** 2, 0);
+
+    // 计算R²
+    return 1 - (SSE / SST);
+}
+
+function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
+    // 1. Fill in the gaps in the frequency data
+    // change values of frequency to float
+    let maxKey = Math.max(...Object.keys(frequency).map(Number));
+    for (let i = 0; i <= maxKey; i++) {
+        if (!frequency[i]) {
+            frequency[i] = 0;
+        }
+    }
+    for (let i =0; i< xAxisValue; i++) {
+        delete frequency[i];
+    }
+
+    let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
+    let percentageFrequency = {};
+    for (let key in frequency) {
+        percentageFrequency[key] = (frequency[key] / total * 100).toFixed(3);  // 保留两位小数并添加%符号
+        percentageFrequency[key] = parseFloat(percentageFrequency[key]);
+    }
+
+    console.log(elementId, percentageFrequency);
+
+    // 2. Find the last non-1 value and slice the data
+    if (lastKey == null) {
+        lastKey = Object.keys(percentageFrequency).reverse().find(key => percentageFrequency[key] > 0.1);
+    }
+    let slicedFrequency = {};
+    for (let i = xAxisValue; i <= lastKey; i++) {
+        slicedFrequency[i] = percentageFrequency[i];
+    }
+
+    let xAxisData = Object.keys(slicedFrequency);
+    let yAxisData = Object.values(slicedFrequency);
+
+    let cdfData = [];
+    let cumulativeValue = 0;
+    for (let i = 0; i < yAxisData.length; i++) {
+        cumulativeValue += parseFloat(yAxisData[i]);  // 假设yAxisData中的值是字符串形式的百分比
+        if (cumulativeValue>100) {
+            cumulativeValue = 100;
+        }
+        cdfData.push(cumulativeValue.toFixed(3));  // 保留两位小数
+    }
+
+    // console.log(titleText, frequency)
+    let fittedY, para, func;
+    if (fittedDistribution == 'power') {
+        para = computePowerRegression(slicedFrequency, 1);
+        console.log('power para', para)
+        fittedY = xAxisData.map(x => para.a * Math.pow((x + para.k), -para.b));
+        let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
+        func = `y = ${para.a.toFixed(3)}(x+${para.k})^${-para.b.toFixed(3)} (r2=${r2})`;
+    } else if(fittedDistribution == 'exponential') {
+        para = computeExponentialRegression(slicedFrequency);
+        fittedY = xAxisData.map(x => Math.exp(para.b) * Math.exp(para.m * x));
+        let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
+        func = `y = ${Math.exp(para.b).toFixed(3)}e^${(para.m).toFixed(3)}x (r2=${r2})`;
+    } else {
+        fittedY = [];
+        func = '';
+    }
+
+    let option = {
+        title: {
+            text: titleText + printDegree(frequency, false)
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                return `${params.marker}${params.name}\t${params.value}%<br/>count: ${frequency[params.name]}`;
+            }
+        },
+        xAxis: {
+            name: 'Degree',
+            type: 'category',
+            data: xAxisData
+        },
+        yAxis: [{
+            name: 'Percentage of Nodes (%)'
+        }, {
+            name: 'CDF (%)',
+            position: 'right'
+        }],
+        series: [{
+            name: 'PDF',
+            type: 'bar',
+            data: yAxisData
+        }, {
+            name: 'CDF',
+            type: 'line',
+            data: cdfData,
+            smooth: true,  // 使曲线更加平滑
+            yAxisIndex: 1  // 使用第二个y轴
+        }, 
+        {
+            name: 'Fitted Curve' + fittedDistribution,
+            type: 'line',
+            data: fittedY,
+            smooth: true,
+            lineStyle: {
+                color: 'red',  // 或其他颜色
+                type: 'dashed'  // 虚线样式
+            }
+        }
+    ],
+        toolbox: {
+            // 如果 toolbox 支持 tooltip，可以在这里添加
+            feature: {
+                saveAsImage: { show: true, title: '保存图片' },
+                // 其他工具定义...
+            }
+        },
+        graphic: {
+            type: 'text',
+            left: '60%',  // 调整位置
+            top: '72%',   // 调整位置
+            style: {
+                text: func,  // 显示拟合的函数公式
+                fill: '#666',
+                fontSize: 15
+            }
+        }
+    };
+
+    let chart = echarts.init(document.getElementById(elementId));
+    chart.setOption(option);
+    return lastKey;
+}
+
+function drawDistributionChart(elementId, frequency, titleText) {
+    // let frequency = computeFrequency(data);
+    let chart_r = echarts.init(document.getElementById(elementId + '-r'));
+    let frequency_r = JSON.parse(JSON.stringify(frequency_global[elementId]));
+    for (let key in frequency) {
+        frequency_r[key] -= frequency[key];
+        if (frequency_r[key] == 0) {
+            delete frequency_r[key];
+        }
+    }
+    let lastKey_r = drawSingleDistribution(elementId + '-r', frequency_r, titleText + ' (Non)')
+    let lastKey = drawSingleDistribution(elementId, frequency, titleText);
+
+    if (lastKey_r > lastKey) {
+        drawSingleDistribution(elementId, frequency, titleText, lastKey_r);
+    } else {
+        drawSingleDistribution(elementId + '-r', frequency_r, titleText + ' (Non)', lastKey);
+    }
+}
+
+
+// 一定要用异步加载！！！ 比同步快得多
+async function loadAuthorsData() {
+    console.log('start Loading Author Data', authorIDs_global)
+    // let promises = authorIDs_global.map(id => d3.json(`out/scigene_acl_anthology/graph/${id}.json`));
+    document.getElementById("loadingIndicator").style.display = "flex";
+    allAuthorsFrequency = {};
+
+    let promises = authorIDs_global.map(id => d3.json(`/src/json/${field}/authors/${id}.json`).then(data => {
+        // Filter nodes and edges based on given probabilities
+        
+        let filteredNodes = Object.keys(data.nodes).filter(key => data.nodes[key] > nodeProbFilter);
+        let filteredEdges = data.edges.filter(edge => edge.prob > edgeProbFilter);
+        filteredNodes = filteredNodes.map(key => String(key));
+        
+        // Compute indegree, outdegree, and total degree
+        let indegree = {}, outdegree = {}, totaldegree = {};
+        // set other nodes in filteredNodes outdegree/indegree =0
+        filteredNodes.forEach(node => {
+            outdegree[node] = 0;
+            indegree[node] = 0;
+            totaldegree[node] = 0;
+        })
+        let edgeCount = 0;
+        let connectedEdges = [];
+        filteredEdges.forEach(edge => {
+            src = String(edge.source);
+            tgt = String(edge.target);
+            if (edgeOnFilteredNodes) {
+                if (filteredNodes.includes(src) && filteredNodes.includes(tgt)) {
+                    outdegree[src] += 1;
+                    indegree[tgt] += 1;
+                    totaldegree[src] += 1;
+                    totaldegree[tgt] += 1;
+                    connectedEdges.push(edge);
+                }
+            } else {
+                if (filteredNodes.includes(src)) {
+                    outdegree[src] += 1;
+                    totaldegree[src] += 1;
+                }
+                if (filteredNodes.includes(tgt)) {
+                    indegree[tgt] += 1;
+                    totaldegree[tgt] += 1;
+                }
+            }
+        });
+
+        let connectedNodes = filteredNodes.filter(node => totaldegree[node] > 0);
+        if (filterIsolatedNodes) {
+            for (let node of filteredNodes) {
+                if (totaldegree[node] == 0) {
+                    delete outdegree[node];
+                    delete indegree[node];
+                    delete totaldegree[node];
+                }
+            }
+        }
+
+        if (id == '1124' || id == 1124) {
+            console.log('data', filteredNodes, filteredEdges)
+            console.log(id, connectedEdges, connectedNodes)
+        }
+
+        // Visualize using ECharts
+        let indegreeData = computeFrequency(Object.values(indegree));
+        let outdegreeData = computeFrequency(Object.values(outdegree));
+        let totaldegreeData = computeFrequency(Object.values(totaldegree));
+
+        allAuthorsFrequency[id] = {
+            'indegree': indegreeData,
+            'outdegree': outdegreeData,
+            'totaldegree': totaldegreeData,
+            'node': String(filteredNodes.length) + '/' + String(Object.values(data.nodes).length) + ' (connected: ' + String(connectedNodes.length) + ')',
+            'edge': String(filteredEdges.length) + '/' + String(data.edges.length) + ' (valid: ' + String(connectedEdges.length) + ')'
+        }
+        // console.log(authorID, filteredNodes, filteredEdges, outdegree)
+    }))
+
+    await Promise.all(promises);
+
+    console.log('allAuthorsFrequency', allAuthorsFrequency);
+    frequency_global = combineAllMaps(allAuthorsFrequency);
+    console.log('frequency_global', frequency_global);
+
+    // combine all the Map together (accumulate) to frequency_global
+    document.getElementById("loadingIndicator").style.display = "none";
+}
+
+
+function combineAllMaps(maps) { 
+    let result = {
+        "indegree": {},
+        "outdegree": {},
+        "totaldegree": {}
+    };
+
+    for (let key in maps) {
+        for (let subKey in result) {
+            for (let degreeKey in maps[key][subKey]) {
+                if (!result[subKey][degreeKey]) {
+                    result[subKey][degreeKey] = 0;
+                }
+                result[subKey][degreeKey] += maps[key][subKey][degreeKey];
+            }
+        }
+    }
+    return result
+}
+
+
+function drawDistribution(authorIDs) {
+    console.log('selected', authorIDs)
+    let subMap = new Map()
+
+    authorIDs.forEach(key=>{
+        subMap[key] = allAuthorsFrequency[key]
+    })
+    combinedMap = combineAllMaps(subMap)
+    console.log('combined subMap', combinedMap)
+
+    drawDistributionChart('indegree', combinedMap['indegree'], 'In-degree Distribution');
+    drawDistributionChart('outdegree', combinedMap['outdegree'], 'Out-degree Distribution');
+    drawDistributionChart('totaldegree', combinedMap['totaldegree'], 'Total Degree Distribution');
+    updateTitle();
+}
+</script>
+</script>
+</body>
+</html>
