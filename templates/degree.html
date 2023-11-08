@@ -213,6 +213,10 @@
                 <option value="none">None</option>
             </select>
         </div>
+        <div class="filters">
+            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="20" oninput="updateValue('powerLawShiftValue', this.value, false)">
+            <span id="powerLawShiftValue">dynamic</span>
+        </div>
 
         <div id="otherAuthorsInfo" class="title"></div>
 
@@ -243,6 +247,7 @@ let field = "{{ field }}";
 let topN = parseInt("{{ topN }}");
 let edgeOnFilteredNodes = true;
 let filterIsolatedNodes = false;
+let powerLawShiftValue = 0;
 authorsData = {{ authorsData|safe }};
 
 startLoading()
@@ -380,10 +385,16 @@ async function updateTop(spanId, value) {
     window.location.href = newUrl;
 }
 
-async function updateValue(spanId, value) {
-    document.getElementById(spanId).textContent = value;
+async function updateValue(spanId, value, reload=true) {
+    if (spanId == 'powerLawShiftValue') {
+        document.getElementById(spanId).textContent = value == 0? 'dynamic': value;
+    } else {
+        document.getElementById(spanId).textContent = value;
+    }
     nodeProbFilter = parseFloat(document.getElementById("nodeProbSlider").value);
     edgeProbFilter = parseFloat(document.getElementById("edgeProbSlider").value);
+    powerLawShiftValue = parseInt(document.getElementById("powerLawShiftSlider").value);
+    // console.log('powerLawShiftValue', powerLawShiftValue)
     await loadAuthorsData();
     drawDistribution(selectedAuthors);
 }
@@ -460,28 +471,23 @@ function computePowerRegression(data, k) {
     let x = Object.keys(data).map(Number);
     let y = Object.values(data).map(Number);
 
-    console.log('computePowerRegression', 'x', x, 'y', y)
-
     let firstZeroIndex = y.indexOf(0);
     if (firstZeroIndex !== -1) {
         x = x.slice(0, firstZeroIndex);
         y = y.slice(0, firstZeroIndex);
     }
+    console.log('computePowerRegression', 'x', x, 'y', y)
 
     // 对y进行对数变换
     let logY = y.map(val => Math.log(val));
-
     // 对x进行变换，并处理x+k<=0的情况
-    let transformedX = x.map(val => {
-        let shifted = val + k;
-        if (shifted <= 0) {
-            throw new Error('x+k must be greater than 0');
-        }
-        return Math.log(shifted);
-    });
+    let transformedX = x.map(val =>  val + k > 0? Math.log(val + k): 0);
 
+    console.log('computePowerRegression', 'x', transformedX, 'y', logY)
     // 线性回归
-    let para = linearRegression(transformedX, logY);
+    let para = linearRegression([transformedX, logY]);
+
+    console.log(para)
 
     // 将线性回归的结果转换回原始参数
     return { a: Math.exp(para.b), b: -para.m, k: k };
@@ -594,14 +600,35 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         cdfData.push(cumulativeValue.toFixed(3));  // 保留两位小数
     }
 
+    console.log('slicedFrequency', slicedFrequency, powerLawShiftValue)
     // console.log(titleText, frequency)
     let fittedY, para, func;
     if (fittedDistribution == 'power') {
-        para = computePowerRegression(slicedFrequency, 1);
+        if (powerLawShiftValue == 0) {
+            let best_k = 0, best_r2 = 0, best_para = null;
+            for (let k=1; k<=20; k++) {
+                para = computePowerRegression(slicedFrequency, k);
+                fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
+                let r2 = calculateR2(yAxisData, fittedY);
+                if (r2 > best_r2) {
+                    best_r2 = r2;
+                    best_k = k;
+                    best_para = para;
+                }
+            }
+            para = best_para;
+        } else {
+            para = computePowerRegression(slicedFrequency, powerLawShiftValue);
+        }
         console.log('power para', para)
-        fittedY = xAxisData.map(x => para.a * Math.pow((x + para.k), -para.b));
+        fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
         let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
-        func = `y = ${para.a.toFixed(3)}(x+${para.k})^${-para.b.toFixed(3)} (r2=${r2})`;
+        if (para.k == 0) {
+            func = `y = ${para.a.toFixed(3)}x\n^${-para.b.toFixed(3)} (r2=${r2})`;
+        } else {
+            func = `y = ${para.a.toFixed(3)}(x+${para.k})\n^${-para.b.toFixed(3)} (r2=${r2})`;
+        }
+        
     } else if(fittedDistribution == 'exponential') {
         para = computeExponentialRegression(slicedFrequency);
         fittedY = xAxisData.map(x => Math.exp(para.b) * Math.exp(para.m * x));
@@ -665,7 +692,7 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         graphic: {
             type: 'text',
             left: '60%',  // 调整位置
-            top: '72%',   // 调整位置
+            top: '60%',   // 调整位置
             style: {
                 text: func,  // 显示拟合的函数公式
                 fill: '#666',
