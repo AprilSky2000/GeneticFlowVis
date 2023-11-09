@@ -663,8 +663,12 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         toolbox: {
             // 如果 toolbox 支持 tooltip，可以在这里添加
             feature: {
-                saveAsImage: { show: true, title: '保存图片' },
-                // 其他工具定义...
+                saveAsImage: { show: true, title: 'save as image' },
+                magicType: {
+                    type: ['line', 'bar', 'stack']
+                },
+                dataView: {show: true},
+                restore: {show:true}
             }
         },
         graphic: {
