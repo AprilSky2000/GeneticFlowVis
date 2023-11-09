@@ -158,8 +158,8 @@
         <thead>
             <tr>
                 <th></th>
-                <th>authorID</th>
-                <th>authorName</th>
+                <th>ID</th>
+                <th>name</th>
                 <th>#paper</th>
                 <th>hIndex</th>
                 <th>fellow</th>
@@ -173,9 +173,9 @@
     <div id="graphs">
         <!-- Add filters for node_prob and edge_prob -->
         <div class="filters">
-            Node Probability: <input type="range" id="nodeProbSlider" value="0.5" step="0.01" min="0" max="1" oninput="updateValue('nodeProbValue', this.value)">
+            Node Prob: <input type="range" id="nodeProbSlider" value="0.5" step="0.01" min="0" max="1" oninput="updateValue('nodeProbValue', this.value)">
             <span id="nodeProbValue" style="margin-right: 10px;">0.5</span>
-            Edge Probability: <input type="range" id="edgeProbSlider" value="0.3" step="0.01" min="0" max="1" oninput="updateValue('edgeProbValue', this.value)">
+            Edge Prob: <input type="range" id="edgeProbSlider" value="0.3" step="0.01" min="0" max="1" oninput="updateValue('edgeProbValue', this.value)">
             <span id="edgeProbValue">0.3</span>
         </div>
         <div class="filters">
@@ -214,7 +214,7 @@
             </select>
         </div>
         <div class="filters">
-            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="20" oninput="updateValue('powerLawShiftValue', this.value, false)">
+            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="30" oninput="updateValue('powerLawShiftValue', this.value, false)">
             <span id="powerLawShiftValue">dynamic</span>
         </div>
 
@@ -476,14 +476,14 @@ function computePowerRegression(data, k) {
         x = x.slice(0, firstZeroIndex);
         y = y.slice(0, firstZeroIndex);
     }
-    console.log('computePowerRegression', 'x', x, 'y', y)
+    // console.log('computePowerRegression', 'x', x, 'y', y)
 
     // 对y进行对数变换
     let logY = y.map(val => Math.log(val));
     // 对x进行变换，并处理x+k<=0的情况
     let transformedX = x.map(val =>  val + k > 0? Math.log(val + k): 0);
 
-    console.log('computePowerRegression', 'x', transformedX, 'y', logY)
+    // console.log('computePowerRegression', 'x', transformedX, 'y', logY)
     // 线性回归
     let para = linearRegression([transformedX, logY]);
 
@@ -492,32 +492,6 @@ function computePowerRegression(data, k) {
     // 将线性回归的结果转换回原始参数
     return { a: Math.exp(para.b), b: -para.m, k: k };
 }
-
-// function computePowerRegression(data) {
-//     console.log('data', data)
-    
-//     let x = Object.keys(data).map(Number);
-//     let y = Object.values(data).map(Number);
-
-//     if (x[0] == 0) {
-//         x.shift();
-//         y.shift();
-//     }
-
-//     let firstZeroIndex = y.indexOf(0);
-//     x = x.slice(0, firstZeroIndex);
-//     y = y.slice(0, firstZeroIndex);
-//     console.log('x', x, 'y', y)
-
-//     // 对数-对数变换
-//     let logX = x.map(val => Math.log(val));
-//     let logY = y.map(val => Math.log(val));
-
-//     // 线性回归
-//     let regression = linearRegression([logX, logY]);
-//     console.log("regression:", regression);
-//     return regression;
-// }
 
 function computeExponentialRegression(data) {
     let x = Object.keys(data).map(Number);
@@ -584,7 +558,7 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     }
     let slicedFrequency = {};
     for (let i = xAxisValue; i <= lastKey; i++) {
-        slicedFrequency[i] = percentageFrequency[i];
+        slicedFrequency[i] = percentageFrequency[i] > 0? percentageFrequency[i]: 0;
     }
 
     let xAxisData = Object.keys(slicedFrequency);
@@ -605,8 +579,8 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     let fittedY, para, func;
     if (fittedDistribution == 'power') {
         if (powerLawShiftValue == 0) {
-            let best_k = 0, best_r2 = 0, best_para = null;
-            for (let k=1; k<=20; k++) {
+            let best_k = 0, best_r2 = 0, best_para = null, decrease_times = 0;
+            for (let k=1; k<=30; k++) {
                 para = computePowerRegression(slicedFrequency, k);
                 fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
                 let r2 = calculateR2(yAxisData, fittedY);
@@ -614,7 +588,11 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
                     best_r2 = r2;
                     best_k = k;
                     best_para = para;
+                    decrease_times = 0;
+                } else {
+                    decrease_times += 1;
                 }
+                if (decrease_times >= 3) break;
             }
             para = best_para;
         } else {
@@ -624,16 +602,16 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
         let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
         if (para.k == 0) {
-            func = `y = ${para.a.toFixed(3)}x\n^${-para.b.toFixed(3)} (r2=${r2})`;
+            func = `y = ${para.a.toFixed(3)}\n\nx^${-para.b.toFixed(3)} (r2=${r2})`;
         } else {
-            func = `y = ${para.a.toFixed(3)}(x+${para.k})\n^${-para.b.toFixed(3)} (r2=${r2})`;
+            func = `y = ${para.a.toFixed(3)}\n\n(x+${para.k})^${-para.b.toFixed(3)} (r2=${r2})`;
         }
         
     } else if(fittedDistribution == 'exponential') {
         para = computeExponentialRegression(slicedFrequency);
         fittedY = xAxisData.map(x => Math.exp(para.b) * Math.exp(para.m * x));
         let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
-        func = `y = ${Math.exp(para.b).toFixed(3)}e^${(para.m).toFixed(3)}x (r2=${r2})`;
+        func = `y = ${Math.exp(para.b).toFixed(3)}e^${(para.m).toFixed(3)}x\n\n(r2=${r2})`;
     } else {
         fittedY = [];
         func = '';
@@ -655,7 +633,7 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
             data: xAxisData
         },
         yAxis: [{
-            name: 'Percentage of Nodes (%)'
+            name: 'Node Percent(%)'
         }, {
             name: 'CDF (%)',
             position: 'right'
@@ -691,8 +669,8 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         },
         graphic: {
             type: 'text',
-            left: '60%',  // 调整位置
-            top: '60%',   // 调整位置
+            left: '62%',  // 调整位置
+            top: '62%',   // 调整位置
             style: {
                 text: func,  // 显示拟合的函数公式
                 fill: '#666',
