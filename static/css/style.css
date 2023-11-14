@@ -179,12 +179,12 @@ table th {
 
 table th.asc:before {
 	display: inline;
-	content: '↓ ';
+	content: '⬇️ ';
 }
 
 table th.desc:before {
 	display: inline;
-	content: '↑ ';
+	content: '⬆️ ';
 }
 
 
