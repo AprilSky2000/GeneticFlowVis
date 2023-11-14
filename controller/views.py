@@ -378,6 +378,9 @@ def get_scholar(row, name):
         scholar['citationCount'] = int(row[7])
         scholar['hIndex'] = int(row[8])
         scholar['paperCount'] = int(row[5])
+        scholar['corePaperCount'] = int(row[-3])
+        scholar['coreCitationCount'] = int(row[-2])
+        scholar['corehIndex'] = int(row[-1])
     return scholar
 
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):

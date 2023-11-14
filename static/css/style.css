@@ -187,6 +187,27 @@ table th.desc:before {
 	content: '↑ ';
 }
 
+
+table td, table th{
+	border: 1px solid #cad9ea;
+	color: #333;
+	height: 30px;
+}
+table thead th{
+	background-color: #CCE8EB;
+	width: 100px;
+}
+th:hover {
+	cursor: pointer;
+	background-color: #a4c7cb; /* 变暗的背景颜色 */
+}
+table tr:nth-child(odd){
+	background: #fff;
+}
+table tr:nth-child(even){
+	background: #F5FAFA;
+}
+
 tr:hover {
     background-color: #0f0b0b07; /* 鼠标滑过时的背景颜色 */
 }

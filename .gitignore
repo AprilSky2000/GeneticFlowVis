@@ -7,6 +7,5 @@ controller/__pycache__
 static/image/svg
 # 忽略csv目录下的所有文件，但不忽略这三个特定的文件
 csv/*
-!csv/version.csv
-!csv/award_authors.csv
-!csv/award_list.csv
+!csv/*.csv
+!csv/*.py

@@ -29,14 +29,17 @@
                 <ul class="pagination" id="pagination"></ul>
             </nav>
             <div style="float: left; width: 95%;">
-                <table class="table">
+                <table class="table" style="box-shadow:5px 5px 5px rgba(0, 0, 0, 0.5),-5px 5px 5px rgba(0, 0, 0, 0.5);">
                     <thead>
                         <tr>
                             <th>Sequence</th>
                             <th>Scholar Name</th>
-                            <th id="paper-count" class="asc"></th>
-                            <th id="citations"></th>
-                            <th id="h-index"></th>
+                            <th id="paperCount" class="asc">Paper Count</th>
+                            <th id="citations">Paper Citations</th>
+                            <th id="h-index">h-index</th>
+                            <th id="corePaperCount">Core Paper Count</th>
+                            <th>Core Paper Citations</th>
+                            <th>Core h-index</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -75,7 +78,7 @@
             $('table tbody').empty();
             const startIndex = (page - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
-
+            
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
                 var content = `
@@ -85,6 +88,9 @@
                         <td>${scholar["paperCount"]}</td>
                         <td>${scholar["citationCount"]}</td>
                         <td>${scholar["hIndex"]}</td>
+                        <td>${scholar["corePaperCount"]}</td>
+                        <td>${scholar["coreCitationCount"]}</td>
+                        <td>${scholar["corehIndex"]}</td>
                         <td>
                             <a class="btn-sm btn-primary" href="/index?field=${fieldType}&id=${scholar["authorID"]}" style="font-size: 12px; text-decoration: none;">
                                 Visualize
@@ -130,8 +136,7 @@
             fieldlabel = fieldDict[fieldType];
             if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";
-            }
-            else {
+            } else {
                 questionContent = `The scholar metrics below are obtained from all the publications tagged as ${fieldType} papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.`;
             }
             
@@ -139,21 +144,23 @@
             <div class="question">
                 <i class="fa-solid fa-circle-question hover-text"></i>
                 <span class="question-tip" style="font-size: 10px;">
-                    ${questionContent}
+                    $$content$$
                 </span>
             </div>`;
-            $("#paper-count").text(fieldlabel + " Paper Count ");
-            $("#citations").text(fieldlabel + " Paper Citations ");
-            $("#h-index").text("h-index (" + fieldlabel + ") ");
-            $("#paper-count, #citations, #h-index").append(content);
-            
+            // $("#paper-count").text(fieldlabel + " Paper Count ");
+            // $("#citations").text(fieldlabel + " Paper Citations ");
+            // $("#h-index").text("h-index (" + fieldlabel + ") ");
+            $("#paperCount").append(content.replace('$$content$$', questionContent));
+            $("#corePaperCount").append(content.replace('$$content$$', 'Core paper is calculated with "isKeyPaper" > 0.5'))
+
             scholarList.sort(compare("paperCount", "asc"));
             displayPagination();
         });
         $('table').on('click', 'th', function () {
             var index = $(this).index();
             if (index != 0) {
-                const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex"];
+                const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex", 
+                "corePaperCount", "coreCitationCount", "corehIndex"];
                 var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
                 scholarList.sort(compare(indexLabel[index], thClass));
                 
