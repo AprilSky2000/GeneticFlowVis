@@ -580,15 +580,17 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
 
     console.log('slicedFrequency', slicedFrequency, powerLawShiftValue)
     // console.log(titleText, frequency)
-    let fittedY, para, func;
-    if (fittedDistribution == 'power') {
+    let fittedY=[], para=null, func='';
+    if (slicedFrequency.length == 0 || slicedFrequency[0] == 0) {
+        // pass
+    } else if (fittedDistribution == 'power') {
         if (powerLawShiftValue == 0) {
             let best_k = 0, best_r2 = -10, best_para = null, decrease_times = 0;
             for (let k=1; k<=100; k++) {
                 para = computePowerRegression(slicedFrequency, k);
                 fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
                 let r2 = calculateR2(yAxisData, fittedY);
-                if (r2 > best_r2) {
+                if (r2 > best_r2 + 0.0002) {
                     best_r2 = r2;
                     best_k = k;
                     best_para = para;
@@ -616,12 +618,9 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         fittedY = xAxisData.map(x => Math.exp(para.b) * Math.exp(para.m * x));
         let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
         func = `y = ${Math.exp(para.b).toFixed(3)}e^${(para.m).toFixed(3)}x\n\n(r2=${r2})`;
-    } else {
-        fittedY = [];
-        func = '';
     }
     console.log('para...', para)
-    if (isNaN(para.b)) {
+    if (para === null) {
         fittedY = [];
         func = 'Not available: y(0)=0'
     }
