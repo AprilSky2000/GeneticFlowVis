@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <meta charset="UTF-8">
     <title>Degree Distribution</title>
+    <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
     <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.7.0/dist/simple-statistics.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
@@ -214,8 +216,10 @@
             </select>
         </div>
         <div class="filters">
-            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="30" oninput="updateValue('powerLawShiftValue', this.value, false)">
-            <span id="powerLawShiftValue">dynamic</span>
+            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="100" 
+            style="width: 250px;"    
+            oninput="updateValue('powerLawShiftValue', this.value, false)">
+            <span id="powerLawShiftValue">auto</span>
         </div>
 
         <div id="otherAuthorsInfo" class="title"></div>
@@ -387,7 +391,7 @@ async function updateTop(spanId, value) {
 
 async function updateValue(spanId, value, reload=true) {
     if (spanId == 'powerLawShiftValue') {
-        document.getElementById(spanId).textContent = value == 0? 'dynamic': value;
+        document.getElementById(spanId).textContent = value == 0? 'auto': value;
     } else {
         document.getElementById(spanId).textContent = value;
     }
@@ -487,7 +491,7 @@ function computePowerRegression(data, k) {
     // 线性回归
     let para = linearRegression([transformedX, logY]);
 
-    console.log(para)
+    // console.log(para)
 
     // 将线性回归的结果转换回原始参数
     return { a: Math.exp(para.b), b: -para.m, k: k };
@@ -579,8 +583,8 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     let fittedY, para, func;
     if (fittedDistribution == 'power') {
         if (powerLawShiftValue == 0) {
-            let best_k = 0, best_r2 = 0, best_para = null, decrease_times = 0;
-            for (let k=1; k<=30; k++) {
+            let best_k = 0, best_r2 = -10, best_para = null, decrease_times = 0;
+            for (let k=1; k<=100; k++) {
                 para = computePowerRegression(slicedFrequency, k);
                 fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
                 let r2 = calculateR2(yAxisData, fittedY);
@@ -598,7 +602,7 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         } else {
             para = computePowerRegression(slicedFrequency, powerLawShiftValue);
         }
-        console.log('power para', para)
+        // para is null
         fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
         let r2 = calculateR2(yAxisData, fittedY).toFixed(4);   // para.r2.toFixed(3)
         if (para.k == 0) {
@@ -615,6 +619,11 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     } else {
         fittedY = [];
         func = '';
+    }
+    console.log('para...', para)
+    if (isNaN(para.b)) {
+        fittedY = [];
+        func = 'Not available: y(0)=0'
     }
 
     let option = {

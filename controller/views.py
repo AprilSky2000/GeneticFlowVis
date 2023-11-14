@@ -88,11 +88,12 @@ def degree(request):
     df.columns = ['authorID', 'name', 'paperCount', 'hIndex']
     df = df.head(topN)
 
-    authors = field2authors.setdefault(field, {})
+    # authors = field2authors.setdefault(field, {})
     for index, row in df.iterrows():
         authorID = row['authorID']
-        if authorID not in authors:
-            authors[authorID] = load_author(field, authorID)
+        load_author(field, authorID)
+        # if authorID not in authors:
+        #     authors[authorID] = load_author(field, authorID)
 
     if fellow is None:
         df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
