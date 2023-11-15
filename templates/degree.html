@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <meta charset="UTF-8">
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
     <title>Degree Distribution</title>
     <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+    <link href="/src/css/style.css" rel='stylesheet' type='text/css' />
     <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.7.0/dist/simple-statistics.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
@@ -30,7 +31,7 @@
         }
 
         #authorTable {
-            width: 30%;
+            width: 34%;
             margin-right: 2%;
             border-collapse: collapse;
         }
@@ -46,40 +47,37 @@
         }
 
         #authorTable tbody {
-            max-height: 1000px;  /* Adjust this value as per your requirement */
+            max-height: 1200px;  /* Adjust this value as per your requirement */
             overflow-y: auto;
         }
 
-
         #authorTable th, #authorTable td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
+            font-size: 14px !important;
         }
 
         #authorTable tr:hover {
-            background-color: #f5f5f5;
+            background-color: #e8e8e8;
             cursor: pointer;
             transition: background-color 0.3s;
         }
 
         /* 设置每列的宽度比例 */
-        #authorTable th:nth-child(1), #authorTable td:nth-child(1) { /* 第一列 */
+        #authorTable th:nth-child(1), #authorTable td:nth-child(1) {
             width: 10%;
         }
-        #authorTable th:nth-child(2), #authorTable td:nth-child(2) { /* 第二列 */
+        #authorTable th:nth-child(2), #authorTable td:nth-child(2) {
             width: 20%;
         }
-        #authorTable th:nth-child(3), #authorTable td:nth-child(3) { /* 第三列 */
-            width: 30%;
+        #authorTable th:nth-child(3), #authorTable td:nth-child(3) {
+            width: 35%;
         }
-        #authorTable th:nth-child(4), #authorTable td:nth-child(4) { /* 第一列 */
-            width: 10%;
+        #authorTable th:nth-child(4), #authorTable td:nth-child(4) {
+            width: 13%;
         }
-        #authorTable th:nth-child(5), #authorTable td:nth-child(5) { /* 第二列 */
-            width: 10%;
+        #authorTable th:nth-child(5), #authorTable td:nth-child(5) {
+            width: 13%;
         }
-        #authorTable th:nth-child(6), #authorTable td:nth-child(6) { /* 第三列 */
+        #authorTable th:nth-child(6), #authorTable td:nth-child(6) { 
             width: 20%;
         }
 
@@ -143,7 +141,7 @@
             padding: 10px;
             font: 14px sans-serif;
             line-height: 20px;
-            background: lightsteelblue;
+            background: black;
             border: 0px;
             border-radius: 8px;
             pointer-events: none;  
@@ -163,7 +161,7 @@
                 <th>ID</th>
                 <th>name</th>
                 <th>#paper</th>
-                <th>hIndex</th>
+                <th class="asc">hIndex</th>
                 <th>fellow</th>
             </tr>
         </thead>
@@ -254,6 +252,20 @@ let filterIsolatedNodes = false;
 let powerLawShiftValue = 0;
 authorsData = {{ authorsData|safe }};
 
+$('table').on('click', 'th', function () {
+    var index = $(this).index();
+    if (index != 0) {
+        var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
+        console.log('sort', index, thClass)
+        authorsData.sort(compare(index-1, thClass));
+        
+        $('table th').removeClass('asc desc');
+        $(this).addClass(thClass);
+        renderAuthorTable();
+        filterByFellow();
+    }
+});
+
 startLoading()
 
 async function startLoading() {
@@ -267,6 +279,22 @@ async function startLoading() {
     await loadAuthorsData();
     renderAuthorTable();
     filterByFellow();
+}
+
+function compare(index, sortType) {
+    return function(row1, row2) {
+        var aValue = row1[index];
+            bValue = row2[index];
+        if (index == 1 || index == 4) {
+            if (sortType == 'asc') return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            else return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+        else {
+            aValue = parseInt(aValue);
+            bValue = parseInt(bValue);
+            return sortType == 'desc' ? aValue - bValue : bValue - aValue;
+        }
+    }
 }
 
 
@@ -326,19 +354,20 @@ function renderAuthorTable() {
     let tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
-        
-        
+
     rows.on("mouseover", function(d) {
         tooltip.transition()
             .duration(200)
             .style("opacity", .9);
-        tooltip.html("author: " + d[0] + " (" + d[1] + ")"
+        tooltip.html('<span class="question-tip" style="font-size: 12px; color: #fff">' 
+                    + "author: " + d[0] + " (" + d[1] + ")"
                     + "<br/>fellow: " + d[4]
                     + "<br/>#node: " + allAuthorsFrequency[d[0]].node
                     + "<br/>#edge: " + allAuthorsFrequency[d[0]].edge
                     + "<br/>degree: " + printDegree(allAuthorsFrequency[d[0]].totaldegree)
                     + "<br/>indegree: " + printDegree(allAuthorsFrequency[d[0]].indegree)
                     + "<br/>outdegree: " + printDegree(allAuthorsFrequency[d[0]].outdegree)
+                    + '</span>'
                     )
             .style("left", (event.pageX) + "px")
             .style("top", (event.pageY - 28) + "px");

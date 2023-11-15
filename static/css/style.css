@@ -189,9 +189,8 @@ table th.desc:before {
 
 
 table td, table th{
-	border: 1px solid #cad9ea;
-	color: #333;
-	height: 30px;
+	border: 0.5px solid #cad9ea;
+	/* color: #cad9ea rgba(202, 217, 234, 0.5)*/
 }
 table thead th{
 	background-color: #CCE8EB;
@@ -209,7 +208,8 @@ table tr:nth-child(even){
 }
 
 tr:hover {
-    background-color: #0f0b0b07; /* 鼠标滑过时的背景颜色 */
+	background-color: #e8e8e8;
+	transition: background-color 0.3s;
 }
 
 /* 滚动槽 */
