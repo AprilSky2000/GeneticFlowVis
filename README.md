@@ -2,7 +2,7 @@
 
 *注意*：为保证项目运行的稳定性，分离测试和正式环境，开发一律使用测试环境，在正式环境文件夹下不要修改代码，只能pull！
 
-本地运行（测试环境）：
+## 本地测试：
 
 ```
 # 数据准备：将现有csv同步到本文件夹中
@@ -13,19 +13,28 @@ pip install -r requirements.txt
 python manage.py runserver 0.0.0.0:9109
 ```
 
-actcloud运行（正式环境）：
+## actcloud测试环境（/home/sy/GFVis，端口9002）：
 
+http://test.genetic-flow.com 端口在9002
+```
+cd /home/sy/GFVis
+pkill -f "runserver 0.0.0.0:9002"
+nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
+```
+
+## actcloud正式环境（/home/xfl/pyCode/GFVis，端口9001）：
+
+https://genetic-flow.com 端口在9001
 ```
 su xfl
 cd /home/xfl/pyCode/GFVis
 git pull
-pkill -f "runserver 0.0.0.0:9001"
-# 后台运行，日志追加到当前目录的`nohup.out`文件，2>&1 表示将错误输出也重定向到同一个文件。
 conda activate python3.7
+pkill -f "runserver 0.0.0.0:9001"
 nohup python manage.py runserver 0.0.0.0:9001 2>&1 &
 ```
-<hr />
-增加新领域：
+
+## 增加新领域：
 
 > 测试环境
 

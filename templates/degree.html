@@ -179,7 +179,7 @@
             <span id="edgeProbValue">0.3</span>
         </div>
         <div class="filters">
-            Fellow Filter: <input type="text" id="fellowInput" value="1:">
+            Fellow Filter (by regex): <input type="text" id="fellowInput" value="^1:|,1:">
             <button onclick="filterByFellow()">Display</button>
         </div>
         <div class="filters">
@@ -387,7 +387,9 @@ function renderAuthorTable() {
 
 function filterByFellow() {
     let fellowFilter = document.getElementById("fellowInput").value;
-    selectedAuthors = authorsData.filter(author => author[4].includes(fellowFilter)).map(author => author[0]);
+    let regex = new RegExp(fellowFilter);
+    // author[4].includes(fellowFilter)
+    selectedAuthors = authorsData.filter(author => regex.test(author[4])).map(author => author[0]);
     console.log('filter value:', fellowFilter)
     updateTitle();
 

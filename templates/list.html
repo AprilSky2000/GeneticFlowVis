@@ -132,7 +132,8 @@
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
             var fieldlabel, questionContent;
-
+            
+            console.log('scholarList', scholarList)
             fieldlabel = fieldDict[fieldType];
             if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";

@@ -361,27 +361,20 @@ def showlist(request):
     fieldType = request.GET.get("field")
     name = request.GET.get("name", None)
     df = pd.read_csv(f'csv/{fieldType}/top_field_authors.csv', sep=',')
-    data = df.values.tolist()
-    scholarList = [get_scholar(row, name) for row in data if get_scholar(row, name) != {}]
+    df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field']]
+    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']
+    
+    if name:
+        filtered_df = df[df['name'].apply(lambda x: name.lower() in x.lower())]
+        scholarList = filtered_df.to_dict(orient='records')
+    else:
+        scholarList = df.to_dict(orient='records')
     if len(scholarList) == 0:
         error = 'No author named ' + name               # 错误信息
         return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
         return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})
 
-def get_scholar(row, name):
-    scholar = {}
-    if name == None or (name != None and name.lower() in str(row[2]).lower()):
-        # scholar['authorRank'] = int(row[6])
-        scholar['authorID'] = int(row[0])
-        scholar['name'] = str(row[2])
-        scholar['citationCount'] = int(row[7])
-        scholar['hIndex'] = int(row[8])
-        scholar['paperCount'] = int(row[5])
-        scholar['corePaperCount'] = int(row[-3])
-        scholar['coreCitationCount'] = int(row[-2])
-        scholar['corehIndex'] = int(row[-1])
-    return scholar
 
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
     path = f'csv/{fieldType}/papers/{authorID}.csv'
