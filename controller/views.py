@@ -162,10 +162,13 @@ def create_partial_graph(dot, papers, links, nodeWidth):
     # 当节点没有边与其相连时，删去
     valid_nodes = set()
     for link in links:
-        valid_nodes.add(link['childrenID'])
-        valid_nodes.add(link['parentID'])
+        a = link['childrenID']
+        b = link['parentID']
+        if a in papers and b in papers:
+            valid_nodes.add(a)
+            valid_nodes.add(b)
 
-    papers_backup = {k: v for k, v in papers.items() if v['paperID'] in valid_nodes}
+    papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
     create_node(dot, papers_backup, nodeWidth)
     create_edge(dot, papers_backup, links)
 
@@ -292,7 +295,22 @@ def index(request):
         write_d3_data(fieldType, detail, papers, links)
 
     return render(request, "index.html",
-                  {'authorID': authorID, 'name': name, 'paperCount': paperCount, 'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'fieldType': fieldType})
+                  {'authorID': authorID, 'name': name, 'paperCount': paperCount, 
+                   'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'fieldType': fieldType})
+
+
+def clean_json(request):
+    import glob
+    fieldType = request.GET.get("field")
+    pattern = f"static/json/{fieldType}/*.json"
+
+    # 获取匹配模式的文件列表
+    file_list = glob.glob(pattern)
+    for file_path in file_list:
+        os.remove(file_path)  # 或者使用 os.unlink(file_path)
+        print(f"Deleted: {file_path}")
+
+    return HttpResponse("Successfully deleted " + pattern)
 
 def update(request):
     fieldType = request.POST.get("field")

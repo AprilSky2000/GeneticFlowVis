@@ -18,6 +18,7 @@ python manage.py runserver 0.0.0.0:9109
 http://test.genetic-flow.com 端口在9002
 ```
 cd /home/sy/GFVis
+pip install -r requirements.txt
 pkill -f "runserver 0.0.0.0:9002"
 nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
 ```
@@ -28,8 +29,9 @@ https://genetic-flow.com 端口在9001
 ```
 su xfl
 cd /home/xfl/pyCode/GFVis
-git pull
 conda activate python3.7
+pip install -r requirements.txt
+git pull
 pkill -f "runserver 0.0.0.0:9001"
 nohup python manage.py runserver 0.0.0.0:9001 2>&1 &
 ```
