@@ -13,17 +13,20 @@ pip install -r requirements.txt
 python manage.py runserver 0.0.0.0:9109
 ```
 
-## actcloud测试环境（/home/sy/GFVis，端口9002）：
+## 内测环境（actcloud:/home/sy/GFVis，端口9002）：
 
 http://test.genetic-flow.com 端口在9002
 ```
+su sy
 cd /home/sy/GFVis
 pip install -r requirements.txt
 pkill -f "runserver 0.0.0.0:9002"
 nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
 ```
 
-## actcloud正式环境（/home/xfl/pyCode/GFVis，端口9001）：
+## 测试环境（actcloud:/home/sy/GFVis，端口9002）
+
+## 正式环境（actcloud:/home/xfl/pyCode/GFVis，端口9001）：
 
 https://genetic-flow.com 端口在9001
 ```

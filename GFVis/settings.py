@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-p9y_(tfj(kceu@t&ja&(i7x)hr9!5dve@pr^jgz5mwt6ke*7f3
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-
+CSRF_TRUSTED_ORIGINS = ['http://*.genetic-flow.com','https://*.127.0.0.1']
 
 # Application definition
 

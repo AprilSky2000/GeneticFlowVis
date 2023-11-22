@@ -47,7 +47,7 @@
         }
 
         #authorTable tbody {
-            max-height: 1200px;  /* Adjust this value as per your requirement */
+            max-height: 1250px;  /* Adjust this value as per your requirement */
             overflow-y: auto;
         }
 
@@ -147,6 +147,16 @@
             pointer-events: none;  
             opacity: 0;  
         }
+
+        .info {
+            background-color: aliceblue;
+            box-shadow: #3498db 0px 0px 5px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            line-height: 24px;
+            max-width: 600px;
+        }
     </style>
 </head>
 <body>
@@ -183,11 +193,12 @@
             <button onclick="filterByFellow()">Display</button>
         </div>
         <div class="filters">
-            Edge on filtered nodes: <input type="checkbox" id="edgeOnFilteredNodes" checked onchange="updateCheck()">
-            Filter isolated nodes: <input type="checkbox" id="filterIsolatedNodes" onchange="updateCheck()">
+            Remove isolated: <input type="checkbox" id="removeIsolated" onchange="updateCheck()">
+            Remove survey: <input type="checkbox" id="removeSurvey"checked onchange="updateCheck()">
+            <!-- Edge on filtered nodes: <input type="checkbox" id="edgeOnFilteredNodes" checked onchange="updateCheck()"> -->
         </div>
 
-        <div id="selectedAuthorsInfo" class="title"></div>
+        <div id="selectedAuthorsInfo" class="info"></div>
 
         <!-- Add divs for your D3 visualizations -->
         <div id="indegree"></div>
@@ -220,7 +231,7 @@
             <span id="powerLawShiftValue">auto</span>
         </div>
 
-        <div id="otherAuthorsInfo" class="title"></div>
+        <div id="otherAuthorsInfo" class="info"></div>
 
         <!-- Add divs for your D3 visualizations -->
         <div id="indegree-r"></div>
@@ -248,7 +259,8 @@ let fittedDistribution = 'exponential';
 let field = "{{ field }}";
 let topN = parseInt("{{ topN }}");
 let edgeOnFilteredNodes = true;
-let filterIsolatedNodes = false;
+let removeIsolated = false;
+let removeSurvey = true;
 let powerLawShiftValue = 0;
 authorsData = {{ authorsData|safe }};
 
@@ -274,6 +286,21 @@ async function startLoading() {
     $("#tophIndexValue").text(topN);
     $("#tophIndexSlider").val(topN);
 
+    let data = await d3.json(`/src/json/config.json`);
+    let config = field in data ? data[field] : data['default'];
+    // removeIsolated = config['remove_isolated'];
+    removeIsolated = false;
+    removeSurvey = config['remove_survey'];
+    nodeProbFilter = config['node_prob'];
+    edgeProbFilter = config['edge_prob'];
+
+    $("#nodeProbValue").text(nodeProbFilter);
+    $("#nodeProbSlider").val(nodeProbFilter);
+    $("#edgeProbValue").text(edgeProbFilter);
+    $("#edgeProbSlider").val(edgeProbFilter);
+    $("#removeIsolated").prop('checked', removeIsolated);
+    $("#removeSurvey").prop('checked', removeSurvey);
+
     console.log(authorsData, topN, field);
     authorIDs_global = authorsData.map(d=>d[0]);
     await loadAuthorsData();
@@ -297,13 +324,47 @@ function compare(index, sortType) {
     }
 }
 
-
-function updateTitle() {
-    document.getElementById("selectedAuthorsInfo").innerText = "Selected Authors: " + selectedAuthors.length;
-    document.getElementById("otherAuthorsInfo").innerText = "Other Authors: " + (authorIDs_global.length - selectedAuthors.length);
+// Function to calculate the sum of corresponding values
+function calculateSum(inputStrings) {
+    console.log('sum', inputStrings)
+    const sumObject = {};
+    inputStrings.forEach(inputString => {
+        const parts = inputString.split(' / ');
+        parts.forEach(part => {
+            const match = part.match(/(\d+)\(([\w+ ]+)\)/);
+            if (match) {
+                const [, number, letter] = match;
+                const key = letter;
+                sumObject[key] = (sumObject[key] || 0) + parseInt(number, 10);
+            }
+        });
+    });
+    
+    const sumString = Object.entries(sumObject)
+        .map(([key, value]) => `${value}(${key})`)
+        .join(' / ');
+    return sumString;
 }
 
+function updateTitle() {
+    let la = selectedAuthors.length;
+    let otherAuthors = authorIDs_global.filter(id => !selectedAuthors.includes(id));
+    let lb = otherAuthors.length;
 
+    document.getElementById("selectedAuthorsInfo").innerText = (
+        `Selected Authors: ${la}
+        #nodes: ${calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].node))}
+        #edges: ${calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].edge))}`
+    );
+
+    document.getElementById("otherAuthorsInfo").innerText = (
+        `Other Authors: ${lb}
+        #nodes: ${calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].node))}
+        #edges: ${calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].edge))}`
+    );
+}
+
+// Average (Ave), standard deviation (SD) and percent coefficient of variation (CV)
 function printDegree(degree, verbose=true) {
     let arr = [];
     let sum = 0, sum_k = 0;
@@ -316,10 +377,20 @@ function printDegree(degree, verbose=true) {
         sum_k += v;
         str += k + ':' + v + ', ';
     }
-    str = str.slice(0, -2);
+    str = str.slice(0, -2) + ' ';
     let ave = (sum/sum_k).toFixed(4)
-    if (verbose) return str + ' (ave: ' + ave + ')'
-    return ' (ave: ' + ave + ')'
+
+    // 计算均方差（SD）
+    let sd = 0;
+    for (let i = 0; i < arr.length; i++) {
+        sd += Math.pow(arr[i][0] - ave, 2) * arr[i][1];
+    }
+    sd = Math.sqrt(sd / sum_k).toFixed(4);
+
+    // 计算变异系数（Coefficient of Variation，CV）
+    let cv = (sd / ave).toFixed(4);
+    let ret = '(ave: ' + ave + ', SD: ' + sd + ', CV: ' + cv + ')';
+    return verbose? str + ret: ret;
 }
 
 function renderAuthorTable() {
@@ -435,8 +506,9 @@ async function updateValue(spanId, value, reload=true) {
 }
 
 async function updateCheck() {
-    edgeOnFilteredNodes = document.getElementById("edgeOnFilteredNodes").checked;
-    filterIsolatedNodes = document.getElementById("filterIsolatedNodes").checked;
+    // edgeOnFilteredNodes = document.getElementById("edgeOnFilteredNodes").checked;
+    removeIsolated = document.getElementById("removeIsolated").checked;
+    removeSurvey = document.getElementById("removeSurvey").checked;
     await loadAuthorsData();
     drawDistribution(selectedAuthors);
 }
@@ -757,46 +829,36 @@ async function loadAuthorsData() {
 
     let promises = authorIDs_global.map(id => d3.json(`/src/json/${field}/authors/${id}.json`).then(data => {
         // Filter nodes and edges based on given probabilities
-        
-        let filteredNodes = Object.keys(data.nodes).filter(key => data.nodes[key] > nodeProbFilter);
-        let filteredEdges = data.edges.filter(edge => edge.prob > edgeProbFilter);
-        filteredNodes = filteredNodes.map(key => String(key));
-        
+        let filteredNodes = data.nodes.filter(node => node.isKeyPaper >= nodeProbFilter);
+        let filteredEdges = data.edges.filter(edge => edge.prob >= edgeProbFilter);
         // Compute indegree, outdegree, and total degree
         let indegree = {}, outdegree = {}, totaldegree = {};
         // set other nodes in filteredNodes outdegree/indegree =0
         filteredNodes.forEach(node => {
-            outdegree[node] = 0;
-            indegree[node] = 0;
-            totaldegree[node] = 0;
+            outdegree[node.paperID] = 0;
+            indegree[node.paperID] = 0;
+            totaldegree[node.paperID] = 0;
         })
+
+        if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
+        let nodeSet = new Set(filteredNodes.map(node => node.paperID));
+        
         let edgeCount = 0;
         let connectedEdges = [];
         filteredEdges.forEach(edge => {
             src = String(edge.source);
             tgt = String(edge.target);
-            if (edgeOnFilteredNodes) {
-                if (filteredNodes.includes(src) && filteredNodes.includes(tgt)) {
-                    outdegree[src] += 1;
-                    indegree[tgt] += 1;
-                    totaldegree[src] += 1;
-                    totaldegree[tgt] += 1;
-                    connectedEdges.push(edge);
-                }
-            } else {
-                if (filteredNodes.includes(src)) {
-                    outdegree[src] += 1;
-                    totaldegree[src] += 1;
-                }
-                if (filteredNodes.includes(tgt)) {
-                    indegree[tgt] += 1;
-                    totaldegree[tgt] += 1;
-                }
+            if (nodeSet.has(src) && nodeSet.has(tgt)) {
+                outdegree[src] += 1;
+                indegree[tgt] += 1;
+                totaldegree[src] += 1;
+                totaldegree[tgt] += 1;
+                connectedEdges.push(edge);
             }
         });
 
-        let connectedNodes = filteredNodes.filter(node => totaldegree[node] > 0);
-        if (filterIsolatedNodes) {
+        let connectedNodes = filteredNodes.filter(node => totaldegree[node.paperID] > 0);
+        if (removeIsolated) {
             for (let node of filteredNodes) {
                 if (totaldegree[node] == 0) {
                     delete outdegree[node];
@@ -806,24 +868,20 @@ async function loadAuthorsData() {
             }
         }
 
-        if (id == '1124' || id == 1124) {
-            console.log('data', filteredNodes, filteredEdges)
-            console.log(id, connectedEdges, connectedNodes)
-        }
-
         // Visualize using ECharts
         let indegreeData = computeFrequency(Object.values(indegree));
         let outdegreeData = computeFrequency(Object.values(outdegree));
         let totaldegreeData = computeFrequency(Object.values(totaldegree));
 
+        let surveyStr = removeSurvey? '(filter+remove survey) / ' : '(filter) / '
         allAuthorsFrequency[id] = {
             'indegree': indegreeData,
             'outdegree': outdegreeData,
             'totaldegree': totaldegreeData,
-            'node': String(filteredNodes.length) + '/' + String(Object.values(data.nodes).length) + ' (connected: ' + String(connectedNodes.length) + ')',
-            'edge': String(filteredEdges.length) + '/' + String(data.edges.length) + ' (valid: ' + String(connectedEdges.length) + ')'
+            'node': String(connectedNodes.length) + '(remove isolated) / ' + String(filteredNodes.length) +surveyStr + String(data.nodes.length) + '(all)',
+            'edge': String(connectedEdges.length) + '(remove isolated) / ' + String(filteredEdges.length) + surveyStr + String(data.edges.length) + '(all)'
         }
-        // console.log(authorID, filteredNodes, filteredEdges, outdegree)
+        // console.log(id, filteredNodes, filteredEdges, outdegree)
     }))
 
     await Promise.all(promises);
@@ -868,9 +926,9 @@ function drawDistribution(authorIDs) {
     combinedMap = combineAllMaps(subMap)
     console.log('combined subMap', combinedMap)
 
-    drawDistributionChart('indegree', combinedMap['indegree'], 'In-degree Distribution');
-    drawDistributionChart('outdegree', combinedMap['outdegree'], 'Out-degree Distribution');
-    drawDistributionChart('totaldegree', combinedMap['totaldegree'], 'Total Degree Distribution');
+    drawDistributionChart('indegree', combinedMap['indegree'], 'In-degree');
+    drawDistributionChart('outdegree', combinedMap['outdegree'], 'Out-degree');
+    drawDistributionChart('totaldegree', combinedMap['totaldegree'], 'Total Degree');
     updateTitle();
 }
 </script>

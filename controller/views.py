@@ -63,10 +63,12 @@ def load_author(field, authorID):
         })
 
     papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv')
-    for index, row in papers_df.iterrows():
-        nodes[row['paperID']] = float(row['isKeyPaper'])
+    papers_df['paperID'] = papers_df['paperID'].astype(str)
+    papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
+    papers_df = papers_df[['paperID', 'year', 'survey', 'isKeyPaper', 'topic']]
+    
     dic = {
-        'nodes': nodes,
+        'nodes': papers_df.to_dict(orient='records'),
         'edges': edges
     }
 
@@ -299,18 +301,12 @@ def index(request):
                    'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'fieldType': fieldType})
 
 
-def clean_json(request):
-    import glob
+def clean(request):
+    import shutil
     fieldType = request.GET.get("field")
-    pattern = f"static/json/{fieldType}/*.json"
-
-    # 获取匹配模式的文件列表
-    file_list = glob.glob(pattern)
-    for file_path in file_list:
-        os.remove(file_path)  # 或者使用 os.unlink(file_path)
-        print(f"Deleted: {file_path}")
-
-    return HttpResponse("Successfully deleted " + pattern)
+    path = f"static/json/{fieldType}"
+    shutil.rmtree(path, ignore_errors=True)
+    return HttpResponse("Successfully deleted " + path)
 
 def update(request):
     fieldType = request.POST.get("field")

@@ -417,6 +417,10 @@
             }
             else    filename += '_1_0.5_0.5_10_1.json';
 
+            d3.json(`/src/json/config.json`).then(data => {
+                config = fieldType in data ? data[fieldType] : data['default'];
+            })
+            
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
                 nodes = data[2];            //论文节点
@@ -449,10 +453,10 @@
                 });
                 nodeSlider = document.getElementById('range-node');
                 noUiSlider.create(nodeSlider, {
-                    start: 0.5,
+                    start: config["node_prob"],
                     behaviour: 'tap',
                     connect: [false, true],
-                    step: 0.1,
+                    step: 0.05,
                     range: {
                         'min': 0,
                         'max': 1.0
@@ -460,15 +464,17 @@
                 });
                 edgeSlider = document.getElementById('range-edge');
                 noUiSlider.create(edgeSlider, {
-                    start: fieldType == "acl" ? 0.4 : 0.5,
+                    start: config["edge_prob"],
                     behaviour: 'tap',
                     connect: [false, true],
-                    step: 0.1,
+                    step: 0.05,
                     range: {
                         'min': 0,
                         'max': 1.0
                     }
                 });
+                $('remove-survey').value = config['remove_survey']? '1': '0';
+                $('mode').value = config['remove_isolated']? '1': '0';
                 
                 onFullscreenChange();
 
@@ -524,6 +530,10 @@
                         onFullscreenChange();
                     });
                 },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("AJAX request failed:", textStatus, errorThrown);
+                    console.log("Response:", jqXHR.responseText);
+                }
             });
         }
         $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
