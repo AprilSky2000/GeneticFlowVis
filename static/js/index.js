@@ -57,7 +57,7 @@ function addAllListeners() {
         d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
     });
     $("#restore").click(function() {
-        d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+        reset_graph();
     });
 
     // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
@@ -160,6 +160,13 @@ function onEscKeyPressed(event) {
     }
 }
 
+function reset_graph() {
+    image_switch = 1;
+    $("#description").hide();
+    $("#mainsvg").show();
+    d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+}
+
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
@@ -196,13 +203,14 @@ function updateSider (name) {
 
     $("#timeline").empty();
     $("#timeline").append(content = `
-    <div style="float: left;">
-        <i style="width: 10px; height: 10px; border-radius: 50%; background-color: white; display: inline-block;"></i>
-    </div>
-    <div style="margin-left: 7%; margin-bottom: 2%; display: flex; justify-content: space-between;">
-        <b style="margin-left: 0%; font-size:16px;">Paper Name</b>
-        <b style="margin-right: 1%; margin-left: 5%; font-size:16px;">#Citation</b>
-    </div>`);
+        <div style="float: left;">
+            <i style="width: 10px; height: 10px; border-radius: 50%; background-color: white; display: inline-block;"></i>
+        </div>
+        <div style="margin-left: 7%; margin-bottom: 2%; display: flex; justify-content: space-between;">
+            <b style="margin-left: 0%; font-size:16px;">Paper Name</b>
+            <b style="margin-right: 1%; margin-left: 5%; font-size:16px;">#Citation</b>
+        </div>`
+    );
     for (let i = 0; i < nodes.length; i++) {
         const paperName = String(nodes[i].name);
         const paperVenu = String(nodes[i].venu);
@@ -295,16 +303,15 @@ function hsvToHex(h, s, v) {
 function textSize(text, size) {
     let container = d3.select('body').append('svg');
     container.append('text')
-  
       .style("font-size", size + "px")      // todo: these need to be passed to the function or a css style
       .style("font-family", "sans-serif")
       .text(text);
   
-    let sel = container.selectAll('text').node()
-    let width = sel.getComputedTextLength()
-    let height = sel.getExtentOfChar(0).height
-    container.remove()
-    return {width, height}
+    let sel = container.selectAll('text').node();
+    let width = sel.getComputedTextLength();
+    let height = sel.getExtentOfChar(0).height;
+    container.remove();
+    return {width, height};
 }
 
 function calculateWordPosition(sortedData, maxFontSize) {
@@ -428,6 +435,8 @@ function draw_tag_cloud() {
 }
 
 function init_graph (viewBox, transform) {
+    $("#imageToShow").height($(".middle-column").height() * 0.75);
+
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", $(".middle-column").width())
         .attr("height", $(".middle-column").height() * 0.75)
@@ -555,13 +564,14 @@ function update_fields() {
     }
 
     g.selectAll('.year-topic')
-    .on('mouseover', function(d) {highlight_field(d, this)})
-    .on('mouseout', reset_field);
+        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseout', reset_field);
 
     return self_field;
 }
 
 function highlight_field(d, that) {
+    if (image_switch == 0)  return;
     // 选择具有特定ID的元素
     // d3.select("#circle" + field_id).select(".topic-map-tip")
     //     .style("display", "block");
@@ -657,6 +667,7 @@ function hsvToColor(color) {
 }
 
 function reset_field(d) {
+    if (image_switch == 0)  return;
     // =========================tagcloud=========================
     // reset rect color
     d3.select(`#rect_${d.id}`)
@@ -701,6 +712,7 @@ function reset_field(d) {
 }
 
 function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
+    if (image_switch == 0)  return;
 
     // 将被点击节点的状态设为1，未被点击的设为2
     for (let i = 0; i < nodes.length; i++) {
@@ -766,6 +778,8 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
 }
 
 function reset_node() {
+    if (image_switch == 0)  return;
+
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
     g.selectAll('.paper').data(nodes)
         .attr('fill-opacity', 1)
@@ -985,6 +999,7 @@ function visual_graph(polygon) {
                     $('#paper-citation').text("Not available");
                 }
                 $('#paper-authors').text(nodes[i].authors);
+                $('#paper-prob').text((parseFloat(nodes[i].isKeyPaper)).toFixed(2));
                 $('#paper-venue').text(nodes[i].venu);
 
                 let topic = parseInt(nodes[i].topic);
@@ -1154,9 +1169,15 @@ function visual_graph(polygon) {
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].id == source) {
                 $('#source-paper').text(nodes[i].name);
+                $('#source-paper-year').text(nodes[i].year);
+                $('#source-paper-venu').text(nodes[i].venu);
+                $('#source-paper-citation').text(nodes[i].citationCount);
             }
             if (nodes[i].id == target) {
                 $('#target-paper').text(nodes[i].name);
+                $('#target-paper-year').text(nodes[i].year);
+                $('#target-paper-venu').text(nodes[i].venu);
+                $('#target-paper-citation').text(nodes[i].citationCount);
             }
         }
         for (var i = 0; i < edges.length; i++) {
@@ -1174,6 +1195,10 @@ function visual_graph(polygon) {
         $(".citation-context-minus-height").each(function() {
             other_height += $(this).height();
         });
+        $(".citation-context-minus-margin").each(function() {
+            let margin = parseInt(($(this).css('marginTop')).slice(0, -2));
+            other_height += margin * 2;
+        })
         let citation_context_height = ($("#paper-list").height() / 1.1 - other_height) / 1.03;
         // let citation_context_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
         $("#citation-context").css("height", citation_context_height);
@@ -1215,12 +1240,12 @@ function updateOutlineColor(isKeyPaper, citationCount) {
             break;
         case '1':
             if (isKeyPaper == 1)  outlineColor = 'red';
-            else if (isKeyPaper >= 0.5)   outlineColor = 'pink';
+            else if (isKeyPaper >= 0.5)   outlineColor = 'red';
             else    outlineColor = 'black';
             break;
         case '2':
             if (citationCount < 50)   outlineColor = 'black';
-            else if (citationCount < 100) outlineColor = 'pink';
+            // else if (citationCount < 100) outlineColor = 'pink';
             else    outlineColor = 'red';
             break;
     }
@@ -1241,9 +1266,10 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
             else    outlineThickness = 1;
             break;
         case '2':
-            if (citationCount <= 50)  outlineThickness = 3;
+            if (citationCount >= 100)  outlineThickness = 10;
+            else if (citationCount >= 50)   outlineThickness = 5;
             // else if (citationCount <= 50) outlineThickness = (citationCount - 10) * 9 / 40 + 1;
-            else    outlineThickness = 10;
+            else    outlineThickness = 3;
             break;
     }
     return outlineThickness;

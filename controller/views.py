@@ -404,3 +404,11 @@ def get_fields(fieldType):
     df_leaves = pd.read_csv(os.path.join(path, "field_leaves.csv"), sep=',')
     leaves = df_leaves.values.tolist()
     return [roots, leaves]
+
+def image(request):
+    path = f'static/image/'
+    image_path = os.path.join(path, "overview.png")
+    with open(image_path, 'rb') as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    return JsonResponse({'image': encoded_string})

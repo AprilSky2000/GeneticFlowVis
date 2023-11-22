@@ -9,3 +9,4 @@ static/image/svg
 csv/*
 !csv/*.csv
 !csv/*.py
+wget-log

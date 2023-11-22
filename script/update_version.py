@@ -11,7 +11,7 @@ from datetime import datetime
 # 2.增加新版本信息
 path = "../csv/version.csv"
 df = pd.read_csv(path, sep=',', header=0)
-data = ['v1.2', datetime(2023, 10, 20), "GeneticFlow system has released a new version, incorporating data in the database field and providing visualization."]
+data = ['v1.3', datetime(2023, 11, 12), "GeneticFlow system has expanded into the new fields of CG & VIS."]
 df.loc[len(df)] = data
 df.to_csv(path, sep=',', index=False)
 # 还需要删除日期单元中的时分秒
