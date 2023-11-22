@@ -452,30 +452,30 @@
     <script type="text/javascript">
         // text1 paperLabel; text2 paperCount; text3 year; text4 field
         
-        $(function () {
-            image_switch = 1;
-            $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
-            const authorID = "{{ authorID }}";
-            name = "{{ name }}";
-            const fields = {{ fields|safe }};
-            const fieldType = "{{ fieldType }}";
-            field_roots = fields[0];
-            field_leaves = fields[1];
-            if (fieldType != "visualization") {
-                $("#field-level option[value='1']").remove();
-                $("#field-level option[value='2']").text(1);
-            }
-            
-            var filename = `/src/json/${fieldType}/${authorID}`;
-            if (fieldType == "acl") {
-                $("#edge-value").text("≥0.4 prob.");
-                filename += '_1_0.5_0.4_10_1.json';
-            }
-            else    filename += '_1_0.5_0.5_10_1.json';
+    $(function () {
+        image_switch = 1;
+        $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
+        const authorID = "{{ authorID }}";
+        name = "{{ name }}";
+        const fields = {{ fields|safe }};
+        const fieldType = "{{ fieldType }}";
+        field_roots = fields[0];
+        field_leaves = fields[1];
+        if (fieldType != "visualization") {
+            $("#field-level option[value='1']").remove();
+            $("#field-level option[value='2']").text(1);
+        }
+        
+        var filename = `/src/json/${fieldType}/${authorID}`;
+        if (fieldType == "acl") {
+            $("#edge-value").text("≥0.4 prob.");
+            filename += '_1_0.5_0.4_10_1.json';
+        }
+        else    filename += '_1_0.5_0.5_10_1.json';
 
-            d3.json(`/src/json/config.json`).then(data => {
-                config = fieldType in data ? data[fieldType] : data['default'];
-            })
+        d3.json(`/src/json/config.json`).then(data => {
+            config = fieldType in data ? data[fieldType] : data['default'];
+            
             
             d3.json(filename).then( data => {
                 years = data[1];            //年份节点
@@ -539,7 +539,11 @@
                 // sugiyama(years, nodes, edges);
                 addAllListeners();
             });
-        });
+        
+        
+        
+        })
+    });
     </script>
 
     <!--ajax提交表单-->

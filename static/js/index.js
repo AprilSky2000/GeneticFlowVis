@@ -941,21 +941,21 @@ function visual_graph(polygon) {
     g.selectAll('.text1').data(nodes).enter().append('text')
         .attr('x', d => d.cx)
         .attr('y', d => d.cy)
-        .text(d => d.text)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
         .attr('font-size', 20)
         .attr('class', 'text1')
-        .attr("pointer-events", "none");
-    g.selectAll('.text2').data(nodes).enter().append('text')
-        .attr('x', d => d.cx)
-        .attr('y', d => d.cy + 18)
-        .text(d => d.citationCount)
-        .attr('text-anchor', 'middle')
-        .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 20)
-        .attr('class', 'text2')
-        .attr("pointer-events", "none");
+        .attr("pointer-events", "none")
+        .each(function(d) {
+            let text = d.text1 + '\n' + d.text2
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                d3.select(this).append('tspan')
+                    .attr('x', d.cx)
+                    .attr('dy', i === 0 ? 0 : 20)  // Adjust dy for subsequent lines
+                    .text(lines[i]);
+            }
+        });
     g.selectAll('.text3').data(years).enter().append('text')
         .attr('x', d => d.cx)
         .attr('y', d => d.cy + 8.7)

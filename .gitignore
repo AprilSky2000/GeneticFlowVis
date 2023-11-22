@@ -2,7 +2,6 @@ nohup.out
 __pycache__
 controller/__pycache__
 GFVis/__pycache__
-static/json
 controller/__pycache__
 static/image/svg
 # 忽略csv目录下的所有文件，但不忽略这三个特定的文件
@@ -10,3 +9,7 @@ csv/*
 !csv/*.csv
 !csv/*.py
 wget-log
+output
+csv.bac
+static/json/*
+!static/json/*.json
