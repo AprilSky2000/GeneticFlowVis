@@ -87,7 +87,10 @@
                                     <option value="0">none</option>
                                 </select>
                                 <script type="text/javascript">
-                                    $("#outline-color").change(updateOutlineColor);
+                                    $("#outline-color").change(function() {
+                                        d3.selectAll('.paper').data(nodes)
+                                            .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount));
+                                    });
                                 </script>
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
@@ -97,7 +100,10 @@
                                     <option value="0">none</option>
                                 </select>
                                 <script type="text/javascript">
-                                    $("#outline-thickness").change(updateOutlineThickness);
+                                    $("#outline-thickness").change(function() {
+                                        d3.selectAll('.paper').data(nodes)
+                                            .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
+                                    });
                                 </script>
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
@@ -225,8 +231,12 @@
                     <button id="zoom-out" class="icon-button" style="background-image: url('/src/image/zoom-out.png');"></button>
                     <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
+                    <button id="info" class="icon-button" style="background-image: url('/src/image/info.png');"></button>
                 </div>
 
+                <div id="description" style="display:none;">
+                    <img id="imageToShow" src="" style="width:100%;" />
+                </div>
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
                 <div id="svg">
@@ -307,6 +317,12 @@
                     </li>
                     <li>
                         <ul class="address-text abstract-minus-height">
+                            <li style="width: 80%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 13%;">core paper prob. ({{ name }})</b></li>
+                            <li id="paper-prob" style="color: #333; width: 10%; margin-top: 3%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text abstract-minus-height">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">venue</b></li>
                             <li id="paper-venue" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
@@ -362,10 +378,11 @@
                     </li>
                     <li>
                         <ul class="address-text citation-context-minus-height">
-                            <li style="width: 40%;"><b style="margin-left: 25%;">extend-type prob.</b></li>
-                            <li id="extend-prob" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                            <li style="width: 60%;"><b style="margin-left: 16.6%;">extend-type prob.</b></li>
+                            <li id="extend-prob" style="color: #333; margin-right: 5%;"></li>
                         </ul>
-                    <li>
+                    </li>
+                    <hr class="citation-context-minus-margin" />
                     <li>
                         <ul class="address-text citation-context-minus-height">
                             <li style="width: 40%"><b style="margin-left: 25%;">cited paper</b></li>
@@ -374,10 +391,48 @@
                     </li>
                     <li>
                         <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">year</b></li>
+                            <li id="source-paper-year" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">venu</b></li>
+                            <li id="source-paper-venu" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">#citation</b></li>
+                            <li id="source-paper-citation" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <hr class="citation-context-minus-margin" />
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
                             <li style="width: 40%"><b style="margin-left: 25%;">citing paper</b></li>
                             <li id="target-paper" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
                         </ul>
                     </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">year</b></li>
+                            <li id="target-paper-year" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">venu</b></li>
+                            <li id="target-paper-venu" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text citation-context-minus-height">
+                            <li style="width: 40%"><b style="margin-left: 25%;">#citation</b></li>
+                            <li id="target-paper-citation" style="color: #333; margin-left: 10%; margin-right: 5%;"></li>
+                        </ul>
+                    </li>
+                    <hr class="citation-context-minus-margin" />
                     <li>
                         <ul class="address-text">
                             <li class="citation-context-minus-height" style="width: 50%"><b style="margin-left: 20%;">citation context</b></li>
@@ -398,6 +453,7 @@
         // text1 paperLabel; text2 paperCount; text3 year; text4 field
         
         $(function () {
+            image_switch = 1;
             $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
             const authorID = "{{ authorID }}";
             name = "{{ name }}";
@@ -529,6 +585,7 @@
                         name = "{{name}}";
                         onFullscreenChange();
                     });
+                    reset_graph();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.error("AJAX request failed:", textStatus, errorThrown);
@@ -539,5 +596,45 @@
         $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
     </script>
 
+    <script>
+        $("#info").click(function(){
+            if (image_switch == 0) {
+                reset_graph();
+            }
+            else {
+                $.ajax({
+                    url: '/description/',
+                    type: 'GET',
+                    success: function(data) {
+                        $("#imageToShow").attr("src", "data:image/jpeg;base64," + data.image);
+                        $("#mainsvg").hide();
+                        $("#description").show();
+                        image_switch = 0;
+                        // 使用CSS或JavaScript确保全屏显示
+                        // div.css({
+                        //     position: 'fixed',
+                        //     top: 0,
+                        //     left: 0,
+                        //     width: '100%',
+                        //     height: '100%',
+                        //     background: 'black',
+                        //     'z-index': 1000,
+                        // });
+                        // img.css({
+                        //     position: 'absolute',
+                        //     top: '50%',
+                        //     left: '50%',
+                        //     transform: 'translate(-50%, -50%)',
+                        //     'max-width': '100%',
+                        //     'max-height': '100%'
+                        // });
+                    },
+                    error: function(xhr, status, error) {
+                        alert("An error occurred: " + error);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
