@@ -232,7 +232,9 @@
                     <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
                     <button id="info" class="icon-button" style="background-image: url('/src/image/info.png');"></button>
+                    <span id="info-text">System Interface Introduction</span>
                 </div>
+                <div id="overlay"></div>
 
                 <div id="description" style="display:none;">
                     <img id="imageToShow" src="" style="width:100%;" />
@@ -275,83 +277,78 @@
                             </li>
                             <script>
                                 $("#paper-info").click(function () {
-                                    $("#edge-info").hide();
-                                    $("#up-line").hide();
-                                    $("#down-line").hide();
-                                    $("#node-info").show();
+                                    $("#edge-info, #up-line, #down-line").hide();
+                                    $("#node-info, #node-info-blank").show();
                                 });
                                 $("#references").click(function () {
-                                    $("#edge-info").hide();
-                                    $("#node-info").hide();
+                                    $("#edge-info, #node-info, #node-info-blank, #down-line").hide();
                                     $("#up-line").show();
-                                    $("#down-line").hide();
                                 });
                                 $("#citations").click(function () {
-                                    $("#edge-info").hide();
-                                    $("#node-info").hide();
-                                    $("#up-line").hide();
+                                    $("#edge-info, #node-info, #node-info-blank, #up-line").hide();
                                     $("#down-line").show();
                                 });
                             </script>
                         </ul>
                     </li>
                 </ul>
-                <ul id="node-info" class="address" style="padding-bottom: 10%; border-top-left-radius: 0%; border-top-right-radius: 0%;">
+                <ul id="node-info" class="address" style="overflow: auto; background-color: white; border-top-left-radius: 0%; border-top-right-radius: 0%;">
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">paperID</b></li>
                             <li id="paper-id" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 25.5%;">title</b></li>
                             <li id="paper-name" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 25.5%;">authors</b></li>
                             <li id="paper-authors" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 80%; margin-top: 3%;"><b style="margin-top: 10%; margin-left: 13%;">core paper prob. ({{ name }})</b></li>
                             <li id="paper-prob" style="color: #333; width: 10%; margin-top: 3%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">venue</b></li>
                             <li id="paper-venue" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">year</b></li>
                             <li id="paper-year" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">#citation</b></li>
                             <li id="paper-citation" style="color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
-                        <ul class="address-text abstract-minus-height">
+                        <ul class="address-text">
                             <li style="width: 40%; margin-top: 3%;"><b style="margin-left: 25.5%;">topic</b></li>
-                            <li id="paper-field" style="color: #333; width: 85%; margin-top: 3%; margin-left: 10%;"></li>
+                            <li id="paper-field" style="width: 85%; color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                     <li>
                         <ul class="address-text">
-                            <li class="abstract-minus-height" style="width: 40%; margin-top: 3%;"><b style=" margin-left: 25.5%;">abstract</b></li>
-                            <li id="abstract" style="overflow: auto; width: 85%; background-color: white; color: #333; margin-top: 3%; margin-left: 10%;"></li>
+                            <li style="width: 40%; margin-top: 3%;"><b style=" margin-left: 25.5%;">abstract</b></li>
+                            <li id="abstract" style="width: 85%; color: #333; margin-top: 3%; margin-left: 10%;"></li>
                         </ul>
                     </li>
                 </ul>
+                <ul id="node-info-blank" style="background-color: white;"></ul>
 
                 <ul id="up-line" class="address" style="border-top-left-radius: 0%; border-top-right-radius: 0%;">
                     <li>
@@ -445,106 +442,104 @@
             <div class="clearfix"></div>
         </div>
     </div>
-
     
+    
+<script type="text/javascript">
+    // text1 paperLabel; text2 paperCount; text3 year; text4 field
 
-    <!--初始js-->
-    <script type="text/javascript">
-        // text1 paperLabel; text2 paperCount; text3 year; text4 field
+$(function () {
+    image_switch = 1;
+    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+    const authorID = "{{ authorID }}";
+    name = "{{ name }}";
+    const fields = {{ fields|safe }};
+    const fieldType = "{{ fieldType }}";
+    field_roots = fields[0];
+    field_leaves = fields[1];
+    if (fieldType != "visualization") {
+        $("#field-level option[value='1']").remove();
+        $("#field-level option[value='2']").text(1);
+    }
+    
+    var filename = `/src/json/${fieldType}/${authorID}`;
+    if (fieldType == "acl") {
+        $("#edge-value").text("≥0.4 prob.");
+        filename += '_1_0.5_0.4_10_1.json';
+    }
+    else    filename += '_1_0.5_0.5_10_1.json';
+
+    d3.json(`/src/json/config.json`).then(data => {
+        config = fieldType in data ? data[fieldType] : data['default'];
         
-    $(function () {
-        image_switch = 1;
-        $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
-        const authorID = "{{ authorID }}";
-        name = "{{ name }}";
-        const fields = {{ fields|safe }};
-        const fieldType = "{{ fieldType }}";
-        field_roots = fields[0];
-        field_leaves = fields[1];
-        if (fieldType != "visualization") {
-            $("#field-level option[value='1']").remove();
-            $("#field-level option[value='2']").text(1);
-        }
         
-        var filename = `/src/json/${fieldType}/${authorID}`;
-        if (fieldType == "acl") {
-            $("#edge-value").text("≥0.4 prob.");
-            filename += '_1_0.5_0.4_10_1.json';
-        }
-        else    filename += '_1_0.5_0.5_10_1.json';
+        d3.json(filename).then( data => {
+            years = data[1];            //年份节点
+            nodes = data[2];            //论文节点
+            edges = data[3];            //path
+            polygon = data[4];          //箭头
+            const params = data[0];
+            viewBox = params[0];
+            transform = params[1];
+            // 正常情况下node状态为0，但发生点击事件时，被点击的点状态为1，没有被点击的点状态为0
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i]['status'] = 0;
+            }
+            // 正常情况下，edge状态为0，但发生点击事件时，需要区分高亮的边和没有高亮的边
+            // 没有高亮的边状态为1，高亮的边状态为2
+            for (let i = 0; i < edges.length; i++) {
+                edges[i]['status'] = 0;
+            }
+            console.log('nodes', nodes)
 
-        d3.json(`/src/json/config.json`).then(data => {
-            config = fieldType in data ? data[fieldType] : data['default'];
-            
-            
-            d3.json(filename).then( data => {
-                years = data[1];            //年份节点
-                nodes = data[2];            //论文节点
-                edges = data[3];            //path
-                polygon = data[4];          //箭头
-                const params = data[0];
-                viewBox = params[0];
-                transform = params[1];
-                // 正常情况下node状态为0，但发生点击事件时，被点击的点状态为1，没有被点击的点状态为0
-                for (let i = 0; i < nodes.length; i++) {
-                    nodes[i]['status'] = 0;
-                }
-                // 正常情况下，edge状态为0，但发生点击事件时，需要区分高亮的边和没有高亮的边
-                // 没有高亮的边状态为1，高亮的边状态为2
-                for (let i = 0; i < edges.length; i++) {
-                    edges[i]['status'] = 0;
-                }
-                console.log('nodes', nodes)
-
-                rangeSlider = document.getElementById("range-slider");
-                rangeLabel = document.getElementById("range-label");
-                noUiSlider.create(rangeSlider, {
-                    start: [0, 100], // 初始值
-                    connect: true,   // 连接两个滑块
-                    range: {
-                        'min': 0,
-                        'max': 100
-                    },
-                    step: 1
-                });
-                nodeSlider = document.getElementById('range-node');
-                noUiSlider.create(nodeSlider, {
-                    start: config["node_prob"],
-                    behaviour: 'tap',
-                    connect: [false, true],
-                    step: 0.05,
-                    range: {
-                        'min': 0,
-                        'max': 1.0
-                    }
-                });
-                edgeSlider = document.getElementById('range-edge');
-                noUiSlider.create(edgeSlider, {
-                    start: config["edge_prob"],
-                    behaviour: 'tap',
-                    connect: [false, true],
-                    step: 0.05,
-                    range: {
-                        'min': 0,
-                        'max': 1.0
-                    }
-                });
-                $('remove-survey').value = config['remove_survey']? '1': '0';
-                $('mode').value = config['remove_isolated']? '1': '0';
-                
-                onFullscreenChange();
-
-                $("#overall-topic-map").hide();
-                $("#paper-topic-map").show();
-                // sugiyama(years, nodes, edges);
-                addAllListeners();
+            rangeSlider = document.getElementById("range-slider");
+            rangeLabel = document.getElementById("range-label");
+            noUiSlider.create(rangeSlider, {
+                start: [0, 100], // 初始值
+                connect: true,   // 连接两个滑块
+                range: {
+                    'min': 0,
+                    'max': 100
+                },
+                step: 1
             });
-        
-        
-        
-        })
-    });
-    </script>
+            nodeSlider = document.getElementById('range-node');
+            noUiSlider.create(nodeSlider, {
+                start: config["node_prob"],
+                behaviour: 'tap',
+                connect: [false, true],
+                step: 0.05,
+                range: {
+                    'min': 0,
+                    'max': 1.0
+                }
+            });
+            edgeSlider = document.getElementById('range-edge');
+            noUiSlider.create(edgeSlider, {
+                start: config["edge_prob"],
+                behaviour: 'tap',
+                connect: [false, true],
+                step: 0.05,
+                range: {
+                    'min': 0,
+                    'max': 1.0
+                }
+            });
+            $('remove-survey').value = config['remove_survey']? '1': '0';
+            $('mode').value = config['remove_isolated']? '1': '0';
+            
+            onFullscreenChange();
+
+            $("#overall-topic-map").hide();
+            $("#paper-topic-map").show();
+            // sugiyama(years, nodes, edges);
+            addAllListeners();
+        });
+    
+    
+    
+    })
+});
+</script>
 
     <!--ajax提交表单-->
     <script type="text/javascript">
@@ -570,7 +565,7 @@
                 success: function (param) {
                     $("#mainsvg, #tagcloud").remove();
                     $("#abstract, #citation-context, #timeline").empty();
-                    $("#selector, #node-info, #up-line, #down-line, #edge-info").hide();
+                    $("#selector, #node-info,, #node-info-blank, #up-line, #down-line, #edge-info").hide();
                     d3.tip().destroy();
                     var detail = param['detail'],
                         fieldType = param['fieldType'];

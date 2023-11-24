@@ -1,3 +1,15 @@
+function guidence() {
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('info').classList.add('highlight');
+    document.getElementById('info-text').style.display = 'inline';
+
+    document.getElementById('overlay').addEventListener('click', function() {
+        this.style.display = 'none';
+        document.getElementById('info').classList.remove('highlight');
+        document.getElementById('info-text').style.display = 'none';
+    });
+};
+
 function addAllListeners() {
     $("#topic-slider").change(function () {
         var topic_r = $("#topic-slider").val();
@@ -73,6 +85,7 @@ function addAllListeners() {
     });
 
     window.addEventListener('resize', onFullscreenChange);
+    guidence()
 }
 
 function toggleFullscreen() {
@@ -113,10 +126,7 @@ function onFullscreenChange() {
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
     d3.select("#topic-map-svg").remove();
-    $("#edge-info").hide();
-    $("#up-line").hide();
-    $("#down-line").hide();
-    $("#node-info").hide();
+    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
     
     const windowHeight = $(window).height();
     const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
@@ -873,26 +883,17 @@ function visual_topics() {
 }
 
 function probToColor(prob, a=0.1, b=1) {
-    // 确保透明度在 [a, b] 范围内
+    // 将透明度从[0.3, 0.8]映射到 [a, b] 范围
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
-    
-    // 将透明度映射到 [a, b] 范围
     const mappedOpacity = a + (b - a) * opacity;
-    
-    // 构建 rgba 颜色字符串
-    const color = `rgba(0, 0, 0, ${mappedOpacity})`;
+    const color = `rgba(32, 32, 32, ${mappedOpacity})`;
     
     return color;
 }
 
-function probToWidth(prob, a=1, b=10) {
-    if (prob <= 0.3) {
-        return a;
-    }
-    else if (prob >= 0.8) {
-        return b;
-    }
-    return a + 2 * (prob - 0.3) * (b - a);
+function probToWidth(prob, a=0.6, b=6) {
+    const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
+    return a + opacity * (b - a);
 }
 
 function visual_graph(polygon) {
@@ -947,7 +948,8 @@ function visual_graph(polygon) {
         .attr('class', 'text1')
         .attr("pointer-events", "none")
         .each(function(d) {
-            let text = d.text1 + '\n' + d.text2
+            let text = d.text === undefined? d.text1 + '\n' + d.text2 : d.text + '\n' + String(d.citationCount)
+            
             var lines = text.split('\n');
             for (var i = 0; i < lines.length; i++) {
                 d3.select(this).append('tspan')
@@ -975,12 +977,8 @@ function visual_graph(polygon) {
 
         highlight_node(id, true);
 
-        $("#paper-list").hide();
-        $("#edge-info").hide();
-        $("#up-line").hide();
-        $("#down-line").hide();
-        $("#selector").show();
-        $("#node-info").show();
+        $("#paper-list, #up-line, #down-line, #edge-info").hide();
+        $("#selector, #node-info, #node-info-blank").show();
 
         // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
         $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
@@ -1009,21 +1007,17 @@ function visual_graph(polygon) {
             }
         }
 
-        //因为abstract为overflow类型，需要先确定高度才能出现滑轮
-        //同时为了使右侧和中间保持相对对齐，所以需要用中间列的高度-abstract上面一些元素的高度和
-        //同样的计算内容在line.click中也出现了
-        let other_height = 0;
-        $(".abstract-minus-height").each(function() {
-            other_height += $(this).height();
-        });
-        let abstract_height = (($("#paper-list").height() / 1.1 - $("#selector").height()) - other_height) / 1.03;
-        // console.log($("#paper-list").height());
-        // console.log($("#selector").height(), other_height);
-        // let abstract_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
-        // console.log('max height', abstract_height, 'other height', other_height);
-        $("#abstract").css("height", abstract_height);
+        /*
+         * 因为node-info为overflow类型，需要先确定高度才能出现滑轮
+         * 同样的计算内容在line.click()中也出现了
+         */
+        let info_height = $("#paper-list").height() - $("#selector").height();
+        $("#node-info").css("height", info_height * 0.95);
+        $("#node-info-blank").css("height", info_height * 0.05);
 
-        // 下面的代码均为构建引用和被引树
+        /*
+         * 下面的代码均为构建引用和被引树
+         */
         var vis = new Array(edges.length).fill(0);
         var citedTraversal = function (root) {
             var self_dict = {};
@@ -1158,11 +1152,7 @@ function visual_graph(polygon) {
                 if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
             });
         
-        $("#paper-list").hide();
-        $("#selector").hide();
-        $("#node-info").hide();
-        $("#up-line").hide();
-        $("#down-line").hide();
+        $("#paper-list, #selector, #node-info, #node-info-blank, #up-line, #down-line").hide();
         $("#edge-info").show();
         
         //更新edge-info中的内容
@@ -1221,12 +1211,8 @@ function visual_graph(polygon) {
             // if (fillColorVal == 0) {
             // 点击的是空白处，隐藏元素
             reset_node();
+            $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
             $("#paper-list").show();
-            $("#selector").hide();
-            $("#node-info").hide();
-            $("#up-line").hide();
-            $("#down-line").hide();
-            $("#edge-info").hide();
         }
     });
 }
