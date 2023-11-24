@@ -322,7 +322,7 @@ function compare(index, sortType) {
 
 // Function to calculate the sum of corresponding values
 function calculateSum(inputStrings) {
-    console.log('sum', inputStrings)
+    // console.log('sum', inputStrings)
     const sumObject = {};
     inputStrings.forEach(inputString => {
         const parts = inputString.split(' / ');
@@ -346,17 +346,23 @@ function updateTitle() {
     let la = selectedAuthors.length;
     let otherAuthors = authorIDs_global.filter(id => !selectedAuthors.includes(id));
     let lb = otherAuthors.length;
+    let sn = calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].node));
+    let se = calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].edge));
+    let tn = calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].node));
+    let te = calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].edge));
 
     document.getElementById("selectedAuthorsInfo").innerText = (
         `Selected Authors: ${la}
-        #nodes: ${calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].node))}
-        #edges: ${calculateSum(selectedAuthors.map(id => allAuthorsFrequency[id].edge))}`
+        #nodes: ${sn}
+        #edges: ${se}
+        ave(degree)=${la? String(se.split('(')[0]) + '/' + String(sn.split(' / ')[removeIsolated?0:1].split('(')[0]): ''}`
     );
 
     document.getElementById("otherAuthorsInfo").innerText = (
         `Other Authors: ${lb}
-        #nodes: ${calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].node))}
-        #edges: ${calculateSum(otherAuthors.map(id => allAuthorsFrequency[id].edge))}`
+        #nodes: ${tn}
+        #edges: ${te}
+        ave(degree)=${lb? String(te.split('(')[0]) + '/' + String(tn.split(' / ')[removeIsolated?0:1].split('(')[0]): ''}`
     );
 }
 
@@ -827,6 +833,8 @@ async function loadAuthorsData() {
         // Filter nodes and edges based on given probabilities
         let filteredNodes = data.nodes.filter(node => node.isKeyPaper >= nodeProbFilter);
         let filteredEdges = data.edges.filter(edge => edge.prob >= edgeProbFilter);
+        let ln = filteredNodes.length;
+        let le = filteredEdges.length;
         if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
         // Compute indegree, outdegree, and total degree
         let indegree = {}, outdegree = {}, totaldegree = {};
@@ -836,7 +844,6 @@ async function loadAuthorsData() {
             indegree[node.paperID] = 0;
             totaldegree[node.paperID] = 0;
         })
-
         let nodeSet = new Set(filteredNodes.map(node => node.paperID));
         
         let edgeCount = 0;
@@ -852,7 +859,7 @@ async function loadAuthorsData() {
                 connectedEdges.push(edge);
             }
         });
-        filteredEdges = connectedEdges;
+        // filteredEdges = connectedEdges;
 
         let connectedNodes = filteredNodes.filter(node => totaldegree[node.paperID] > 0);
         if (removeIsolated) {
@@ -871,13 +878,14 @@ async function loadAuthorsData() {
         let outdegreeData = computeFrequency(Object.values(outdegree));
         let totaldegreeData = computeFrequency(Object.values(totaldegree));
 
-        let surveyStr = removeSurvey? '(filter+remove survey) / ' : '(filter) / '
         allAuthorsFrequency[id] = {
             'indegree': indegreeData,
             'outdegree': outdegreeData,
             'totaldegree': totaldegreeData,
-            'node': String(connectedNodes.length) + '(remove isolated) / ' + String(filteredNodes.length) +surveyStr + String(data.nodes.length) + '(all)',
-            'edge': String(connectedEdges.length) + '(remove isolated) / ' + String(filteredEdges.length) + surveyStr + String(data.edges.length) + '(all)'
+            'node': String(connectedNodes.length) + '(rm isolated) / ' + (removeSurvey? String(filteredNodes.length) + '(rm survey) / ' : '')
+                     + ln + '(filter) / ' + String(data.nodes.length) + '(all)',
+            'edge': String(connectedEdges.length) + '(rm edges on invalid node) / '
+                     + le + '(filter) / ' + String(data.edges.length) + '(all)'
         }
         // console.log(id, filteredNodes, filteredEdges, outdegree)
     }))
