@@ -236,7 +236,7 @@
                 </div>
                 <div id="overlay"></div>
 
-                <div id="description" style="display:none;">
+                <div id="description" style="display:none; margin-top: 10%; margin-bottom: 10%;">
                     <img id="imageToShow" src="" style="width:100%;" />
                 </div>
                 <!--img src="data:image/png;base64,">
@@ -599,6 +599,7 @@ $(function () {
         $("#info").click(function(){
             if (image_switch == 0) {
                 reset_graph();
+                draw_tag_cloud();
             }
             else {
                 $.ajax({
@@ -607,6 +608,7 @@ $(function () {
                     success: function(data) {
                         $("#imageToShow").attr("src", "data:image/jpeg;base64," + data.image);
                         $("#mainsvg").hide();
+                        $("#tagcloud").remove();
                         $("#description").show();
                         image_switch = 0;
                         // 使用CSS或JavaScript确保全屏显示

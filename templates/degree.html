@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.7.0/dist/simple-statistics.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
+    <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts-stat@latest/dist/ecStat.min.js"></script>
+    <script src="/src/js/jquery.min.js"></script>
+
     <style>
         body {
             font-size: 14px;
@@ -88,12 +92,12 @@
             margin-left: 2%;
         }
 
-        #indegree, #outdegree, #totaldegree {
+        #indegree, #outdegree, #alldegree {
             width: 100%;
             height: 300px;
         }
 
-        #indegree-r, #outdegree-r, #totaldegree-r {
+        #indegree-r, #outdegree-r, #alldegree-r {
             width: 100%;
             height: 300px;
         }
@@ -199,7 +203,7 @@
         <!-- Add divs for your D3 visualizations -->
         <div id="indegree"></div>
         <div id="outdegree"></div>
-        <div id="totaldegree"></div>
+        <div id="alldegree"></div>
     
         <!-- ... (rest of the divs for the charts) ... -->
     </div>
@@ -207,38 +211,46 @@
     <div id="graphs-r">
         <!-- Add filters for node_prob and edge_prob -->
         <div class="filters">
-            Top hIndex: <input type="range" id="tophIndexSlider" value="200" step="1" min="0" max="1000" oninput="updateTop('tophIndexValue', this.value)">
+            Top hIndex: <input type="range" id="tophIndexSlider" value="200" step="10" min="0" max="1000" oninput="updateTop('tophIndexValue', this.value)">
             <span id="tophIndexValue" style="margin-right: 10px;">200</span>
             X-Axis Start: <input type="range" id="xAxisSlider" value="0" step="1" min="0" max="10" oninput="updateXAxis('xAxisValue', this.value)">
             <span id="xAxisValue">0</span>
         </div>
         <div class="filters">
-            Fitted Distribution Type:
+            Fitted Distribution:
             <select id="distributionSelector">
-                <option value="exponential" selected>Exponential Distribution</option>
-                <option value="power">Power-law Distribution</option>
+                <option value="exponential" selected>Exponential</option>
+                <option value="power">Power-law</option>
                 <option value="none">None</option>
             </select>
-        </div>
-        <div class="filters">
-            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="100" 
-            style="width: 250px;"    
+            Power-law shift: <input type="range" id="powerLawShiftSlider" value="0" step="1" min="0" max="50" 
+            style="width: 150px;"    
             oninput="updateValue('powerLawShiftValue', this.value, false)">
             <span id="powerLawShiftValue">auto</span>
         </div>
-
+        <div class="filters">
+            Log-Log Plot: <input type="checkbox" id="logLogPlot" onchange="toggleLogLog(this.checked)">
+            <!-- Average Log: <input type="checkbox" id="AverageLog" onchange="toggleCheck()"> -->
+            Draw Para Distribution: 
+            <select id="paraDistributionSelector">
+                <option value="None" selected>None</option>
+                <option value="m">m</option>
+                <option value="b">b</option>
+                <option value="m,b">m,b</option>
+                <!-- <option value="r2">r2</option> -->
+            </select>
+        </div>
         <div id="otherAuthorsInfo" class="info"></div>
 
         <!-- Add divs for your D3 visualizations -->
         <div id="indegree-r"></div>
         <div id="outdegree-r"></div>
-        <div id="totaldegree-r"></div>
+        <div id="alldegree-r"></div>
     
         <!-- ... (rest of the divs for the charts) ... -->
     </div>
 </div>
-<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.2.2/echarts.min.js"></script>
-<script src="/src/js/jquery.min.js"></script>
+
 
 <script>
 
@@ -257,6 +269,8 @@ let topN = parseInt("{{ topN }}");
 let edgeOnFilteredNodes = true;
 let removeIsolated = false;
 let removeSurvey = true;
+let logLogPlot = false;
+let AverageLog = false;
 let powerLawShiftValue = 0;
 authorsData = {{ authorsData|safe }};
 
@@ -296,6 +310,8 @@ async function startLoading() {
     $("#edgeProbSlider").val(edgeProbFilter);
     $("#removeIsolated").prop('checked', removeIsolated);
     $("#removeSurvey").prop('checked', removeSurvey);
+    $("#logLogPlot").prop('checked', logLogPlot);
+    $('#paraDistributionSelector').prop('disabled', false);
 
     console.log(authorsData, topN, field);
     authorIDs_global = authorsData.map(d=>d[0]);
@@ -391,7 +407,9 @@ function printDegree(degree, verbose=true) {
 
     // 计算变异系数（Coefficient of Variation，CV）
     let cv = (sd / ave).toFixed(4);
-    let ret = '(ave: ' + ave + ', SD: ' + sd + ', CV: ' + cv + ')';
+    let para= calculateLogLogPara(degree);
+
+    let ret = '(ave: ' + ave + ', SD: ' + sd + ', CV: ' + cv + ', gamma: '+ (-para.m).toFixed(3) + ')';
     return verbose? str + ret: ret;
 }
 
@@ -437,7 +455,7 @@ function renderAuthorTable() {
                     + "<br/>fellow: " + d[4]
                     + "<br/>#node: " + allAuthorsFrequency[d[0]].node
                     + "<br/>#edge: " + allAuthorsFrequency[d[0]].edge
-                    + "<br/>degree: " + printDegree(allAuthorsFrequency[d[0]].totaldegree)
+                    + "<br/>degree: " + printDegree(allAuthorsFrequency[d[0]].alldegree)
                     + "<br/>indegree: " + printDegree(allAuthorsFrequency[d[0]].indegree)
                     + "<br/>outdegree: " + printDegree(allAuthorsFrequency[d[0]].outdegree)
                     + '</span>'
@@ -515,6 +533,63 @@ async function updateCheck() {
     drawDistribution(selectedAuthors);
 }
 
+async function toggleLogLog(checked) {
+    logLogPlot = checked;
+    removeIsolated = checked;
+    $('#xAxisSlider').prop('disabled', checked);
+    $('#powerLawShiftSlider').prop('disabled', checked);
+    $('#distributionSelector').prop('disabled', checked);
+    $('#removeIsolated').prop('checked', checked);
+    $('#paraDistributionSelector').prop('disabled', !checked);
+    await loadAuthorsData();
+    drawDistribution(selectedAuthors);
+}
+
+function calculateWeightedFrequency(authors, element) {
+    let allFrequency = {}
+    authors.forEach(authorID => {
+        let frequency = allAuthorsFrequency[authorID][element];
+        let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
+        let percentageFrequency = {};
+        for (let key in frequency) {
+            fq = parseFloat((frequency[key] / total).toFixed(5));  // 保留两位小数并添加%符号
+            if (fq > 0) {
+                percentageFrequency[key] = fq
+            }
+        }
+        // console.log('percentageFrequency', percentageFrequency)
+        for (let key in percentageFrequency) {
+            if (allFrequency[key]) {
+                allFrequency[key].push(percentageFrequency[key]);
+            } else {
+                allFrequency[key] = [percentageFrequency[key]];
+            }
+        }
+    });
+    for (let key in allFrequency) {
+        allFrequency[key] = allFrequency[key].reduce((sum, value) => sum + Math.log(value), 0) / allFrequency[key].length;
+        allFrequency[key] = Math.exp(allFrequency[key]);
+    }
+    console.log('weighted frequency', element, authors, allFrequency)
+    return allFrequency;
+}
+
+function toggleCheck() {
+    AverageLog = document.getElementById("AverageLog").checked;
+    if (!AverageLog) {
+        drawDistribution(selectedAuthors);
+        return;
+    }
+    
+    let otherAuthors = authorIDs_global.filter(id => !selectedAuthors.includes(id));
+    console.log('otherAuthors', otherAuthors)
+    ['indegree', 'outdegree', 'alldegree'].forEach(element => {
+        drawLogLogDistribution(element, calculateWeightedFrequency(selectedAuthors, element));
+        drawLogLogDistribution(element + '-r', calculateWeightedFrequency(otherAuthors, element));
+    });
+    
+}
+
 function updateXAxis(spanId, value) {
     document.getElementById(spanId).textContent = value;
     xAxisValue = parseInt(document.getElementById("xAxisSlider").value);
@@ -525,6 +600,228 @@ document.getElementById("distributionSelector").addEventListener("change", funct
     fittedDistribution = event.target.value;
     // 根据选择的分布重新计算和绘制图表
     drawDistribution(selectedAuthors);
+});
+
+function valid(v) {
+    return v !== null && v !== undefined && !isNaN(v);
+}
+echarts.registerTransform(ecStat.transform.histogram);
+
+function drawParaDistribution(elementID, authors, paraName) {
+    let values = []
+    authors.forEach(authorID => {
+        let frequency = allAuthorsFrequency[authorID][elementID.split('-')[0]];
+        // console.log('frequency', frequency)
+        if (frequency !== undefined && Object.keys(frequency).length > 0) {        
+            let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
+            let percentageFrequency = {};
+            for (let key in frequency) {
+                fq = parseFloat((frequency[key] / total).toFixed(5));  // 保留两位小数并添加%符号
+                if (fq > 0) {
+                    percentageFrequency[key] = fq
+                }
+            }
+            // console.log('percentageFrequency', percentageFrequency)
+            let para = calculateLogLogPara(percentageFrequency);
+            if (valid(para.m)) values.push([para.m, para.b]);
+        }
+    });
+    let count = values.length;
+    let title = `${elementID} ${paraName} (count: ${count})`
+    let option;
+    // Specify configurations and data for the chart
+    if (paraName == 'm,b') {
+        option = {
+            title: {
+                text: title
+            },
+            dataset: [
+                {
+                source: values
+                },
+                {
+                transform: {
+                    type: 'ecStat:histogram',
+                    config: {}
+                }
+                },
+                {
+                transform: {
+                    type: 'ecStat:histogram',
+                    // print: true,
+                    config: { dimensions: [1] }
+                }
+                }
+            ],
+            tooltip: {},
+            grid: [
+                {
+                top: '50%',
+                right: '50%'
+                },
+                {
+                bottom: '52%',
+                right: '50%'
+                },
+                {
+                top: '50%',
+                left: '52%'
+                }
+            ],
+            xAxis: [
+                {
+                scale: true,
+                gridIndex: 0
+                },
+                {
+                type: 'category',
+                scale: true,
+                axisTick: { show: false },
+                axisLabel: { show: false },
+                axisLine: { show: false },
+                gridIndex: 1
+                },
+                {
+                scale: true,
+                gridIndex: 2
+                }
+            ],
+            yAxis: [
+                {
+                gridIndex: 0
+                },
+                {
+                gridIndex: 1
+                },
+                {
+                type: 'category',
+                axisTick: { show: false },
+                axisLabel: { show: false },
+                axisLine: { show: false },
+                gridIndex: 2
+                }
+            ],
+            series: [
+                {
+                name: 'origianl scatter',
+                type: 'scatter',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                encode: { tooltip: [0, 1] },
+                datasetIndex: 0
+                },
+                {
+                name: 'histogram',
+                type: 'bar',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                barWidth: '99.3%',
+                label: {
+                    show: true,
+                    position: 'top'
+                },
+                encode: { x: 0, y: 1, itemName: 4 },
+                datasetIndex: 1
+                },
+                {
+                name: 'histogram',
+                type: 'bar',
+                xAxisIndex: 2,
+                yAxisIndex: 2,
+                barWidth: '99.3%',
+                label: {
+                    show: true,
+                    position: 'right'
+                },
+                encode: { x: 1, y: 0, itemName: 4 },
+                datasetIndex: 2
+                }
+            ]
+            };
+    } else{
+        values = paraName == 'm'? values.map(v => v[0]): values.map(v => v[1]);
+        title = `${elementID} ${paraName} (count: ${count}, mean: ${ss.mean(values).toFixed(3)}, sd: ${ss.standardDeviation(values).toFixed(3)})`
+        option = {
+            title: {
+                text: title
+            },
+            dataset: [
+                {
+                source:  values.map(v => [v, v])
+                },
+                {
+                transform: {
+                    type: 'ecStat:histogram',
+                    config: {}
+                }
+                }
+            ],
+            grid: [
+                {
+                top: '20%',
+                right: '0%'
+                },
+            ],
+            xAxis: [
+                {
+                type: 'category',
+                scale: true,
+                // axisTick: { show: false },
+                // axisLabel: { show: false },
+                // axisLine: { show: false },
+                }
+            ],
+            yAxis: [
+                {
+                gridIndex: 0
+                },
+            ],
+            series: [
+                {
+                name: 'histogram',
+                type: 'bar',
+                barWidth: '99.3%',
+                label: {
+                    show: true,
+                    position: 'top'
+                },
+                encode: { x: 0, y: 1, itemName: 4 },
+                datasetIndex: 1
+                },
+            ]
+        };
+    }    
+    
+    
+
+    // 清除之前的数据并设置新的选项
+    var chartDom = document.getElementById(elementID);
+
+    // 如果已经有一个实例，先销毁它
+    if (echarts.getInstanceByDom(chartDom)) {
+        echarts.dispose(chartDom);
+    }
+
+    // 然后创建一个新的实例
+    let chart = echarts.init(chartDom);
+    chart.setOption(option);
+}
+
+document.getElementById("paraDistributionSelector").addEventListener("change", function(event) {
+    let paraName = event.target.value;
+    // 根据选择的分布重新计算和绘制图表
+    if (paraName == 'None') {
+        drawDistribution(selectedAuthors);
+        return;
+    }
+    let otherAuthors = authorIDs_global.filter(id => !selectedAuthors.includes(id));
+
+    drawParaDistribution('indegree', selectedAuthors, paraName);
+    drawParaDistribution('indegree-r', otherAuthors, paraName);
+    drawParaDistribution('outdegree', selectedAuthors, paraName);
+    drawParaDistribution('outdegree-r', otherAuthors, paraName);
+    drawParaDistribution('alldegree', selectedAuthors, paraName);
+    drawParaDistribution('alldegree-r', otherAuthors, paraName);
 });
 
 
@@ -639,7 +936,108 @@ function calculateR2(yAxisData, fittedY) {
     return 1 - (SSE / SST);
 }
 
-function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
+function calculateLogLogPara(frequency) {
+    let percentageFrequency = {};
+    let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
+    for (let key in frequency) {
+        percentageFrequency[key] = (frequency[key] / total).toFixed(5);  // 保留两位小数并添加%符号
+        percentageFrequency[key] = parseFloat(percentageFrequency[key]);
+    }
+
+    let data = [];
+    for (let x in percentageFrequency) {
+        let xVal = parseFloat(x);
+        if (xVal > 0) {
+            data.push([Math.log(xVal), Math.log(percentageFrequency[x])]);
+        }
+    }
+
+    // 计算线性拟合
+    let para = linearRegression([data.map(point => point[0]), data.map(point => point[1])]);
+    return para;
+}
+
+function drawLogLogDistribution(elementID, frequency) {
+    let percentageFrequency = {};
+    let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
+    for (let key in frequency) {
+        percentageFrequency[key] = (frequency[key] / total).toFixed(5);  // 保留两位小数并添加%符号
+        percentageFrequency[key] = parseFloat(percentageFrequency[key]);
+    }
+
+    let data = [];
+    for (let x in percentageFrequency) {
+        let xVal = parseFloat(x);
+        if (xVal > 0) {
+            data.push([Math.log(xVal), Math.log(percentageFrequency[x])]);
+        }
+    }
+
+    // 计算线性拟合
+    let para = linearRegression([data.map(point => point[0]), data.map(point => point[1])]);
+    let lineData = data.map(d => [d[0], para.m * d[0] + para.b]); // 拟合线的数据
+    let r2 = calculateR2(data.map(d => d[1]), lineData.map(d => d[1])).toFixed(4);   // para.r2.toFixed(3)
+    let func = `y = ${para.m.toFixed(3)}x${(para.b.toFixed(3)>0? '+':'') + para.b.toFixed(3) } (r2=${r2})`;
+
+    // ECharts选项
+    let option = {
+        title: {
+            text: elementID + printDegree(frequency, false)
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+                let originalX = Math.round(Math.exp(params.value[0]));
+                return `${params.marker}${params.value[0].toFixed(3)}\t${params.value[1].toFixed(3)}<br/>degree: ${originalX}<br/>#node: ${frequency[originalX]}<br/> prob: ${percentageFrequency[originalX]}`;
+            }
+        },
+        xAxis: {
+            name: 'log k',
+            type: 'value'
+        },
+        yAxis: {
+            name: 'log P(k)',
+            type: 'value'
+        },
+        series: [
+            {
+                name: 'PDF',
+                type: 'scatter',
+                data: data
+            },
+            {
+                name: 'Linear Fit',
+                type: 'line',
+                data: lineData
+            }
+        ],
+        toolbox: {
+            feature: {
+                saveAsImage: { show: true, title: 'save as image' },
+                dataView: {show: true},
+                restore: {show:true}
+            }
+        },
+        graphic: {
+            type: 'text',
+            left: '62%',  // 调整位置
+            top: '28%',   // 调整位置
+            style: {
+                text: func,  // 显示拟合的函数公式
+                fill: '#666',
+                fontSize: 15
+            }
+        }
+    };
+
+    // 清除之前的数据并设置新的选项
+    let chart = echarts.init(document.getElementById(elementID));
+    chart.clear();
+    chart.setOption(option);
+}
+
+
+function drawSingleDistribution(elementID, frequency, lastKey=null) {
     // 1. Fill in the gaps in the frequency data
     // change values of frequency to float
     let maxKey = Math.max(...Object.keys(frequency).map(Number));
@@ -655,12 +1053,11 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
     let percentageFrequency = {};
     for (let key in frequency) {
-        percentageFrequency[key] = (frequency[key] / total * 100).toFixed(3);  // 保留两位小数并添加%符号
+        percentageFrequency[key] = (frequency[key] / total * 100).toFixed(4);  // 保留两位小数并添加%符号
         percentageFrequency[key] = parseFloat(percentageFrequency[key]);
     }
 
-    console.log(elementId, percentageFrequency);
-
+    // console.log(elementID, percentageFrequency);
     // 2. Find the last non-1 value and slice the data
     if (lastKey == null) {
         lastKey = Object.keys(percentageFrequency).reverse().find(key => percentageFrequency[key] > 0.1);
@@ -684,14 +1081,15 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
     }
 
     console.log('slicedFrequency', slicedFrequency, powerLawShiftValue)
-    // console.log(titleText, frequency)
+    // console.log(elementID, frequency)
     let fittedY=[], para=null, func='';
     if (slicedFrequency.length == 0 || slicedFrequency[0] == 0) {
         // pass
     } else if (fittedDistribution == 'power') {
         if (powerLawShiftValue == 0) {
             let best_k = 0, best_r2 = -10, best_para = null, decrease_times = 0;
-            for (let k=1; k<=100; k++) {
+            
+            for (let k=1; k<=parseInt($('#powerLawShiftSlider').attr('max')); k++) {
                 para = computePowerRegression(slicedFrequency, k);
                 fittedY = xAxisData.map(x => para.a * Math.pow((parseInt(x) + para.k), -para.b));
                 let r2 = calculateR2(yAxisData, fittedY);
@@ -732,7 +1130,7 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
 
     let option = {
         title: {
-            text: titleText + printDegree(frequency, false)
+            text: elementID + printDegree(frequency, false)
         },
         tooltip: {
             trigger: 'item',
@@ -796,28 +1194,34 @@ function drawSingleDistribution(elementId, frequency, titleText, lastKey=null) {
         }
     };
 
-    let chart = echarts.init(document.getElementById(elementId));
+    let chart = echarts.init(document.getElementById(elementID));
     chart.setOption(option);
     return lastKey;
 }
 
-function drawDistributionChart(elementId, frequency, titleText) {
+function drawDistributionChart(elementID, frequency) {
     // let frequency = computeFrequency(data);
-    let chart_r = echarts.init(document.getElementById(elementId + '-r'));
-    let frequency_r = JSON.parse(JSON.stringify(frequency_global[elementId]));
+    let chart_r = echarts.init(document.getElementById(elementID + '-r'));
+    let frequency_r = JSON.parse(JSON.stringify(frequency_global[elementID]));
     for (let key in frequency) {
         frequency_r[key] -= frequency[key];
         if (frequency_r[key] == 0) {
             delete frequency_r[key];
         }
     }
-    let lastKey_r = drawSingleDistribution(elementId + '-r', frequency_r, titleText + ' (Non)')
-    let lastKey = drawSingleDistribution(elementId, frequency, titleText);
+    if (logLogPlot) {
+        drawLogLogDistribution(elementID, frequency);
+        drawLogLogDistribution(elementID + '-r', frequency_r);
+        return;
+    }
+
+    let lastKey_r = drawSingleDistribution(elementID + '-r', frequency_r)
+    let lastKey = drawSingleDistribution(elementID, frequency);
 
     if (lastKey_r > lastKey) {
-        drawSingleDistribution(elementId, frequency, titleText, lastKey_r);
+        drawSingleDistribution(elementID, frequency, lastKey_r);
     } else {
-        drawSingleDistribution(elementId + '-r', frequency_r, titleText + ' (Non)', lastKey);
+        drawSingleDistribution(elementID + '-r', frequency_r, lastKey);
     }
 }
 
@@ -837,12 +1241,12 @@ async function loadAuthorsData() {
         let le = filteredEdges.length;
         if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
         // Compute indegree, outdegree, and total degree
-        let indegree = {}, outdegree = {}, totaldegree = {};
+        let indegree = {}, outdegree = {}, alldegree = {};
         // set other nodes in filteredNodes outdegree/indegree =0
         filteredNodes.forEach(node => {
             outdegree[node.paperID] = 0;
             indegree[node.paperID] = 0;
-            totaldegree[node.paperID] = 0;
+            alldegree[node.paperID] = 0;
         })
         let nodeSet = new Set(filteredNodes.map(node => node.paperID));
         
@@ -854,21 +1258,21 @@ async function loadAuthorsData() {
             if (nodeSet.has(src) && nodeSet.has(tgt)) {
                 outdegree[src] += 1;
                 indegree[tgt] += 1;
-                totaldegree[src] += 1;
-                totaldegree[tgt] += 1;
+                alldegree[src] += 1;
+                alldegree[tgt] += 1;
                 connectedEdges.push(edge);
             }
         });
         // filteredEdges = connectedEdges;
 
-        let connectedNodes = filteredNodes.filter(node => totaldegree[node.paperID] > 0);
+        let connectedNodes = filteredNodes.filter(node => alldegree[node.paperID] > 0);
         if (removeIsolated) {
             for (let node of filteredNodes) {
                 let id = node.paperID;
-                if (totaldegree[id] === 0 || totaldegree[id] === undefined) {
+                if (alldegree[id] === 0 || alldegree[id] === undefined) {
                     delete outdegree[id];
                     delete indegree[id];
-                    delete totaldegree[id];
+                    delete alldegree[id];
                 }
             }
         }
@@ -876,12 +1280,12 @@ async function loadAuthorsData() {
         // Visualize using ECharts
         let indegreeData = computeFrequency(Object.values(indegree));
         let outdegreeData = computeFrequency(Object.values(outdegree));
-        let totaldegreeData = computeFrequency(Object.values(totaldegree));
+        let alldegreeData = computeFrequency(Object.values(alldegree));
 
         allAuthorsFrequency[id] = {
             'indegree': indegreeData,
             'outdegree': outdegreeData,
-            'totaldegree': totaldegreeData,
+            'alldegree': alldegreeData,
             'node': String(connectedNodes.length) + '(rm isolated) / ' + (removeSurvey? String(filteredNodes.length) + '(rm survey) / ' : '')
                      + ln + '(filter) / ' + String(data.nodes.length) + '(all)',
             'edge': String(connectedEdges.length) + '(rm edges on invalid node) / '
@@ -905,7 +1309,7 @@ function combineAllMaps(maps) {
     let result = {
         "indegree": {},
         "outdegree": {},
-        "totaldegree": {}
+        "alldegree": {}
     };
 
     for (let key in maps) {
@@ -932,9 +1336,9 @@ function drawDistribution(authorIDs) {
     combinedMap = combineAllMaps(subMap)
     console.log('combined subMap', combinedMap)
 
-    drawDistributionChart('indegree', combinedMap['indegree'], 'In-degree');
-    drawDistributionChart('outdegree', combinedMap['outdegree'], 'Out-degree');
-    drawDistributionChart('totaldegree', combinedMap['totaldegree'], 'Total Degree');
+    drawDistributionChart('indegree', combinedMap['indegree']);
+    drawDistributionChart('outdegree', combinedMap['outdegree']);
+    drawDistributionChart('alldegree', combinedMap['alldegree']);
     updateTitle();
 }
 </script>
