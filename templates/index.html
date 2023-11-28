@@ -232,7 +232,7 @@
                     <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
                     <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
                     <button id="info" class="icon-button" style="background-image: url('/src/image/info.png');"></button>
-                    <span id="info-text">System Interface Introduction</span>
+                    <span id="info-text">Visualization Guide</span>
                 </div>
                 <div id="overlay"></div>
 
@@ -565,7 +565,7 @@ $(function () {
                 success: function (param) {
                     $("#mainsvg, #tagcloud").remove();
                     $("#abstract, #citation-context, #timeline").empty();
-                    $("#selector, #node-info,, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+                    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
                     d3.tip().destroy();
                     var detail = param['detail'],
                         fieldType = param['fieldType'];

@@ -18,14 +18,14 @@
    sudo apt-get install graphviz graphviz-dev
    ```
 3. 运行命令
-   ```
-   su xfl
-   cd /home/xfl/pyCode/GFVisTest
-   conda activate python3.7
+```
+su xfl
+cd /home/xfl/pyCode/GFVisTest
+conda activate python3.7
 
-   pkill -f "runserver 0.0.0.0:9002"
-   nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
-   ```
+pkill -f "runserver 0.0.0.0:9002"
+nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
+```
 
 ## 正式环境（actcloud:/home/xfl/pyCode/GFVis，端口9001）
 

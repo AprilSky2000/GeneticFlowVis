@@ -35,6 +35,7 @@ def update_top_field_authors(field):
     df = pd.DataFrame(results)
     top_field_authors = pd.read_csv(f'../csv/{field}/top_field_authors.csv')
     top_field_authors['authorID'] = top_field_authors['authorID'].astype(str)
+    top_field_authors = top_field_authors.drop(columns=['CorePaperCount_field', 'CoreCitationCount_field', 'CorehIndex_field'])
     top_field_authors = top_field_authors.merge(df, on='authorID')
 
     top_field_authors.to_csv(f'../csv/{field}/top_field_authors.csv', index=False)
