@@ -1237,14 +1237,9 @@ async function loadAuthorsData() {
         // Filter nodes and edges based on given probabilities
         let filteredNodes = data.nodes.filter(node => node.isKeyPaper >= nodeProbFilter);
         let filteredEdges = data.edges.filter(edge => edge.prob >= edgeProbFilter);
-<<<<<<< HEAD
-        if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
-
-=======
         let ln = filteredNodes.length;
         let le = filteredEdges.length;
         if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
->>>>>>> 0be1e065f2627329226591bf9e246cd513beb4d8
         // Compute indegree, outdegree, and total degree
         let indegree = {}, outdegree = {}, alldegree = {};
         // set other nodes in filteredNodes outdegree/indegree =0
@@ -1253,10 +1248,6 @@ async function loadAuthorsData() {
             indegree[node.paperID] = 0;
             alldegree[node.paperID] = 0;
         })
-<<<<<<< HEAD
-        
-=======
->>>>>>> 0be1e065f2627329226591bf9e246cd513beb4d8
         let nodeSet = new Set(filteredNodes.map(node => node.paperID));
         
         let edgeCount = 0;
@@ -1272,11 +1263,7 @@ async function loadAuthorsData() {
                 connectedEdges.push(edge);
             }
         });
-<<<<<<< HEAD
-        filteredEdges = connectedEdges;
-=======
         // filteredEdges = connectedEdges;
->>>>>>> 0be1e065f2627329226591bf9e246cd513beb4d8
 
         let connectedNodes = filteredNodes.filter(node => alldegree[node.paperID] > 0);
         if (removeIsolated) {
