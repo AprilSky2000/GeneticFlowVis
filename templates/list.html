@@ -126,8 +126,8 @@
             const fieldDict = {
 				acl: "NLP",
 				visualization: "Visualization",
-				database: "Database/Data Science",
-				VCG: "Graphics/Visualization"
+				database: "Database & Data Science",
+				CG: "Graphics"
 			};
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
@@ -139,7 +139,7 @@
             if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";
             } else {
-                questionContent = `The scholar metrics below are obtained from all the publications tagged as ${fieldType} papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.`;
+                questionContent = `The scholar metrics below are obtained from all the publications tagged as ${fieldlabel} papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.`;
             }
             
             var content = `
