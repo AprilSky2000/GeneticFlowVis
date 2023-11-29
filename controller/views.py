@@ -307,8 +307,11 @@ def clean(request):
     import shutil
     fieldType = request.GET.get("field")
     path = f"static/json/{fieldType}"
-    shutil.rmtree(path, ignore_errors=True)
-    return HttpResponse("Successfully deleted " + path)
+    try:
+        shutil.rmtree(path)
+        return HttpResponse("Successfully deleted " + path)
+    except Exception as e:
+        return HttpResponse("Failed to delete " + path + " because: " + e.__str__())
 
 def update(request):
     fieldType = request.POST.get("field")

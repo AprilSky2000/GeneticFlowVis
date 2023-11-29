@@ -2,7 +2,7 @@
 
 *注意*：为保证项目运行的稳定性，分离测试和正式环境，开发一律使用测试环境，在正式环境文件夹下不要修改代码，只能pull！
 
-## 测试环境（aliyun:/home/xiaofengli/pyCode/GFVis，端口8080）
+## 正式环境（actcloud:/home/xfl/pyCode/GFVisTest，端口9002）
 
 1. 数据准备：将现有csv同步到本文件夹中
    ```
@@ -18,10 +18,14 @@
    sudo apt-get install graphviz graphviz-dev
    ```
 3. 运行命令
-   ```
-   pkill -f "runserver 0.0.0.0:8080"
-   nohup python manage.py runserver 0.0.0.0:8080 2>&1 &
-   ```
+```
+su xfl
+cd /home/xfl/pyCode/GFVisTest
+conda activate python3.7
+
+pkill -f "runserver 0.0.0.0:9002"
+nohup python manage.py runserver 0.0.0.0:9002 2>&1 &
+```
 
 ## 正式环境（actcloud:/home/xfl/pyCode/GFVis，端口9001）
 

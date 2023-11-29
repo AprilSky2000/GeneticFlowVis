@@ -1,13 +1,18 @@
 function guidence() {
-    document.getElementById('overlay').style.display = 'block';
-    document.getElementById('info').classList.add('highlight');
-    document.getElementById('info-text').style.display = 'inline';
+    if (!localStorage.getItem('guidanceShown')) {
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('info').classList.add('highlight');
+        document.getElementById('info-text').style.display = 'inline';
 
-    document.getElementById('overlay').addEventListener('click', function() {
-        this.style.display = 'none';
-        document.getElementById('info').classList.remove('highlight');
-        document.getElementById('info-text').style.display = 'none';
-    });
+        document.getElementById('overlay').addEventListener('click', function() {
+            this.style.display = 'none';
+            document.getElementById('info').classList.remove('highlight');
+            document.getElementById('info-text').style.display = 'none';
+
+            // 在localStorage中设置标记
+            localStorage.setItem('guidanceShown', 'true');
+        });
+    }
 };
 
 function addAllListeners() {
