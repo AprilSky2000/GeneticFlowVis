@@ -30,6 +30,8 @@ def reference(request):
     return render(request, 'reference.html')
 
 def front(request):
+    client_ip = get_client_ip(request)
+    print('Client IP:', client_ip)
     return render(request, 'front.html', {'error': '', 'versionID': versionID})
 
 def search(request):
@@ -412,3 +414,14 @@ def image(request):
         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
     
     return JsonResponse({'image': encoded_string})
+
+def get_client_ip(request):
+    """
+    获取客户端IP地址
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
