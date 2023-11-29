@@ -456,6 +456,9 @@ $(function () {
     const fieldType = "{{ fieldType }}";
     field_roots = fields[0];
     field_leaves = fields[1];
+    field_roots.forEach(element => {
+        element[2] = String(element[2]);
+    });
     if (fieldType != "visualization") {
         $("#field-level option[value='1']").remove();
         $("#field-level option[value='2']").text(1);
@@ -466,11 +469,10 @@ $(function () {
         $("#edge-value").text("≥0.4 prob.");
         filename += '_1_0.5_0.4_10_1.json';
     }
-    else    filename += '_1_0.5_0.5_10_1.json';
+    else filename += '_1_0.5_0.5_10_1.json';
 
     d3.json(`/src/json/config.json`).then(data => {
         config = fieldType in data ? data[fieldType] : data['default'];
-        
         
         d3.json(filename).then( data => {
             years = data[1];            //年份节点
@@ -489,7 +491,6 @@ $(function () {
             for (let i = 0; i < edges.length; i++) {
                 edges[i]['status'] = 0;
             }
-            console.log('nodes', nodes)
 
             rangeSlider = document.getElementById("range-slider");
             rangeLabel = document.getElementById("range-label");
@@ -534,9 +535,6 @@ $(function () {
             // sugiyama(years, nodes, edges);
             addAllListeners();
         });
-    
-    
-    
     })
 });
 </script>
@@ -608,27 +606,9 @@ $(function () {
                     success: function(data) {
                         $("#imageToShow").attr("src", "data:image/jpeg;base64," + data.image);
                         $("#mainsvg").hide();
-                        $("#tagcloud").remove();
+                        $("#tagcloud").hide();
                         $("#description").show();
                         image_switch = 0;
-                        // 使用CSS或JavaScript确保全屏显示
-                        // div.css({
-                        //     position: 'fixed',
-                        //     top: 0,
-                        //     left: 0,
-                        //     width: '100%',
-                        //     height: '100%',
-                        //     background: 'black',
-                        //     'z-index': 1000,
-                        // });
-                        // img.css({
-                        //     position: 'absolute',
-                        //     top: '50%',
-                        //     left: '50%',
-                        //     transform: 'translate(-50%, -50%)',
-                        //     'max-width': '100%',
-                        //     'max-height': '100%'
-                        // });
                     },
                     error: function(xhr, status, error) {
                         alert("An error occurred: " + error);

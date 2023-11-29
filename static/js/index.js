@@ -178,6 +178,7 @@ function onEscKeyPressed(event) {
 function reset_graph() {
     image_switch = 1;
     $("#description").hide();
+    $("#tagcloud").show();
     $("#mainsvg").show();
     d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
 }
