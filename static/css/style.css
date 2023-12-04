@@ -418,3 +418,12 @@ input[type=range]::-webkit-slider-thumb {
 	background-color: #b3ddff;
 	transition: background-color 0.3s;
 }
+
+/* h1文本底部对齐 */
+h1 {
+	display: inline-block;
+	color: white; 
+	margin-bottom: 0;
+	vertical-align: bottom;
+	line-height: normal;
+}
