@@ -178,6 +178,7 @@ function onEscKeyPressed(event) {
 function reset_graph() {
     image_switch = 1;
     $("#description").hide();
+    $("#tagcloud").show();
     $("#mainsvg").show();
     d3.select('#mainsvg').transition().duration(500).call(zoom.transform, d3.zoomIdentity);
 }
@@ -348,7 +349,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let size = ratio * maxFontSize;
         let height = ratio * lineHeight;
         let opacity = ratio * 0.8 + 0.1;
-        let shortName = d.name.split("_").slice(0, 2).join(' ');
+        let shortName = d.name.split("_").slice(0, 3).join(' ');
         // let width = size * shortName.length * 0.5;
         let width = textSize(shortName, size).width * 1.06;
         if (currentLineWidth + width > svgWidth) {

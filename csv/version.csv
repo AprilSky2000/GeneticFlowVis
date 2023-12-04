@@ -2,3 +2,4 @@ versionID,date,updateContent
 v1.0,2023-09-17,GeneticFlow System has been officially released.
 v1.1,2023-10-17,"It was found that due to the incompleteness of MAG's ""visualization"" category, about 22% visualization papers is missing in our system. A new version was released to fix this issue."
 v1.2,2023-10-20,"GeneticFlow system has released a new version, incorporating data in the database field and providing visualization."
+v1.3,2023-11-29,GeneticFlow system has expanded into the new fields of Computer Graphics.

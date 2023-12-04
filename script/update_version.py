@@ -4,14 +4,15 @@ from datetime import datetime
 # 1.初始化版本信息
 # path = "../csv/version.csv"
 # df = pd.read_csv(path, sep=',', header=0)
-# data = [['v1.0', datetime(2023, 9, 17), "GeneticFlow System has been officially released."]]
+# dt = datetime(2023, 11, 29)
+# data = [['v1.0', dt.date(), "GeneticFlow System has been officially released."]]
 # df = pd.DataFrame(data, columns=["versionID", "date", "updateContent"])
 # df.to_csv(path, sep=',', index=False)
 
 # 2.增加新版本信息
 path = "../csv/version.csv"
 df = pd.read_csv(path, sep=',', header=0)
-data = ['v1.3', datetime(2023, 11, 12), "GeneticFlow system has expanded into the new fields of CG & VIS."]
+dt = datetime(2023, 11, 29)
+data = ['v1.3', dt.date(), "GeneticFlow system has expanded into the new fields of Computer Graphics."]
 df.loc[len(df)] = data
 df.to_csv(path, sep=',', index=False)
-# 还需要删除日期单元中的时分秒
