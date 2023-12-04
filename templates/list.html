@@ -21,6 +21,7 @@
             <div class="logo" style="margin-left: 8%;">
                 <!--h1><span>G</span>eneticFlow</h1-->
                 <a href="/"><img src="/src/image/logo-index.jpg" width="324" height="72"></a>
+                <div id="field" style="display: inline-block;"><h1></h1></div>
             </div>
             <div class="clearfix"></div>
         </div>
@@ -132,16 +133,18 @@
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
-            var fieldlabel, questionContent;
-            
-            console.log('scholarList', scholarList)
+
+            var fieldlabel, questionContent, imgHeight;
             fieldlabel = fieldDict[fieldType];
+            imgHeight = $("img").css("height");
+            $("#field").css("height", imgHeight);
+            $("#field").css("line-height", imgHeight);
+            $("h1").append(`<span><b> - ${fieldlabel}</b></span>`);
             if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";
             } else {
                 questionContent = `The scholar metrics below are obtained from all the publications tagged as ${fieldType} papers in Microsoft Academic Graph (MAG) dataset, till 2021.9. All paper citation counts are native data from MAG.`;
             }
-            
             var content = `
             <div class="question">
                 <i class="fa-solid fa-circle-question hover-text"></i>
@@ -149,9 +152,6 @@
                     $$content$$
                 </span>
             </div>`;
-            // $("#paper-count").text(fieldlabel + " Paper Count ");
-            // $("#citations").text(fieldlabel + " Paper Citations ");
-            // $("#h-index").text("h-index (" + fieldlabel + ") ");
             $("#paperCount").append(content.replace('$$content$$', questionContent));
             $("#corePaperCount").append(content.replace('$$content$$', "Core paper = first-author paper or advisee's first-author paper"));
 
