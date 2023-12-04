@@ -77,17 +77,27 @@ def load_author(field, authorID):
         json.dump(dic, f, indent=4, sort_keys=True, ensure_ascii=False)
 
 
+def read_top_authors(field):
+    df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',')
+    try:
+        df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field']]
+    except:
+        df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex']]
+    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']
+    for col in ['paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
+        df[col] = df[col].astype(int)
+    df['authorID'] = df['authorID'].astype(str)
+    return df
+
+
 def degree(request):
     field = request.GET.get("field")
     topN = int(request.GET.get("topN", 200))
 
-    df = pd.read_csv(f'csv/{field}/top_field_authors.csv')
-    df['authorID'] = df['authorID'].astype(str)
-    # sort df by 'hIndex_field' desc
-    df = df.sort_values(by='hIndex_field', ascending=False)
+    df = read_top_authors(field)
+    df = df[['authorID', 'name', 'paperCount', 'hIndex']]
+    df = df.sort_values(by='hIndex', ascending=False)
     fellow = df['fellow'].head(topN) if 'fellow' in df.columns else None
-    df = df[['authorID', 'name', 'PaperCount_field', 'hIndex_field']]
-    df.columns = ['authorID', 'name', 'paperCount', 'hIndex']
     df = df.head(topN)
 
     # authors = field2authors.setdefault(field, {})
@@ -266,13 +276,12 @@ def write_d3_data(fieldType, detail, papers, influence):
 def index(request):
     fieldType = request.GET.get("field")
     authorID = request.GET.get("id")
-    df = pd.read_csv(f"csv/{fieldType}/top_field_authors.csv", sep=',')
-    df['authorID'] = df['authorID'].astype(str)
+    df = read_top_authors(fieldType)
     author = df[df["authorID"] == authorID]
     name = author["name"].iloc[0]
-    paperCount = author["PaperCount_field"].iloc[0]
-    citationCount = author["CitationCount_field"].iloc[0]
-    hIndex = author["hIndex_field"].iloc[0]
+    paperCount = author["paperCount"].iloc[0]
+    citationCount = author["citationCount"].iloc[0]
+    hIndex = author["hIndex"].iloc[0]
     
     fields = get_fields(fieldType)
     mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 1, 0.5, 0.5, 10, 1
@@ -350,11 +359,7 @@ def update(request):
 def showlist(request):
     fieldType = request.GET.get("field")
     name = request.GET.get("name", None)
-    df = pd.read_csv(f'csv/{fieldType}/top_field_authors.csv', sep=',')
-    df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field']]
-    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']
-    for col in ['authorID','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
-        df[col] = df[col].astype(int)
+    df = read_top_authors(fieldType)
 
     if name:
         filtered_df = df[df['name'].apply(lambda x: name.lower() in x.lower())]
