@@ -19,25 +19,7 @@
             <input type="hidden" name="csrfmiddlewaretoken" value="Yse6cgbnpqJr4Xjn1flWIVqE5knZ5Ty44Z0GtTvzdxFypbn46s9aILmj2eTgPCWJ">
 			<a href="/"><img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="390" height="140.4"></a>
 			<br />
-            <div style="display: inline;">
-				<a id="databaseLink" class="custom-button" href="search?field=database">
-                    <i class="fa-solid fa-database"></i>
-                    Database & Data Science
-                </a>
-				<a id="CGLink" class="custom-button" href="search?field=CG">
-                    <i class="fa-brands fa-codepen"></i>
-                    Graphics
-                </a>
-				<a id="NLPLink" class="custom-button" href="search?field=acl" style="margin-left: 30px;">
-                    <i class="fa-solid fa-pencil icon"></i>
-                    NLP
-                </a>
-                <!-- <a id="visualizationLink" class="btn btn-front" href="search/?field=visualization" style="background-color: #f8f9fa; border-color: #f8f9fa; color: #3c4043;">visualization</a> -->
-				<a id="visualizationLink" class="custom-button" href="search?field=visualization">
-                    <i class="fas fa-eye icon"></i>
-                    Visualization
-                </a>
-			</div>
+            <div id="dynamicList" style="display: inline;"></div>
 			<br />
 			<br />
 			<br />
@@ -49,4 +31,32 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 			<p class="mt-5 text-muted">© 2023-2024<a href=" " target="_blank" style="margin-left: 2em;">京ICP备2022000473号-2</a></p>
 		</form>
 	</body>
+
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			fetch('/src/json/config.json')
+			.then(response => response.json())
+			.then(data => {
+				createList(data);
+			})
+			.catch(error => console.error('Error:', error));
+		});
+
+		// icon: https://fontawesome.com/search?o=r&s=solid&f=classic
+
+		function createList(data) {
+			const container = document.getElementById('dynamicList');
+			for (const key in data) {
+				if (key !== 'default' && data.hasOwnProperty(key)) {
+					const item = data[key];
+					const link = document.createElement('a');
+					link.href = `search?field=${key}`;
+					link.className = 'custom-button';
+					link.innerHTML = `<i class="${item.icon}"></i> ${item.name}`;
+					container.appendChild(link);
+				}
+			}
+		}
+	</script>
 </html>

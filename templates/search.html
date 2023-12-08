@@ -79,27 +79,26 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 				window.location.href = "/list?field=" + fieldType + "&name=" +name;
 			}
 		}
-		
-		$(function () {
-			fieldType = "{{ fieldType }}";
-			// TODO 增加新领域
-			const fieldDict = {
-				acl: "NLP",
-				visualization: "Visualization",
-				database: "Database & Data Science",
-				CG: "Graphics"
-			};
-			$("#scholar-field").text(`${fieldDict[fieldType]} Scholar`);
-			
-			$("#searchLink").click(scholarSearch);
 
+		function createTitle(data) {
+			fieldType = "{{ fieldType }}";
+			$("#scholar-field").text(`${data[fieldType].name} Scholar`);
+			$("#searchLink").click(scholarSearch);
 			$('form').on('submit', function(event) {
 				event.preventDefault();
 			});
-
 			$("#authorInput").on('keydown', function(event) {
 				if (event.key === 'Enter') scholarSearch(event); 
 			});
+		}
+		
+		$(function () {
+			fetch('/src/json/config.json')
+			.then(response => response.json())
+			.then(data => {
+				createTitle(data);
+			})
+			.catch(error => console.error('Error:', error));
 		});
 	</script>
 </body>

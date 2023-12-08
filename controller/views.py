@@ -80,6 +80,10 @@ def load_author(field, authorID):
 def read_top_authors(field):
     df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',')
     try:
+        fellow = df[['fellow']]
+    except:
+        fellow = None
+    try:
         df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field']]
     except:
         df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex']]
@@ -87,6 +91,9 @@ def read_top_authors(field):
     for col in ['paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
         df[col] = df[col].astype(int)
     df['authorID'] = df['authorID'].astype(str)
+    if fellow is not None:
+        df = pd.concat([df, fellow], axis=1)
+    
     return df
 
 
@@ -370,7 +377,7 @@ def showlist(request):
         error = 'No author named ' + name               # 错误信息
         return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
-        return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})
+        return render(request, "list.html", {'scholarList': json.dumps(scholarList), 'fieldType': fieldType})
 
 
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):

@@ -32,7 +32,7 @@
             <div style="float: left; width: 95%;">
                 <table class="table" style="box-shadow:5px 5px 5px rgba(0, 0, 0, 0.5),-5px 5px 5px rgba(0, 0, 0, 0.5);">
                     <thead>
-                        <tr>
+                        <tr id="tableHeaderRow">
                             <th>Sequence</th>
                             <th>Scholar Name</th>
                             <th id="paperCount" class="asc">Paper Count</th>
@@ -58,7 +58,7 @@
             return function(row1, row2) {
                 var aValue = row1[index];
                     bValue = row2[index];
-                if (index == "name") {
+                if (index == "name" || index == "fellow") {
                     if (sortType == 'asc') return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
                     else return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
                 }
@@ -76,6 +76,7 @@
             
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
+                var fellowStr = scholar['fellow'] !== undefined? `<td>${scholar["fellow"]}</td>`: ''
                 var content = `
                     <tr>
                         <td>${i + 1}</td>
@@ -85,7 +86,7 @@
                         <td>${scholar["hIndex"]}</td>
                         <td>${scholar["corePaperCount"]}</td>
                         <td>${scholar["coreCitationCount"]}</td>
-                        <td>${scholar["corehIndex"]}</td>
+                        <td>${scholar["corehIndex"]}</td>${fellowStr}
                         <td>
                             <a class="btn-sm btn-primary" href="/index?field=${fieldType}&id=${scholar["authorID"]}" style="font-size: 12px; text-decoration: none;">
                                 Visualize
@@ -116,22 +117,23 @@
             displayData(1);
         }
 
-        $(function () {
-            /*
-             * TODO: 增加新领域
-             */
-            const fieldDict = {
-				acl: "NLP",
-				visualization: "Visualization",
-				database: "Database & Data Science",
-				CG: "Graphics"
-			};
+        function createList(data) {
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
 
+            if (scholarList.length > 0 && 'fellow' in scholarList[0]) {
+                var headerRow = document.getElementById('tableHeaderRow');
+                var fellowTh = document.createElement('th');
+                fellowTh.textContent = 'Fellow';
+                // Find the last <th> element in the row
+                var lastTh = headerRow.querySelector('th:last-child');
+                // Insert the new <th> before the last <th>
+                headerRow.insertBefore(fellowTh, lastTh);
+            }
+
             var fieldlabel, questionContent, imgHeight;
-            fieldlabel = fieldDict[fieldType];
+            fieldlabel = data[fieldType].name;
             imgHeight = $("img").css("height");
             $("#field").css("height", imgHeight);
             $("#field").css("line-height", imgHeight);
@@ -153,13 +155,24 @@
 
             scholarList.sort(compare("paperCount", "asc"));
             displayPagination();
+        }
+
+        $(function () {
+            fetch('/src/json/config.json')
+			.then(response => response.json())
+			.then(data => {
+				createList(data);
+			})
+			.catch(error => console.error('Error:', error));
         });
+
         $('table').on('click', 'th', function () {
             var index = $(this).index();
             if (index != 0) {
                 const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex", 
-                "corePaperCount", "coreCitationCount", "corehIndex"];
+                "corePaperCount", "coreCitationCount", "corehIndex", 'fellow'];
                 var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
+                console.log('sort on index', index, indexLabel[index], thClass)
                 scholarList.sort(compare(indexLabel[index], thClass));
                 
                 $('table th').removeClass('asc desc');
