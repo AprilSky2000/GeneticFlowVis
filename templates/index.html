@@ -472,8 +472,11 @@ $(function () {
     else filename += '_1_0.5_0.5_10_1.json';
 
     d3.json(`/src/json/config.json`).then(data => {
-        config = fieldType in data ? data[fieldType] : data['default'];
-        
+        config =  data['default'];
+        if (fieldType in data) {
+            Object.assign(config, data[fieldType])
+        }
+
         d3.json(filename).then( data => {
             years = data[1];            //年份节点
             nodes = data[2];            //论文节点
