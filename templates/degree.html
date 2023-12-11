@@ -297,7 +297,10 @@ async function startLoading() {
     $("#tophIndexSlider").val(topN);
 
     let data = await d3.json(`/src/json/config.json`);
-    let config = field in data ? data[field] : data['default'];
+    let config = config =  data['default'];
+    if (field in data) {
+        Object.assign(config, data[field])
+    }
     // removeIsolated = config['remove_isolated'];
     removeIsolated = false;
     removeSurvey = config['remove_survey'];
