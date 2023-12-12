@@ -8,11 +8,13 @@
     "acl": {
         "edge_prob": 0.4,
         "name": "NLP",
-        "icon": "fa-solid fa-pencil icon"
+        "icon": "fa-solid fa-pencil icon",
+        "description": "Natural Language Processing"
     },
     "CG": {
         "name": "Graphics",
-        "icon": "fa-brands fa-codepen icon"
+        "icon": "fa-brands fa-codepen icon",
+        "description": "Computer Graphics and Visualization"
     },
     "database": {
         "name": "Database & Data Science",
@@ -22,9 +24,15 @@
         "name": "Visualization",
         "icon": "fas fa-eye icon"
     },
-    "fellow": {
+    "ACMfellow": {
         "name": "ACM Fellows",
-        "icon": "fas fa-user-graduate icon"
+        "icon": "fa-solid fa-graduation-cap icon",
+        "description": "Fellows of the ACM"
+    },
+    "fellow": {
+        "name": "Fellows",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)"
     }
 }
 

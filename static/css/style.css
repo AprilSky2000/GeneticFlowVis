@@ -36,11 +36,13 @@
 	box-shadow:
 		5px 5px 5px rgba(0, 0, 0, 0.5),
 		-5px 5px 5px rgba(0, 0, 0, 0.5);
+	min-height: 500px;
 }
 .right-column {
     flex: 3;
     padding: 1% 1% 1% 0;
     overflow: hidden;
+	min-height: 500px;
 }
 
 /* 在小屏幕上重新排列列 */
@@ -426,4 +428,19 @@ h1 {
 	margin-bottom: 0;
 	vertical-align: bottom;
 	line-height: normal;
+}
+
+#screen-size-warning {
+    display: none; /* 默认不显示 */
+    position: fixed; /* 固定位置，覆盖整个屏幕 */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8); /* 半透明黑色背景 */
+    color: white; /* 白色文本 */
+    z-index: 9999; /* 确保在页面其他内容之上 */
+    text-align: center; /* 文本居中 */
+    padding-top: 20%; /* 调整文本位置 */
+    font-size: 20px; /* 字体大小 */
 }

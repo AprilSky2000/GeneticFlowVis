@@ -3,8 +3,8 @@ import os
 import sys
 
 field = "visualization"
-col = "abstract"
-raw_directory = "/home/xfl/pyCode/csv_backup/csv.20231204/visualization/papers/"
+col = "topic"
+raw_directory = "/home/xfl/tmp/visualization/papers/"
 directory = f"../csv/{field}/papers/"
 if os.path.exists("output") == False:
     os.makedirs("output")

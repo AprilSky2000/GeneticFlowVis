@@ -1,3 +1,5 @@
+let tagCloudRatio = 0.25;
+
 function guidence() {
     if (!localStorage.getItem('guidanceShown')) {
         document.getElementById('overlay').style.display = 'block';
@@ -14,6 +16,14 @@ function guidence() {
         });
     }
 };
+
+function checkScreenSize() {
+    if (window.innerWidth <= 800) {
+        document.getElementById('screen-size-warning').style.display = 'block';
+    } else {
+        document.getElementById('screen-size-warning').style.display = 'none';
+    }
+}
 
 function addAllListeners() {
     $("#topic-slider").change(function () {
@@ -90,6 +100,7 @@ function addAllListeners() {
     });
 
     window.addEventListener('resize', onFullscreenChange);
+    window.onload = checkScreenSize;
     guidence()
 }
 
@@ -128,6 +139,8 @@ function toggleFullscreen() {
 
 function onFullscreenChange() {
     // 在这里执行其他操作
+    checkScreenSize();
+
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
     d3.select("#topic-map-svg").remove();
@@ -137,12 +150,13 @@ function onFullscreenChange() {
     const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
         return sum + $(element).outerHeight();
     }, 0);
-    mainPanalHeight = windowHeight - navigationHeight;
+    mainPanalHeight = Math.max(windowHeight - navigationHeight, 600);
     mainPanalWidth = $('.main-panel').width();
     virtualOpacity = 0.05;
 
     $('.main-panel').css('max-height', mainPanalHeight);
-    $('.right-column').css('max-height', mainPanalHeight * 0.98);
+    $('.right-column').css('max-height', mainPanalHeight);
+    mainPanalHeight *= 0.95
 
     init_graph(viewBox, transform);
     update_nodes();
@@ -332,14 +346,14 @@ function textSize(text, size) {
 
 function calculateWordPosition(sortedData, maxFontSize) {
     let svgWidth = $(".middle-column").width();
-    let svgHeight = $(".middle-column").height() * 0.25;
+    let svgHeight = mainPanalHeight * tagCloudRatio;
     let lineHeight = maxFontSize * 1.2;
     let emptySpace = maxFontSize * 0.1;
     let wordPosition = [];
     let currentLine = [];
     let currentLineWidth = 0;
     let currentLineHeight = 0;
-    let minFontSize = 10;
+    let minFontSize = 8;
 
     for (const d of sortedData) {
         let ratio = Math.cbrt(d.num / sortedData[0].num);
@@ -353,13 +367,12 @@ function calculateWordPosition(sortedData, maxFontSize) {
         // let width = size * shortName.length * 0.5;
         let width = textSize(shortName, size).width * 1.06;
         if (currentLineWidth + width > svgWidth) {
+            if (currentLine.length == 0) return null
             for (const word of currentLine) {
                 word.x += (svgWidth - currentLineWidth) / 2;
             }
             currentLineHeight += currentLine[0].height + emptySpace;
-            if (currentLineHeight + height > svgHeight) {
-                return null;
-            }
+            if (currentLineHeight + height > svgHeight) return null;
             wordPosition.push(currentLine);
             currentLine = [];
             currentLineWidth = 0;
@@ -390,7 +403,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
 
 function draw_tag_cloud() {
     let svgWidth = $(".middle-column").width();
-    let svgHeight = $(".middle-column").height() * 0.25;
+    let svgHeight = mainPanalHeight * tagCloudRatio;
 
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", svgWidth)
@@ -402,10 +415,10 @@ function draw_tag_cloud() {
     const wordCloud = svg.append("g");
         // .attr("transform", "translate(10, 10)");
 
-    let maxFontSize = 50;
+    let maxFontSize = 60;
     
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
-        maxFontSize *= 0.9;
+        maxFontSize *= 0.95;
     }
     
     const words = wordCloud.selectAll("g")
@@ -451,11 +464,11 @@ function draw_tag_cloud() {
 }
 
 function init_graph (viewBox, transform) {
-    $("#imageToShow").height($(".middle-column").height() * 0.75);
+    $("#imageToShow").height(mainPanalHeight * (1-tagCloudRatio));
 
     const svg = d3.select(".middle-column").append("svg")
         .attr("width", $(".middle-column").width())
-        .attr("height", $(".middle-column").height() * 0.75)
+        .attr("height", mainPanalHeight * (1-tagCloudRatio))
         .attr("viewBox", viewBox)
         .attr("id", "mainsvg");
     

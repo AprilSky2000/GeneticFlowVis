@@ -54,6 +54,7 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 					link.href = `search?field=${key}`;
 					link.className = 'custom-button';
 					link.innerHTML = `<i class="${item.icon}"></i> ${item.name}`;
+					link.title = item.description || item.name;
 					container.appendChild(link);
 				}
 			}
