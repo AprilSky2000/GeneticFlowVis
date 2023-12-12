@@ -17,7 +17,6 @@ from django.core import serializers
 
 version_df = pd.read_csv("csv/version.csv", sep=',')
 versionID = version_df.iloc[-1]['versionID']
-field2authors = {}
 
 authorID2fellow = defaultdict(str)
 fellow_df = pd.read_csv("csv/award_authors.csv", sep=',', dtype={'MAGID': str})
@@ -25,6 +24,9 @@ for index, row in fellow_df.iterrows():
     authorID = row['MAGID']
     if authorID and authorID != 'NULL':
         authorID2fellow[authorID] += str(row['type']) + ':' + str(row['year']) + ','
+print('authorID2fellow', authorID2fellow)
+
+field2top_authors = {}
 
 def reference(request):
     return render(request, 'reference.html')
@@ -51,9 +53,7 @@ def load_author(field, authorID):
     filename = f'static/json/{field}/authors/{authorID}.json'
     if os.path.exists(filename):
         return
-    nodes = {}
     edges = []
-    # print(authorID, authorID2fellow.get(authorID, ''))
     links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv')
     for index, row in links_df.iterrows():
         edges.append({
@@ -78,22 +78,24 @@ def load_author(field, authorID):
 
 
 def read_top_authors(field):
+    if field in field2top_authors:
+        return field2top_authors[field]
+    
     df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',')
+    df['authorID'] = df['authorID'].astype(str)
+    if field not in ['acl']:
+        df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
+    df['fellow'].fillna('', inplace=True)
+
     try:
-        fellow = df[['fellow']]
+        df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field', 'fellow']]
     except:
-        fellow = None
-    try:
-        df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field']]
-    except:
-        df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex']]
-    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']
+        df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex', 'fellow']]
+    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex', 'fellow']
     for col in ['paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
         df[col] = df[col].astype(int)
-    df['authorID'] = df['authorID'].astype(str)
-    if fellow is not None:
-        df = pd.concat([df, fellow], axis=1)
     
+    field2top_authors[field] = df
     return df
 
 
@@ -102,22 +104,14 @@ def degree(request):
     topN = int(request.GET.get("topN", 200))
 
     df = read_top_authors(field)
-    df = df[['authorID', 'name', 'paperCount', 'hIndex']]
+    df = df[['authorID', 'name', 'paperCount', 'hIndex', 'fellow']]
     df = df.sort_values(by='hIndex', ascending=False)
-    fellow = df['fellow'].head(topN) if 'fellow' in df.columns else None
+    
     df = df.head(topN)
-
-    # authors = field2authors.setdefault(field, {})
     for index, row in df.iterrows():
         authorID = row['authorID']
         load_author(field, authorID)
-        # if authorID not in authors:
-        #     authors[authorID] = load_author(field, authorID)
 
-    if fellow is None:
-        df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
-    else:
-        df['fellow'] = fellow.fillna('', inplace=False)
     # keys = list(topAuthors.keys())
     # print('load complete', df, keys, authorID2fellow)
     return render(request, 'degree.html', {
@@ -377,7 +371,7 @@ def showlist(request):
         error = 'No author named ' + name               # 错误信息
         return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
-        return render(request, "list.html", {'scholarList': json.dumps(scholarList), 'fieldType': fieldType})
+        return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})
 
 
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
