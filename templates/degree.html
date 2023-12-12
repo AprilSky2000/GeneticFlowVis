@@ -297,7 +297,7 @@ async function startLoading() {
     $("#tophIndexSlider").val(topN);
 
     let data = await d3.json(`/src/json/config.json`);
-    let config = config =  data['default'];
+    let config = data['default'];
     if (field in data) {
         Object.assign(config, data[field])
     }
@@ -961,6 +961,7 @@ function calculateLogLogPara(frequency) {
 }
 
 function drawLogLogDistribution(elementID, frequency) {
+    console.log('drawLogLogDistribution', elementID, frequency)
     let percentageFrequency = {};
     let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
     for (let key in frequency) {
@@ -1203,6 +1204,7 @@ function drawSingleDistribution(elementID, frequency, lastKey=null) {
 }
 
 function drawDistributionChart(elementID, frequency) {
+    console.log('drawDistributionChart', elementID, frequency)
     // let frequency = computeFrequency(data);
     let chart_r = echarts.init(document.getElementById(elementID + '-r'));
     let frequency_r = JSON.parse(JSON.stringify(frequency_global[elementID]));
