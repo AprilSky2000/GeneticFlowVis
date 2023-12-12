@@ -230,7 +230,6 @@
         </div>
         <div class="filters">
             Log-Log Plot: <input type="checkbox" id="logLogPlot" onchange="toggleLogLog(this.checked)">
-            <!-- Average Log: <input type="checkbox" id="AverageLog" onchange="toggleCheck()"> -->
             Draw Para Distribution: 
             <select id="paraDistributionSelector">
                 <option value="None" selected>None</option>
@@ -538,59 +537,12 @@ async function updateCheck() {
 
 async function toggleLogLog(checked) {
     logLogPlot = checked;
-    removeIsolated = checked;
     $('#xAxisSlider').prop('disabled', checked);
     $('#powerLawShiftSlider').prop('disabled', checked);
     $('#distributionSelector').prop('disabled', checked);
-    $('#removeIsolated').prop('checked', checked);
     $('#paraDistributionSelector').prop('disabled', !checked);
     await loadAuthorsData();
     drawDistribution(selectedAuthors);
-}
-
-function calculateWeightedFrequency(authors, element) {
-    let allFrequency = {}
-    authors.forEach(authorID => {
-        let frequency = allAuthorsFrequency[authorID][element];
-        let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
-        let percentageFrequency = {};
-        for (let key in frequency) {
-            fq = parseFloat((frequency[key] / total).toFixed(5));  // 保留两位小数并添加%符号
-            if (fq > 0) {
-                percentageFrequency[key] = fq
-            }
-        }
-        // console.log('percentageFrequency', percentageFrequency)
-        for (let key in percentageFrequency) {
-            if (allFrequency[key]) {
-                allFrequency[key].push(percentageFrequency[key]);
-            } else {
-                allFrequency[key] = [percentageFrequency[key]];
-            }
-        }
-    });
-    for (let key in allFrequency) {
-        allFrequency[key] = allFrequency[key].reduce((sum, value) => sum + Math.log(value), 0) / allFrequency[key].length;
-        allFrequency[key] = Math.exp(allFrequency[key]);
-    }
-    console.log('weighted frequency', element, authors, allFrequency)
-    return allFrequency;
-}
-
-function toggleCheck() {
-    AverageLog = document.getElementById("AverageLog").checked;
-    if (!AverageLog) {
-        drawDistribution(selectedAuthors);
-        return;
-    }
-    
-    let otherAuthors = authorIDs_global.filter(id => !selectedAuthors.includes(id));
-    console.log('otherAuthors', otherAuthors)
-    ['indegree', 'outdegree', 'alldegree'].forEach(element => {
-        drawLogLogDistribution(element, calculateWeightedFrequency(selectedAuthors, element));
-        drawLogLogDistribution(element + '-r', calculateWeightedFrequency(otherAuthors, element));
-    });
-    
 }
 
 function updateXAxis(spanId, value) {
@@ -961,7 +913,6 @@ function calculateLogLogPara(frequency) {
 }
 
 function drawLogLogDistribution(elementID, frequency) {
-    console.log('drawLogLogDistribution', elementID, frequency)
     let percentageFrequency = {};
     let total = Object.values(frequency).reduce((sum, value) => sum + value, 0);
     for (let key in frequency) {
@@ -1204,7 +1155,7 @@ function drawSingleDistribution(elementID, frequency, lastKey=null) {
 }
 
 function drawDistributionChart(elementID, frequency) {
-    console.log('drawDistributionChart', elementID, frequency)
+    console.log('drawDistributionChart', logLogPlot, elementID, frequency)
     // let frequency = computeFrequency(data);
     let chart_r = echarts.init(document.getElementById(elementID + '-r'));
     let frequency_r = JSON.parse(JSON.stringify(frequency_global[elementID]));
