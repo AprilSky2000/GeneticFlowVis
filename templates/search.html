@@ -93,7 +93,7 @@ and see our <a href="/reference">KDD/VIS/NeurIPS 2023 papers</a> for more detail
 		}
 		
 		$(function () {
-			fetch('/src/json/config.json')
+			fetch('/src/config.json')
 			.then(response => response.json())
 			.then(data => {
 				createTitle(data);
