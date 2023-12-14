@@ -11,5 +11,5 @@ csv/*
 wget-log
 output
 csv.bac
-static/json/*
-!static/json/*.json
+static/json
+static/.test

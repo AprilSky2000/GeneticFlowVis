@@ -26,6 +26,10 @@
 </head>
 
 <body>
+    <div id="screen-size-warning">
+        Please use a larger screen for a better visualization experience (iPad or desktop with width > 800px).
+    </div>
+    
     <div class="container-fluid">
         <div class="navigation" style="background-color: #054863; padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
@@ -469,9 +473,12 @@ $(function () {
     }
     else filename += '_1_0.5_0.5_10_1.json';
 
-    d3.json(`/src/json/config.json`).then(data => {
-        config = fieldType in data ? data[fieldType] : data['default'];
-        
+    d3.json(`/src/config.json`).then(data => {
+        config =  data['default'];
+        if (fieldType in data) {
+            Object.assign(config, data[fieldType])
+        }
+
         d3.json(filename).then( data => {
             years = data[1];            //年份节点
             nodes = data[2];            //论文节点
@@ -595,7 +602,7 @@ $(function () {
         $("#info").click(function(){
             if (image_switch == 0) {
                 reset_graph();
-                draw_tag_cloud();
+                // draw_tag_cloud();
             }
             else {
                 $.ajax({

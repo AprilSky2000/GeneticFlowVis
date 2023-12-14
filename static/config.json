@@ -1,0 +1,38 @@
+{
+    "default": {
+        "remove_survey": true,
+        "remove_isolated": true,
+        "node_prob": 0.5,
+        "edge_prob": 0.5
+    },
+    "acl": {
+        "edge_prob": 0.4,
+        "name": "NLP",
+        "icon": "fa-solid fa-pencil icon",
+        "description": "Natural Language Processing"
+    },
+    "CG": {
+        "name": "Graphics",
+        "icon": "fa-brands fa-codepen icon",
+        "description": "Computer Graphics and Visualization"
+    },
+    "database": {
+        "name": "Database & Data Science",
+        "icon": "fa-solid fa-database icon"
+    },
+    "visualization": {
+        "name": "Visualization",
+        "icon": "fas fa-eye icon"
+    },
+    "ACMfellow": {
+        "name": "ACM Fellows",
+        "icon": "fa-solid fa-graduation-cap icon",
+        "description": "Fellows of the ACM"
+    },
+    "fellow": {
+        "name": "Fellows",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)"
+    }
+}
+
