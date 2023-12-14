@@ -27,9 +27,9 @@
 
 <body>
     <div class="container-fluid">
-        <div class="navigation" style="background-image: linear-gradient(to bottom, #054863, #0d3245); padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
+        <div class="navigation" style="background-color: #054863; padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
-                <a href="/"><img src="/src/image/logo-index.jpg" width="288" height="64"></a>
+                <a href="/"><img src="/src/image/logo-index.svg" width="300" height="70"></a>
             </div>
             <div class="clearfix"></div>
         </div>
@@ -459,10 +459,8 @@ $(function () {
     field_roots.forEach(element => {
         element[2] = String(element[2]);
     });
-    if (fieldType != "visualization") {
-        $("#field-level option[value='1']").remove();
-        $("#field-level option[value='2']").text(1);
-    }
+    $("#field-level option[value='1']").remove();
+    $("#field-level option[value='2']").text(1);
     
     var filename = `/src/json/${fieldType}/${authorID}`;
     if (fieldType == "acl") {
