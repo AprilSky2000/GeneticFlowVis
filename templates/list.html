@@ -54,6 +54,7 @@
     </div>
 
     <script>
+        let hasFellow = false;
         function compare(index, sortType) {
             return function(row1, row2) {
                 var aValue = row1[index];
@@ -69,6 +70,12 @@
                 }
             }
         }
+        function findMatch(str) {
+            const pattern = /\b1:(\d+),/; // 正则表达式，匹配模式 "1:xxx,"
+            const match = str.match(pattern);
+            return match ? match[1] : ''; // 返回匹配的数字部分，如果没有匹配则返回 null
+        }
+
         function displayData(page) {
             $('table tbody').empty();
             const startIndex = (page - 1) * itemsPerPage;
@@ -76,7 +83,7 @@
             
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
-                var fellowStr = scholar['fellow'] !== undefined? `<td>${scholar["fellow"]}</td>`: ''
+                var fellowStr = hasFellow? `<td>${scholar["fellowYear"]}</td>`: ''
                 var content = `
                     <tr>
                         <td>${i + 1}</td>
@@ -121,11 +128,13 @@
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
-
-            if (scholarList.length > 0 && 'fellow' in scholarList[0]) {
+            
+            // 测试服（data有fellow字段）或者fellow领域
+            if (data.hasOwnProperty('fellow') || fieldType.includes("fellow")) {
+                hasFellow = true;
                 var headerRow = document.getElementById('tableHeaderRow');
                 var fellowTh = document.createElement('th');
-                fellowTh.textContent = 'Fellow';
+                fellowTh.textContent = 'Fellow Year';
                 // Find the last <th> element in the row
                 var lastTh = headerRow.querySelector('th:last-child');
                 // Insert the new <th> before the last <th>
@@ -157,20 +166,35 @@
             displayPagination();
         }
 
-        $(function () {
-            fetch('/src/json/config.json')
+        function isTestEnv() {
+			return fetch('/src/.test')
+			.then(response => {
+				return response.ok;
+			})
+			.catch(error => {
+				return true
+			});
+		}
+
+		$(function() {
+			fetch('/src/config.json')
 			.then(response => response.json())
 			.then(data => {
-				createList(data);
+				delete data['default'];
+				isTestEnv().then(isTest => {
+					if(!isTest) delete data['fellow'];
+					console.log(data);
+					createList(data);
+				})
 			})
 			.catch(error => console.error('Error:', error));
-        });
+		});
 
         $('table').on('click', 'th', function () {
             var index = $(this).index();
             if (index != 0) {
                 const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex", 
-                "corePaperCount", "coreCitationCount", "corehIndex", 'fellow'];
+                "corePaperCount", "coreCitationCount", "corehIndex", 'fellowYear'];
                 var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
                 console.log('sort on index', index, indexLabel[index], thClass)
                 scholarList.sort(compare(indexLabel[index], thClass));
