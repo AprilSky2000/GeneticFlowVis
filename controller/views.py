@@ -94,7 +94,7 @@ def read_top_authors(field):
             if len(s) == 0:
                 return 0
             pattern = r"\b1:(\d+),"
-            group = re.search(pattern, string)
+            group = re.search(pattern, s)
             return int(group.group(1)) if group else 0
         df['fellow'].fillna('', inplace=True)
         df['fellowYear'] = df['fellow'].apply(getYear)

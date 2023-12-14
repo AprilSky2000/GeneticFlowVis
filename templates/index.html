@@ -475,7 +475,7 @@ $(function () {
     }
     else filename += '_1_0.5_0.5_10_1.json';
 
-    d3.json(`/src/json/config.json`).then(data => {
+    d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
         if (fieldType in data) {
             Object.assign(config, data[fieldType])
