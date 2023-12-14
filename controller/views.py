@@ -27,7 +27,7 @@ for index, row in fellow_df.iterrows():
         authorID2fellow[authorID] += str(row['type']) + ':' + str(row['year']) + ','
     if row['type'] == 1:
         authorID2fellowYear[authorID] = int(row['year'])
-print('authorID2fellow', authorID2fellow)
+# print('authorID2fellow', authorID2fellow)
 
 field2top_authors = {}
 
