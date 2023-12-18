@@ -20,7 +20,7 @@
         <div class="navigation" style="background-color: #054863; padding-bottom: 2%; padding-top: 2%;">
             <div class="logo" style="margin-left: 8%;">
                 <!--h1><span>G</span>eneticFlow</h1-->
-                <a href="/"><img src="/src/image/logo-index.svg" width="302" height="72"></a>
+                <a href="/"><img src="/src/image/logo-index.jpg" width="330" height="77"></a>
                 <div id="field" style="display: inline-block;"><h1></h1></div>
             </div>
             <div class="clearfix"></div>
@@ -146,7 +146,7 @@
             imgHeight = $("img").css("height");
             $("#field").css("height", imgHeight);
             $("#field").css("line-height", imgHeight);
-            $("h1").append(`<span><i>-${fieldlabel}</i></span>`);
+            $("h1").append(`<span><i>- ${fieldlabel}</i></span>`);
             if (fieldType == "acl") {
                 questionContent = "The scholar metrics below are obtained from all the paper publications in ACL Anthology Reference Corpus (ARC), till 2021.7. All paper citation counts are native data from Microsoft Academic Graph (MAG).";
             } else {
@@ -183,7 +183,7 @@
 				delete data['default'];
 				isTestEnv().then(isTest => {
 					if(!isTest) delete data['fellow'];
-					console.log(data);
+					// console.log(data);
 					createList(data);
 				})
 			})
