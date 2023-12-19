@@ -14,6 +14,9 @@ import re
 from collections import defaultdict
 from django.utils.safestring import mark_safe
 from django.core import serializers
+import logging
+
+logger = logging.getLogger('log')
 
 version_df = pd.read_csv("csv/version.csv", sep=',')
 versionID = version_df.iloc[-1]['versionID']
@@ -32,15 +35,19 @@ for index, row in fellow_df.iterrows():
 field2top_authors = {}
 
 def reference(request):
+    client_ip = get_client_ip(request)
+    logger.info("Request Parameters: [clientIP:%s]", client_ip)
     return render(request, 'reference.html')
 
 def front(request):
     client_ip = get_client_ip(request)
-    print('Client IP:', client_ip)
+    logger.info("Request Parameters: [clientIP:%s]", client_ip)
     return render(request, 'front.html', {'error': '', 'versionID': versionID})
 
 def search(request):
+    client_ip = get_client_ip(request)
     field = request.GET.get("field")
+    logger.info("Request Parameters: [clientIP:%s] [field:%s]", client_ip, field)
     return render(request, 'search.html', {'error': '', 'fieldType': field, 'versionID': versionID})
 
 def changelog(request):
@@ -139,19 +146,17 @@ def degree(request):
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
-    initYear = 2023
-    publicationTime = []
     papers = papers.values()
-    if len(papers) != 0:
-        for paper in papers:
-            year = int(paper['year'])
-            if year < initYear:
-                initYear = year
-        publicationTime = [i for i in range(initYear, 2024)]
+    if len(papers):
+        min_year = min(item['year'] for item in papers)
+        max_year = max(item['year'] for item in papers)
+        publication_time = [i for i in range(min_year, max_year + 1)]
+    else:
+        publication_time = []
 
     # 根据已有年份对论文重新分类，每个年份的论文构成一个子图，分成subgraph()
     papers = sorted(papers, key=lambda x:int(x['year']))
-    for year in publicationTime:
+    for year in publication_time:
         with dot.subgraph() as s:
             s.attr(rank='same')
             s.node(name=str(year), style='filled', fillcolor='white')
@@ -175,9 +180,9 @@ def create_node(dot, papers, nodeWidth):
                         paper_name = label + '\n' + str(paper['citationCount'])
                     s.node(name=paper['paperID'], label=paper_name)
     # 将表示年份的点先连接
-    for i in range(0, len(publicationTime)):
+    for i in range(0, len(publication_time)):
         if i:
-            dot.edge(str(publicationTime[i - 1]), str(publicationTime[i]), arrowsize='0')
+            dot.edge(str(publication_time[i - 1]), str(publication_time[i]), arrowsize='0')
 
 def create_edge(dot, papers, links):
     for link in links:
@@ -291,9 +296,12 @@ def write_d3_data(fieldType, detail, papers, influence):
 def index(request):
     fieldType = request.GET.get("field")
     authorID = request.GET.get("id")
+    client_ip = get_client_ip(request)
     df = read_top_authors(fieldType)
     author = df[df["authorID"] == authorID]
     name = author["name"].iloc[0]
+    logger.info("Request Parameters: [clientIP:%s] [field:%s] [authorID:%s] [scholar:%s]",
+                client_ip, fieldType, authorID, name)
     paperCount = author["paperCount"].iloc[0]
     citationCount = author["citationCount"].iloc[0]
     hIndex = author["hIndex"].iloc[0]
@@ -374,6 +382,8 @@ def update(request):
 def showlist(request):
     fieldType = request.GET.get("field")
     name = request.GET.get("name", None)
+    client_ip = get_client_ip(request)
+    logger.info("Request Parameters: [clientIP:%s] [field:%s] [scholar:%s]", client_ip, fieldType, name)
     df = read_top_authors(fieldType)
 
     if name:
@@ -437,9 +447,6 @@ def image(request):
     return JsonResponse({'image': encoded_string})
 
 def get_client_ip(request):
-    """
-    获取客户端IP地址
-    """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]

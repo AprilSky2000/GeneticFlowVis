@@ -13,3 +13,4 @@ output
 csv.bac
 static/json
 static/.test
+Log/*
