@@ -420,6 +420,13 @@ function draw_tag_cloud() {
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.95;
     }
+
+    /* TODO
+     * 当nodes没有节点时，下面的wordPosition会因为访问了未知属性`.y`出错
+     */
+    if (Array.isArray(wordPosition) && wordPosition.length == 1 && Array.isArray(wordPosition[0]) && wordPosition[0].length == 0) {
+        return;
+    }
     
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
