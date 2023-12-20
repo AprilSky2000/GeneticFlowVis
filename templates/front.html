@@ -51,7 +51,10 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 			.then(data => {
 				delete data['default'];
 				isTestEnv().then(isTest => {
-					if(!isTest) delete data['fellow'];
+					if(!isTest) {
+						delete data['fellow'];
+						delete data['turing'];
+					}
 					// console.log(data);
 					createList(data);
 				})
