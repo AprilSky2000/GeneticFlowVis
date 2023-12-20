@@ -33,6 +33,10 @@
         "name": "Fellows",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (similar #paper and #citation)"
+    },
+    "turing": {
+        "name": "Turing Award",
+        "icon": "fa-solid fa-trophy icon"
     }
 }
 
