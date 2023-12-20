@@ -33,6 +33,7 @@ for index, row in fellow_df.iterrows():
 # print('authorID2fellow', authorID2fellow)
 
 field2top_authors = {}
+field2topics = {}
 
 def reference(request):
     client_ip = get_client_ip(request)
@@ -108,11 +109,25 @@ def read_top_authors(field):
         df['fellow'].fillna('', inplace=True)
         df['fellowYear'] = df['fellow'].apply(getYear)
 
-    try:
-        df = df[['authorID','name','PaperCount_field','CitationCount_field','hIndex_field','CorePaperCount_field','CoreCitationCount_field','CorehIndex_field', 'fellow', 'fellowYear']]
-    except:
-        df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex', 'fellow', 'fellowYear']]
-    df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex', 'fellow', 'fellowYear']
+    df = df.rename(columns={
+        'PaperCount_field': 'PaperCount',
+        'CitationCount_field': 'CitationCount',
+        'hIndex_field': 'hIndex',
+        'CorePaperCount_field': 'CorePaperCount',
+        'CoreCitationCount_field': 'CoreCitationCount',
+        'CorehIndex_field': 'CorehIndex'
+    })
+    df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex', 'fellow', 'fellowYear']]
+    # df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex', 'fellow', 'fellowYear']
+    df = df.rename(columns={
+        'PaperCount': 'paperCount',
+        'CitationCount': 'citationCount',
+        'hIndex': 'hIndex',
+        'CorePaperCount': 'corePaperCount',
+        'CoreCitationCount': 'coreCitationCount',
+        'CorehIndex': 'corehIndex'
+    })
+
     for col in ['paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
         df[col] = df[col].astype(int)
     
@@ -313,6 +328,9 @@ def index(request):
     detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}'
     filename = f'static/json/{fieldType}/{detail}.json'
 
+    if os.path.exists(f'csv/{fieldType}/paperID2topic.json'):
+        field2topics[fieldType] = json.load(open(f'csv/{fieldType}/paperID2topic.json'))
+
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
 
@@ -403,10 +421,14 @@ def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
 
     df = pd.read_csv(path, sep=',', index_col=0)
     df = df.fillna('')
+
+    df['paperID'] = df['paperID'].astype(str).replace('.0', '')
+    if fieldType in field2topics:
+        paperID2topic = field2topics[fieldType]
+        df['topic'] = df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
     
     for col in ['year', 'referenceCount', 'citationCount', 'topic']:
         df[col] = df[col].astype(int)
-    df['paperID'] = df['paperID'].astype(str).replace('.0', '')
     df["isKeyPaper"] = df["isKeyPaper"].astype(float)
     df = df[df["isKeyPaper"] >= isKeyPaper]
     if removeSurvey == 1:

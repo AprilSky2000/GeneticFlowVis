@@ -37,6 +37,10 @@
     "turing": {
         "name": "Turing Award",
         "icon": "fa-solid fa-trophy icon"
+    },
+    "SE": {
+        "name": "Software & Programming Language",
+        "icon": "fa-brands fa-microsoft icon"
     }
 }
 
