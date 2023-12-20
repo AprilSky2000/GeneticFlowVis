@@ -167,9 +167,10 @@ LOGGING = {
         # 输出info日志
         'info': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_DIR, 'info-{}.log'.format(time.strftime('%Y-%m-%d'))),
-            'maxBytes': 1024 * 1024 * 5,
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'info.log'.format(time.strftime('%Y-%m-%d'))),
+            'when': 'midnight',
+            'interval': 1,
             'backupCount': 30,
             'formatter': 'standard',
             'encoding': 'utf-8',  # 设置默认编码
@@ -177,11 +178,12 @@ LOGGING = {
         # 输出错误日志
         'error': {
             'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_DIR, 'error-{}.log'.format(time.strftime('%Y-%m-%d'))),
-            'maxBytes': 1024 * 1024 * 5,  # 文件大小
-            'backupCount': 30,  # 备份数
-            'formatter': 'standard',  # 输出格式
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'error.log'.format(time.strftime('%Y-%m-%d'))),
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 30,
+            'formatter': 'standard',
             'encoding': 'utf-8',  # 设置默认编码
         },
         # 控制台输出
