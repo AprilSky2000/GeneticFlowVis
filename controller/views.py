@@ -109,6 +109,10 @@ def read_top_authors(field):
         df['fellow'].fillna('', inplace=True)
         df['fellowYear'] = df['fellow'].apply(getYear)
 
+    if 'PaperCount' in df.columns and 'PaperCount_field' in df.columns:
+        df = df.drop(columns=['PaperCount'])
+    if 'CitationCount' in df.columns and 'CitationCount_field' in df.columns:
+        df = df.drop(columns=['CitationCount'])
     df = df.rename(columns={
         'PaperCount_field': 'PaperCount',
         'CitationCount_field': 'CitationCount',
@@ -314,12 +318,9 @@ def index(request):
     client_ip = get_client_ip(request)
     df = read_top_authors(fieldType)
     author = df[df["authorID"] == authorID]
-    name = author["name"].iloc[0]
+    author = author.to_dict(orient='records')[0]
     logger.info("Request Parameters: [clientIP:%s] [field:%s] [authorID:%s] [scholar:%s]",
-                client_ip, fieldType, authorID, name)
-    paperCount = author["paperCount"].iloc[0]
-    citationCount = author["citationCount"].iloc[0]
-    hIndex = author["hIndex"].iloc[0]
+                client_ip, fieldType, authorID, author["name"])
     
     fields = get_fields(fieldType)
     mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 1, 0.5, 0.5, 10, 1
@@ -347,8 +348,8 @@ def index(request):
         write_d3_data(fieldType, detail, papers, links)
 
     return render(request, "index.html",
-                  {'authorID': authorID, 'name': name, 'paperCount': paperCount, 
-                   'citationCount': citationCount, 'hIndex': hIndex, 'fields': fields, 'fieldType': fieldType})
+                  {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"], 
+                   'citationCount': author["citationCount"], 'hIndex': author["hIndex"], 'fields': fields, 'fieldType': fieldType})
 
 
 def clean(request):
@@ -419,13 +420,15 @@ def showlist(request):
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
     path = f'csv/{fieldType}/papers/{authorID}.csv'
 
-    df = pd.read_csv(path, sep=',', index_col=0)
+    df = pd.read_csv(path, sep=',')
     df = df.fillna('')
 
     df['paperID'] = df['paperID'].astype(str).replace('.0', '')
     if fieldType in field2topics:
         paperID2topic = field2topics[fieldType]
         df['topic'] = df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
+    elif 'topic' not in df.columns:
+        df['topic'] = 0
     
     for col in ['year', 'referenceCount', 'citationCount', 'topic']:
         df[col] = df[col].astype(int)
@@ -452,13 +455,17 @@ def read_links(fieldType, authorID, extendsProb):
     # df = df[~df["parentID"].isin(surveys)]
     return df.to_dict(orient='records')
 
+    
 def get_fields(fieldType):
     path = f'csv/{fieldType}/'
-    df_roots = pd.read_csv(os.path.join(path, "field_roots.csv"), sep=',')
-    roots = df_roots.values.tolist()
-    df_leaves = pd.read_csv(os.path.join(path, "field_leaves.csv"), sep=',')
-    leaves = df_leaves.values.tolist()
+    leaves_path = os.path.join(path, "field_leaves.csv")
+    if os.path.exists(leaves_path) == False:
+        return [[],[[0,7406,"default",0,0,113.7,0.4438242822393499,1,1]]]
+
+    roots = pd.read_csv(os.path.join(path, "field_roots.csv"), sep=',').values.tolist()
+    leaves = pd.read_csv(leaves_path, sep=',').values.tolist()
     return [roots, leaves]
+
 
 def image(request):
     path = f'static/image/'

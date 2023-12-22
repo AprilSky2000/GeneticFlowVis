@@ -157,7 +157,7 @@ function onFullscreenChange() {
     $('.main-panel').css('max-height', mainPanalHeight);
     $('.right-column').css('max-height', mainPanalHeight);
     mainPanalHeight *= 0.95
-
+    
     init_graph(viewBox, transform);
     update_nodes();
     paper_field = update_fields();
@@ -171,7 +171,6 @@ function onFullscreenChange() {
     // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
     // $(".middle-column").css('height', maxHeight);
     updateSider(name);
-
     // $("paper-list").css('height', maxHeight);
 
     d3.selectAll('.paper').data(nodes)
@@ -284,6 +283,8 @@ function updateSider (name) {
         $("#timeline").append(content);
     }
     $("#paper-list").show();
+    $("#node-info").css("max-height", $("#paper-list").height() - $("#selector").innerHeight());
+    $("#edge-content").css("max-height", $("#paper-list").height() - $("#edge-title").innerHeight());
 }
 
 // Function to convert HSV to RGB
@@ -1034,14 +1035,6 @@ function visual_graph(polygon) {
         }
 
         /*
-         * 因为node-info为overflow类型，需要先确定高度才能出现滑轮
-         * 同样的计算内容在line.click()中也出现了
-         */
-        let info_height = $("#paper-list").height() - $("#selector").height();
-        $("#node-info").css("height", info_height * 0.95);
-        $("#node-info-blank").css("height", info_height * 0.05);
-
-        /*
          * 下面的代码均为构建引用和被引树
          */
         var vis = new Array(edges.length).fill(0);
@@ -1203,21 +1196,6 @@ function visual_graph(polygon) {
                 break;
             }
         }
-
-        //因为citation-context为overflow类型，需要先确定高度才能出现滑轮
-        //同时为了使右侧和中间保持相对对齐，所以需要用中间列的高度-citation-context上面一些元素的高度和
-        //同样的计算内容在ellipse.click中也出现了
-        let other_height = 0;
-        $(".citation-context-minus-height").each(function() {
-            other_height += $(this).height();
-        });
-        $(".citation-context-minus-margin").each(function() {
-            let margin = parseInt(($(this).css('marginTop')).slice(0, -2));
-            other_height += margin * 2;
-        })
-        let citation_context_height = ($("#paper-list").height() / 1.1 - other_height) / 1.03;
-        // let citation_context_height = ($("#mainsvg").height() + $("#tagcloud").height() - $("#selector").height() - other_height) * 0.9;
-        $("#citation-context").css("height", citation_context_height);
     })
     .on('mouseout', function () {
         d3.select(this)

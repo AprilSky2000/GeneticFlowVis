@@ -204,7 +204,7 @@ table td {
 }
 
 table th {
-	background-color: #ccc;
+	background-color: #CCE8EB;
 }
 
 table th.asc:before {
@@ -222,10 +222,10 @@ table td, table th{
 	border: 0.5px solid #cad9ea;
 	/* color: #cad9ea rgba(202, 217, 234, 0.5)*/
 }
-table thead th{
+/* table thead th{
 	background-color: #CCE8EB;
 	width: 100px;
-}
+} */
 th:hover {
 	cursor: pointer;
 	background-color: #a4c7cb; /* 变暗的背景颜色 */
@@ -238,8 +238,8 @@ table tr:nth-child(even){
 }
 
 tr:hover {
-	background-color: #e8e8e8;
-	transition: background-color 0.3s;
+	background-color: #e8e8e8 !important;
+	transition: background-color 0.2s;
 }
 
 /* 滚动槽 */

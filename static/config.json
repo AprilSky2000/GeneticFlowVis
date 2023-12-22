@@ -41,6 +41,14 @@
     "SE": {
         "name": "Software & Programming Language",
         "icon": "fa-brands fa-microsoft icon"
+    },
+    "HCI": {
+        "name": "Human-Computer Interaction",
+        "icon": "fa-solid fa-display icon"
+    },
+    "CN": {
+        "name": "Networking & Parallel/Distributed/Real-time/Embedded Computing",
+        "icon": "fa-solid fa-network-wired icon"
     }
 }
 
