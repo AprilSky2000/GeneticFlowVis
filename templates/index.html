@@ -147,34 +147,6 @@
         </div>
         <div class="main-panel">
             <div class="left-column">
-                <ul id="basic-info" class="address" style="padding-bottom: 5%;">
-                    <li>
-                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
-                            <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Scholar Info</p>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
-                            <li style="color: #333;">{{ name }}</li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 60%;"><b>h-index / citations</b></li>
-                            <li style="color: #333;">{{ hIndex }} / {{ citationCount }}</li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 60%;"><b>paper count</b></li>
-                            <li style="color: #333;">{{ paperCount }}</li>
-                        </ul>
-                    </li>
-                </ul>
-                <br />
                 <ul id="graph-info" class="address" style="padding-bottom: 5%;">
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
@@ -183,18 +155,9 @@
                             </li>
                         </ul>
                     </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 55%;"><b># of nodes</b></li>
-                            <li id="node-num" style="color: #333;"></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 55%;"><b># of edges</b></li>
-                            <li id="edge-num" style="color: #333;"></li>
-                        </ul>
-                    </li>
+                    <div id="radialgraph">
+                        <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="500px"></iframe>
+                    </div>
                 </ul>
                 <br />
                 <ul id="topic-info" class="address">
@@ -252,6 +215,46 @@
             </div>
 
             <div class="right-column" style="margin-left: -0.6%;">
+                <ul id="basic-info" class="address" style="padding-bottom: 5%;">
+                    <li>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
+                            <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
+                                <p>Scholar Info</p>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
+                            <li style="color: #333;">{{ name }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 60%;"><b>h-index / citations</b></li>
+                            <li style="color: #333;">{{ hIndex }} / {{ citationCount }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 60%;"><b>paper count</b></li>
+                            <li style="color: #333;">{{ paperCount }}</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 55%;"><b># of nodes</b></li>
+                            <li id="node-num" style="color: #333;"></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul class="address-text">
+                            <li style="width: 55%;"><b># of edges</b></li>
+                            <li id="edge-num" style="color: #333;"></li>
+                        </ul>
+                    </li>
+                </ul>
+
                 <div id="paper-list" style="background-color: white; border-top-right-radius: 10px;border-bottom-right-radius: 10px;">
                     <div style="width: 100%; padding-top: 4%; padding-bottom: 3%;background-color: #054863; border-top-right-radius: 10px;">
                         <p style="margin-left: 40px; color: white; font-size: 16px; font-weight: bold;">Paper List</p>

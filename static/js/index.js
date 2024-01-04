@@ -1,4 +1,8 @@
-let tagCloudRatio = 0.25;
+let tagCloudRatio = 0.2;
+let adjacent_nodes = [];
+let adjacent_edges = [];
+let center_node = null;
+
 
 function guidence() {
     if (!localStorage.getItem('guidanceShown')) {
@@ -365,6 +369,9 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let height = ratio * lineHeight;
         let opacity = ratio * 0.8 + 0.1;
         let shortName = d.name.split("_").slice(0, 3).join(' ');
+        if (ratio < 0.5) {
+            shortName = d.name.split("_").slice(0, 2).join(' ');
+        }
         // let width = size * shortName.length * 0.5;
         let width = textSize(shortName, size).width * 1.06;
         if (currentLineWidth + width > svgWidth) {
@@ -547,10 +554,12 @@ function update_fields() {
             dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
             dic.cx = parseFloat(fields[topic][3]);
             dic.cy = parseFloat(fields[topic][4]);
+            dic.label = parseInt(fields[topic][8])
             self_field.push(dic);
         }
     }
     self_field.sort(op('num'));
+    self_field.sort(op('label'));
 
     // 处理左侧柱状图
     g.selectAll('.year-topic').remove();
@@ -585,15 +594,15 @@ function update_fields() {
             year_field[j].name += ': ' + year_field[j].num;
             year_field[j].x = x;
             year_field[j].y = y;
-            x -= year_field[j].num * 40;
+            y -= year_field[j].num * 40;
             year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
         }
 
         g.selectAll('circle').data(year_field).enter().append('rect')
-            .attr('x', d => d.x - d.num * 40 - 29)
-            .attr('y', d => d.y - 25)
-            .attr('width', d => d.num * 40)
-            .attr('height', 50)
+            .attr('y', d => d.y - d.num * 40 - 29)
+            .attr('x', d => d.x - 25)
+            .attr('height', d => d.num * 40)
+            .attr('width', 50)
             .attr('fill', d => hsvToColor(d.color))
             .attr('class', 'year-topic')
             .attr('id', d => d.id)
@@ -678,7 +687,7 @@ function highlight_field(d, that) {
         .attr('stroke', function(d) {
             // 在箭头函数中使用 this 时，this 不会指向当前的 DOM 元素，而是指向定义该箭头函数的上下文。
             if (color_papers.indexOf(d.id) == -1) {
-                return d3.rgb(200, 200, 200);
+                return d3.rgb(224, 224, 224);
             } else {
                 return this.getAttribute('stroke');
             }
@@ -689,18 +698,18 @@ function highlight_field(d, that) {
             if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
                 return  probToColor(d.extends_prob);
             else
-                return d3.rgb(200, 200, 200);
+                return d3.rgb(224, 224, 224);
         });
     d3.selectAll(".year")
         .attr("fill", d3.rgb(250, 250, 250))
-        .attr('stroke', d3.rgb(200, 200, 200));
+        .attr('stroke', d3.rgb(224, 224, 224));
 
     $("#mainsvg").attr("style", "background-color: #FAFAFA;");
 }
 
-function hsvToColor(color) {
+function hsvToColor(color, sat=0.4) {
     // return d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    return d3.hsv(color[0], 0.4, color[2]) //  color[1]
+    return d3.hsv(color[0], sat, color[2]) //  color[1]
 }
 
 function reset_field(d) {
@@ -748,8 +757,277 @@ function reset_field(d) {
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
 }
 
-function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
+function find_child_nodes(id) { 
+    var ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].source) {
+            ids.push(edges[i].target);
+        }
+    }
+    return ids;
+
+}
+
+function find_parent_nodes(id) {
+    var ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].target) {
+            ids.push(edges[i].source);
+        }
+    }
+    return ids;
+}
+
+function buildTree(centerNodeId, nodes, edges) {
+    const idToNodeMap = new Map(nodes.map(node => [node.id, { ...node, children: [] }]));
+    edges.forEach(edge => {
+        if (idToNodeMap.has(edge.source) && idToNodeMap.has(edge.target)) {
+            idToNodeMap.get(edge.source).children.push(idToNodeMap.get(edge.target));
+        }
+    });
+    return idToNodeMap.get(centerNodeId);
+}
+
+function getAdjacentNodes(nodeId) {
+    let children = edges.filter(edge => edge.source === nodeId).map(edge => edge.target);
+    let parents = edges.filter(edge => edge.target === nodeId).map(edge => edge.source);
+    return Array.from(new Set(children.concat(parents)));
+}
+
+function simplifyNode(node) {
+    return {
+        name: node.name,
+        numLeafs: 0, // 初始设置为 0，稍后计算
+        ottId: node.paperID,
+        children: [],
+        parents: []
+    };
+}
+
+function buildTreeBFS(id) {
+    var parent_ids = [];
+    var new_parent_ids = [id];
+    let idToNodeMap = new Map(nodes.map(node => [node.id, simplifyNode(node)]));
+    console.log('idToNodeMap', idToNodeMap)
+
+    while (new_parent_ids.length != parent_ids.length) {
+        parent_ids = new_parent_ids;
+        for (let i = 0; i < parent_ids.length; i++) {
+            // console.log('node:', parent_ids[i], idToNodeMap[String(parent_ids[i])])
+            let parents = find_parent_nodes(parent_ids[i]);
+            new_parent_ids = new_parent_ids.concat(parents);
+            idToNodeMap.get(parent_ids[i]).parents = parents.map(id => idToNodeMap.get(id))
+        }
+        new_parent_ids = Array.from(new Set(new_parent_ids));
+    }
+
+    var child_ids = [];
+    var new_child_ids = [id];
+    while (new_child_ids.length != child_ids.length) {
+        child_ids = new_child_ids;
+        for (let i = 0; i < child_ids.length; i++) {
+            let childs = find_child_nodes(child_ids[i])
+            new_child_ids = new_child_ids.concat(childs);
+            idToNodeMap.get(child_ids[i]).children = childs.map(id => idToNodeMap.get(id))
+        }
+        new_child_ids = Array.from(new Set(new_child_ids));
+    }
+
+    // DAG图中出现了环！！！！！！！！！！！！！！！！！需要修复
+    // 删除没有子节点的节点的 children 属性
+    function removeEmptyChildren(node) {
+        if (node.children === undefined) return;
+        // console.log('node', node)
+        delete node.parents;
+        if (node.children.length === 0) {
+            delete node.children;
+        } else {
+            // node.children = node.children.concat(node.parents)
+            node.children.forEach(child => removeEmptyChildren(child));
+            node.numLeafs = node.children.reduce((sum, child) => sum + child.numLeafs, 0);
+            node.numLeafs += node.children.length;
+        }
+    }
+    removeEmptyChildren(idToNodeMap.get(id));
+    return idToNodeMap.get(id);
+}
+
+function draw_hyper_tree(id) {
+    const hypertreeData = buildTreeBFS(id);
+    console.log('hypertreeData', hypertreeData);
+    const root = d3.hierarchy(hypertreeData);
+
+    const iframeWindow = document.getElementById('hypertreeFrame').contentWindow;
+
+    // 使用 postMessage 发送 hypertreeData
+    iframeWindow.postMessage({ hypertreeData: hypertreeData }, '*');
+
+    // const ht = new hyt.Hypertree(
+    //     {
+    //         parent: d3.select("#radialgraph").node()    
+    //         //d3.select("#radialgraph").node() // 获取 DOM 元素
+    //     },
+    //     {
+    //         dataloader:  hyt.loaders.fromFile('/src/json/test.d3.json'),
+    //         // ok => ok(root),
+    //         langInitBFS: (ht, n)=> n.precalc.label = n.data.name,
+    //     }
+    // )
+    // ht.initPromise
+    //     .then(()=> new Promise((ok, err)=> ht.animateUp(ok, err)))            
+    //     .then(()=> ht.drawDetailFrame());
+}
+
+function get_adjacent_ids(id) {
+    var parent_ids = [];
+    var new_parent_ids = [id];
+
+    while (new_parent_ids.length != parent_ids.length) {
+        parent_ids = new_parent_ids;
+        for (let i = 0; i < parent_ids.length; i++) {
+            new_parent_ids = new_parent_ids.concat(find_parent_nodes(parent_ids[i]));
+        }
+        new_parent_ids = Array.from(new Set(new_parent_ids));
+    }
+
+    var child_ids = [];
+    var new_child_ids = [id];
+    while (new_child_ids.length != child_ids.length) {
+        child_ids = new_child_ids;
+        for (let i = 0; i < child_ids.length; i++) {
+            new_child_ids = new_child_ids.concat(find_child_nodes(child_ids[i]));
+        }
+        new_child_ids = Array.from(new Set(new_child_ids));
+    }
+
+    var adjacent_ids = new_child_ids.concat(new_parent_ids);
+    console.log('highlight ids:', adjacent_ids)
+    return adjacent_ids;
+}
+
+function draw_radial_graph(centerNodeId, adjacent_ids) {
+    adjacent_nodes = nodes.filter(d => adjacent_ids.indexOf(d.id) != -1);
+    adjacent_edges = edges.filter(d => adjacent_ids.indexOf(d.source) != -1 && adjacent_ids.indexOf(d.target) != -1);
+
+    console.log('highlight nodes:', adjacent_nodes)
+    console.log('highlight edges:', adjacent_edges)
+
+    // 假设 centerNodeId 是中心节点的 ID
+    const width = 300;  // 画布宽度
+    const height = width; // 画布高度
+
+    d3.select("#radialgraph").html("");
+    // 创建 SVG 画布
+    const svg = d3.select("#radialgraph")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+    // 查找中心节点
+    const centerNode = nodes.find(node => node.id === centerNodeId);
+    if (!centerNode) {
+        throw new Error("Center node not found");
+    }
+
+    // 计算其他节点的位置
+    const radiusScale = d3.scaleLinear()
+        .domain(d3.extent(nodes, d => Math.abs(d.year - centerNode.year)))
+        .range([width/20, width/2]); // 节点离中心的最小和最大半径
+
+    nodes.forEach(node => {
+        if (node.id !== centerNodeId) {
+            const angle = Math.random() * Math.PI * 2; // 随机角度
+            const radius = radiusScale(Math.abs(node.year - centerNode.year));
+            node.x = width / 2 + radius * Math.cos(angle);
+            node.y = height / 2 + radius * Math.sin(angle);
+        } else {
+            // 将中心节点固定在画布的中心
+            node.x = width / 2;
+            node.y = height / 2;
+        }
+    });
+
+    // 设置渐变背景
+    const radialGradient = svg.append("defs")
+        .append("radialGradient")
+        .attr("id", "radial-gradient");
+
+    radialGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "skyblue");
+
+    radialGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "white");
+
+    // 在 SVG 中添加一个覆盖整个画布的圆，应用径向渐变
+    svg.append("circle")
+        .attr("cx", width / 2)
+        .attr("cy", height / 2)
+        .attr("r", Math.max(width, height) / 2) // 确保圆覆盖整个 SVG
+        .style("fill", "url(#radial-gradient)");
+
+    // 计算每个不同年份的半径
+    const yearDifferences = new Set(nodes.map(d => Math.abs(d.year - centerNode.year)));
+    const yearRadii = Array.from(yearDifferences).sort((a, b) => a - b).map(diff => radiusScale(diff));
+
+    // 绘制同心圆
+    yearRadii.forEach(radius => {
+        svg.append("circle")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+            .attr("r", radius)
+            .style("fill", "none")
+            .style("stroke", "grey")
+            .style("stroke-dasharray", "2,2"); // 可以设置为虚线以提高可读性
+    });
+
+    // 创建节点
+    svg.selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", d => d.id === centerNodeId ? 10 : 5) // 中心节点更大
+        .style("fill", d => hsvToColor(d.color, sat=0.7));
+
+    // 创建边
+    // 定义箭头标记
+    svg.append("defs").append("marker")
+        .attr("id", "arrowhead")
+        .attr("viewBox", "-0 -5 10 10") // 视图框的大小和位置
+        .attr("refX", 5) // 控制箭头的位置
+        .attr("refY", 0)
+        .attr("orient", "auto")
+        .attr("markerWidth", 10) // 箭头大小
+        .attr("markerHeight", 10)
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5") // 箭头形状
+        .attr("class", "arrowHead")
+        .style("fill", "grey");
+
+        // 创建边
+    svg.selectAll(".edge")
+        .data(edges)
+        .enter()
+        .append("line")
+        .attr("class", "edge")
+        .attr("x1", d => nodes.find(node => node.id === d.source).x)
+        .attr("y1", d => nodes.find(node => node.id === d.source).y)
+        .attr("x2", d => nodes.find(node => node.id === d.target).x)
+        .attr("y2", d => nodes.find(node => node.id === d.target).y)
+        .style("stroke", "grey")
+        .style("stroke-width", 1)
+        .attr("marker-end", "url(#arrowhead)"); // 应用箭头标记
+
+    
+}
+
+function highlight_node(id, draw_hypertree=false) {   // 输入：当前node的 id
     if (image_switch == 0)  return;
+    center_node = id;
 
     // 将被点击节点的状态设为1，未被点击的设为2
     for (let i = 0; i < nodes.length; i++) {
@@ -757,18 +1035,9 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
         else    nodes[i].status = 2;
     }
 
-    // 找到当前节点的所有邻接点
-    var adjacent_ids = [];
-    if (highlight_neighbor) {
-        for (let i = 0; i < edges.length; i++) {
-            if (id == edges[i].source) {
-                adjacent_ids.push(edges[i].target);
-            }
-            else if (id == edges[i].target) {
-                adjacent_ids.push(edges[i].source);
-            }
-        }
-    }
+    let adjacent_ids = get_adjacent_ids(id);
+    // draw_radial_graph(id, adjacent_ids)
+    if (draw_hypertree) draw_hyper_tree(id);
     
     // 改变当前节点颜色和相邻节点
     g.selectAll(".paper").data(nodes)
@@ -788,9 +1057,11 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
     // 改变当前节点与其相邻节点间线的颜色为红色
     d3.selectAll('.reference')
         .attr('stroke', d => {
-            if (d.target == id || d.source == id)   return 'red';
-            else    return d3.rgb(200, 200, 200);
+            if (adjacent_ids.includes(d.source) & adjacent_ids.includes(d.target)) return 'black'
+            else    return d3.rgb(224, 224, 224);
         });
+
+    
     for (let i = 0; i < edges.length; i++) {
         if (edges[i].source != id && edges[i].target != id) {
             edges[i].status = 1;
@@ -918,7 +1189,7 @@ function probToColor(prob, a=0.1, b=1) {
     return color;
 }
 
-function probToWidth(prob, a=0.6, b=6) {
+function probToWidth(prob, a=0.4, b=4) {
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     return a + opacity * (b - a);
 }
@@ -971,17 +1242,17 @@ function visual_graph(polygon) {
         .attr('y', d => d.cy)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 20)
+        .attr('font-size', 28)
         .attr('class', 'text1')
         .attr("pointer-events", "none")
         .each(function(d) {
-            let text = d.text === undefined? d.text1 + '\n' + d.text2 : d.text + '\n' + String(d.citationCount)
+            let text = d.text === undefined? d.text1 + '\n' + d.text2 : String(d.citationCount)
             
             var lines = text.split('\n');
             for (var i = 0; i < lines.length; i++) {
                 d3.select(this).append('tspan')
                     .attr('x', d.cx)
-                    .attr('dy', i === 0 ? 0 : 20)  // Adjust dy for subsequent lines
+                    .attr('dy', 10)  // Adjust dy for subsequent lines
                     .text(lines[i]);
             }
         });
@@ -1153,7 +1424,7 @@ function visual_graph(polygon) {
         d3.selectAll('.reference').data(edges)
             .attr('stroke', d => {
                 if (d.status == 2)   return 'red';
-                else    return d3.rgb(200, 200, 200);
+                else    return d3.rgb(224, 224, 224);
             })
             .attr('stroke-width', d => {
                 if (d.id == id) return 10;
@@ -1200,7 +1471,7 @@ function visual_graph(polygon) {
     .on('mouseout', function () {
         d3.select(this)
             .attr("stroke", d => {
-                if (d.status == 1)    return d3.rgb(200, 200, 200);
+                if (d.status == 1)    return d3.rgb(224, 224, 224);
                 else if (d.status == 2)   return "red";
                 else    return probToColor(d.extends_prob);
             })
@@ -1248,18 +1519,18 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
     let outlineThicknessVal = $("#outline-thickness").val();
     switch(outlineThicknessVal) {
         case '0':
-            outlineThickness = 1;
+            outlineThickness = 0;
             break;
         case '1':
             if (isKeyPaper == 1)  outlineThickness = 10;
             else if (isKeyPaper >= 0.5)   outlineThickness = 5;
-            else    outlineThickness = 1;
+            else    outlineThickness = 0;
             break;
         case '2':
             if (citationCount >= 100)  outlineThickness = 10;
             else if (citationCount >= 50)   outlineThickness = 5;
             // else if (citationCount <= 50) outlineThickness = (citationCount - 10) * 9 / 40 + 1;
-            else    outlineThickness = 3;
+            else    outlineThickness = 0;
             break;
     }
     return outlineThickness;

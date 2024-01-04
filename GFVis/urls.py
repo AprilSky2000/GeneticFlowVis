@@ -16,7 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import re_path as url
-from controller.views import front, search, update, showlist, index, reference, changelog, degree, clean, image
+from controller.views import front, search, update, showlist, index, reference, changelog, \
+    degree, clean, image, topicflow, hypertree_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,8 +29,10 @@ urlpatterns = [
     path('reference/', reference),
     path('changelog/', changelog),
     path('degree/', degree),
+    path('topicflow/', topicflow),
     path('clean/', clean),
-    path('description/', image)
+    path('description/', image),
+    path('hypertree/', hypertree_view),
     # url(r'^idx/([0-9]+)', index_id),
 ]
 

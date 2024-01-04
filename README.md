@@ -6,7 +6,7 @@
 
 1. 数据准备：将现有csv同步到本文件夹中
    ```
-   rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv/ csv/
+   rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv/ csv/ --progress=info2
    ```
 2. 环境搭建
    ```
