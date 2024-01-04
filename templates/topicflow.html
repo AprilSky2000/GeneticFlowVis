@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FR7K2YVNR"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-9FR7K2YVNR'); </script>
+    <title>Topic Flow</title>
+    <link rel="icon" href="/src/image/favicon.ico" type="image/x-icon"/>
+    <link href="/src/css/style.css" rel='stylesheet' type='text/css' />
+    <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.7.0/dist/simple-statistics.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts-stat@latest/dist/ecStat.min.js"></script>
+    <script src="/src/js/jquery.min.js"></script>
+
+    <style>
+        body {
+            font-size: 14px;
+        }
+        #container {
+            display: flex;
+        }
+
+        /* 滚动槽 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            border-radius: 3px;
+            background: rgba(0,0,0,0.06);
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.08);
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 3px;
+            background: rgba(0,0,0,0.12);
+            -webkit-box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        #authorTable {
+            width: 34%;
+            border-collapse: collapse;
+        }
+
+        #authorTable thead, #authorTable tbody {
+            display: block;
+        }
+
+        #authorTable thead tr, #authorTable tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        #authorTable tbody {
+            max-height: 1100px;  /* Adjust this value as per your requirement */
+            overflow-y: auto;
+        }
+
+        #authorTable th, #authorTable td {
+            font-size: 14px !important;
+        }
+
+        #authorTable tr:hover {
+            background-color: #e8e8e8;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* 设置每列的宽度比例 */
+        #authorTable th:nth-child(1), #authorTable td:nth-child(1) {
+            width: 10%;
+        }
+        #authorTable th:nth-child(2), #authorTable td:nth-child(2) {
+            width: 20%;
+        }
+        #authorTable th:nth-child(3), #authorTable td:nth-child(3) {
+            width: 35%;
+        }
+        #authorTable th:nth-child(4), #authorTable td:nth-child(4) {
+            width: 13%;
+        }
+        #authorTable th:nth-child(5), #authorTable td:nth-child(5) {
+            width: 13%;
+        }
+        #authorTable th:nth-child(6), #authorTable td:nth-child(6) { 
+            width: 20%;
+        }
+
+        #graphs {
+            width: 64%;
+            margin-left: 2%;
+        }
+
+        #indegree, #outdegree, #alldegree {
+            width: 100%;
+            height: 300px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255, 255, 255, 0.8); /* White background with opacity */
+            z-index: 1000; /* Ensure it's on top of other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        .filters {
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: left;
+            max-width: 300px;
+            padding: 10px;
+            font: 14px sans-serif;
+            line-height: 20px;
+            background: black;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;  
+            opacity: 0;  
+        }
+
+        .info {
+            background-color: aliceblue;
+            box-shadow: #3498db 0px 0px 5px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            line-height: 24px;
+            max-width: 1000px;
+        }
+    </style>
+</head>
+<body>
+<div id="loadingIndicator" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+<div id="container">
+    <table id="authorTable">
+        <thead>
+            <tr>
+                <th></th>
+                <th>ID</th>
+                <th>name</th>
+                <th>#paper</th>
+                <th class="asc">hIndex</th>
+                <th>fellow</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated using D3.js -->
+        </tbody>
+    </table>
+
+    <div id="graphs">
+        <!-- Add filters for node_prob and edge_prob -->
+        <div class="filters">
+            Top hIndex: <input type="range" id="tophIndexSlider" value="200" step="10" min="0" max="1000" oninput="updateTop('tophIndexValue', this.value)">
+            <span id="tophIndexValue" style="margin-right: 10px;">200</span>
+            Node Prob: <input type="range" id="nodeProbSlider" value="0.5" step="0.01" min="0" max="1" oninput="updateValue('nodeProbValue', this.value)">
+            <span id="nodeProbValue" style="margin-right: 10px;">0.5</span>
+            Edge Prob: <input type="range" id="edgeProbSlider" value="0.3" step="0.01" min="0" max="1" oninput="updateValue('edgeProbValue', this.value)">
+            <span id="edgeProbValue">0.3</span>
+        </div>
+        <div class="filters">
+            Fellow Filter (by regex): <input type="text" id="fellowInput" value="^1:|,1:">
+            <button onclick="filterByFellow()">Display</button>
+            Remove isolated: <input type="checkbox" id="removeIsolated" onchange="updateCheck()">
+            Remove survey: <input type="checkbox" id="removeSurvey"checked onchange="updateCheck()">
+            <!-- Edge on filtered nodes: <input type="checkbox" id="edgeOnFilteredNodes" checked onchange="updateCheck()"> -->
+        </div>
+
+        <div id="selectedAuthorsInfo" class="info"></div>
+
+        <!-- Add divs for your D3 visualizations -->
+        <div id="streamgraph"></div>
+    
+        <!-- ... (rest of the divs for the charts) ... -->
+    </div>
+
+</div>
+
+
+<script>
+
+let authorsData = [];
+let authorIDs_global = [];
+let selectedAuthors = [];
+let topAuthors = {};
+let nodeProbFilter = 0.5;
+let edgeProbFilter = 0.3;
+let topic_global = {};
+let allAuthorsTopic = {};
+let xAxisValue = 0;
+let field = "{{ field }}";
+let topN = parseInt("{{ topN }}");
+let edgeOnFilteredNodes = true;
+let removeIsolated = false;
+let field_leaves;
+let removeSurvey = true;
+authorsData = {{ authorsData|safe }};
+field_leaves = {{ fields|safe }};
+field_leaves = field_leaves[1];
+
+console.log(field_leaves)
+
+
+$('table').on('click', 'th', function () {
+    var index = $(this).index();
+    if (index != 0) {
+        var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
+        console.log('sort', index, thClass)
+        authorsData.sort(compare(index-1, thClass));
+        
+        $('table th').removeClass('asc desc');
+        $(this).addClass(thClass);
+        renderAuthorTable();
+        filterByFellow();
+    }
+});
+
+startLoading()
+
+
+// Function to convert HSV to RGB
+function hsvToRgb(h, s, v) {
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+    let r, g, b;
+
+    if (h >= 0 && h < 60) {
+        [r, g, b] = [c, x, 0];
+    } else if (h >= 60 && h < 120) {
+        [r, g, b] = [x, c, 0];
+    } else if (h >= 120 && h < 180) {
+        [r, g, b] = [0, c, x];
+    } else if (h >= 180 && h < 240) {
+        [r, g, b] = [0, x, c];
+    } else if (h >= 240 && h < 300) {
+        [r, g, b] = [x, 0, c];
+    } else {
+        [r, g, b] = [c, 0, x];
+    }
+
+    const rgbColor = [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+    return rgbColor;
+}
+
+function hsvToHex(h, s, v) {
+    let rgbColor = hsvToRgb(h, s, v);
+    let r = Math.round(rgbColor[0]);
+    let g = Math.round(rgbColor[1]);
+    let b = Math.round(rgbColor[2]);
+
+    // 将RGB值转换为十六进制字符串
+    const toHex = (value) => {
+        const hex = value.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    };
+
+    const red = toHex(r);
+    const green = toHex(g);
+    const blue = toHex(b);
+
+    return "#" + red + green + blue;
+}
+
+function hsvToColor(color) {
+    // return d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
+    return d3.hsv(color[0], 0.4, color[2]) //  color[1]
+}
+
+function get_topic_info(topic) {
+    topic = parseInt(topic) || 0;
+    let fields = field_leaves;
+    return {
+        'color': [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])],
+        'labal': fields[topic][8],
+    }
+}
+
+function get_topic_color(topic) {
+    topic = parseInt(topic) || 0;
+    let info = get_topic_info(topic)
+    let color = info['color'];
+    // return hsvToColor(color);
+    return hsvToHex(color[0], 0.7, color[2]);
+}
+
+
+async function startLoading() {
+    // document.getElementById("loadingIndicator").style.display = "none";
+    console.log('start loading')
+    $("#tophIndexValue").text(topN);
+    $("#tophIndexSlider").val(topN);
+
+    let data = await d3.json(`/src/config.json`);
+    let config = data['default'];
+    if (field in data) {
+        Object.assign(config, data[field])
+    }
+    // removeIsolated = config['remove_isolated'];
+    removeIsolated = false;
+    removeSurvey = config['remove_survey'];
+    nodeProbFilter = config['node_prob'];
+    edgeProbFilter = config['edge_prob'];
+
+    $("#nodeProbValue").text(nodeProbFilter);
+    $("#nodeProbSlider").val(nodeProbFilter);
+    $("#edgeProbValue").text(edgeProbFilter);
+    $("#edgeProbSlider").val(edgeProbFilter);
+    $("#removeIsolated").prop('checked', removeIsolated);
+    $("#removeSurvey").prop('checked', removeSurvey);
+
+    console.log(authorsData, topN, field);
+    authorIDs_global = authorsData.map(d=>d[0]);
+    await loadAuthorsData();
+    renderAuthorTable();
+    filterByFellow();
+}
+
+function compare(index, sortType) {
+    return function(row1, row2) {
+        var aValue = row1[index];
+            bValue = row2[index];
+        if (index == 1 || index == 4) {
+            if (sortType == 'asc') return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            else return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+        else {
+            aValue = parseInt(aValue);
+            bValue = parseInt(bValue);
+            return sortType == 'desc' ? aValue - bValue : bValue - aValue;
+        }
+    }
+}
+
+function updateTitle(nodeCount) {
+    let la = selectedAuthors.length;
+    document.getElementById("selectedAuthorsInfo").innerText = (
+        `Selected Authors: ${la}
+        #nodes: ${nodeCount}`
+    );
+}
+
+// Average (Ave), standard deviation (SD) and percent coefficient of variation (CV)
+function printDegree(degree, verbose=true) {
+    let arr = [];
+    let sum = 0, sum_k = 0;
+    let str = ''
+    for (let k in degree) {
+        v = degree[k];
+        k = parseInt(k);
+        arr.push([k, v]);
+        sum += k * v;
+        sum_k += v;
+        str += k + ':' + v + ', ';
+    }
+    str = str.slice(0, -2) + ' ';
+    let ave = (sum/sum_k).toFixed(4)
+
+    // 计算均方差（SD）
+    let sd = 0;
+    for (let i = 0; i < arr.length; i++) {
+        sd += Math.pow(arr[i][0] - ave, 2) * arr[i][1];
+    }
+    sd = Math.sqrt(sd / sum_k).toFixed(4);
+
+    // 计算变异系数（Coefficient of Variation，CV）
+    let cv = (sd / ave).toFixed(4);
+    let ret = '(ave: ' + ave + ', SD: ' + sd + ', CV: ' + cv + ')';
+    return verbose? str + ret: ret;
+}
+
+function renderAuthorTable() {
+    console.log('rendering author table', authorsData)
+
+    let table = d3.select("#authorTable").select("tbody");
+    table.selectAll("tr").remove();
+    let rows = table.selectAll("tr")
+        .data(authorsData)
+        .enter().append("tr")
+        .on("click", function(d) {
+            let checkbox = d3.select(this).select("input").node();
+            checkbox.checked = !checkbox.checked;
+            rowClicked(d[0], checkbox.checked);
+        });
+
+    rows.append("td")
+        .append("input")
+        .attr("type", "checkbox");
+
+    rows.selectAll("td.data")
+        .data(function(d) {
+            return [d[0], d[1], d[2], d[3], d[4]];
+        })
+        .enter().append("td")
+        .attr("class", "data")
+        .text(function(d) {
+            return d;
+        })
+
+    // 添加悬浮提示
+    let tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+    rows.on("mouseover", function(d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+        tooltip.html('<span class="question-tip" style="font-size: 12px; color: #fff">' 
+                    + "author: " + d[0] + " (" + d[1] + ")"
+                    + "<br/>fellow: " + d[4]
+                    + '</span>'
+                    )
+            .style("left", (event.pageX) + "px")
+            .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(d) {
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    });
+    
+    let authorIDs = authorsData.map(d=>d[0]);
+    console.log('all authors', authorIDs)
+    authorIDs_global = authorIDs;
+    updateTitle();
+}
+
+
+function filterByFellow() {
+    let fellowFilter = document.getElementById("fellowInput").value;
+    let regex = new RegExp(fellowFilter);
+    // author[4].includes(fellowFilter)
+    selectedAuthors = authorsData.filter(author => regex.test(author[4])).map(author => author[0]);
+    console.log('filter value:', fellowFilter)
+    updateTitle();
+
+    // Highlight the rows in the table that match the filter
+    d3.select("#authorTable").selectAll("tr").each(function(d) {
+        if (!d) return;
+        // console.log(d)
+        let row = d3.select(this);
+        let checkbox = row.select("input").node();
+        if (selectedAuthors.includes(d[0])) {
+            checkbox.checked = true;
+            row.style.backgroundColor = "#e0e0e0";  // Highlight color
+        } else {
+            checkbox.checked = false;
+            row.style.backgroundColor = "";  // Reset color
+        }
+    });
+
+    drawDistribution(selectedAuthors);
+}
+
+async function updateTop(spanId, value) {
+    document.getElementById(spanId).textContent = value;
+    topN = parseInt(document.getElementById("tophIndexSlider").value);
+    // 构建新的URL
+    let newUrl = `/degree?topN=${topN}&field=${field}`;
+    // 重定向到新的URL
+    window.location.href = newUrl;
+}
+
+async function updateValue(spanId, value, reload=true) {
+    nodeProbFilter = parseFloat(document.getElementById("nodeProbSlider").value);
+    edgeProbFilter = parseFloat(document.getElementById("edgeProbSlider").value);
+    await loadAuthorsData();
+    drawDistribution(selectedAuthors);
+}
+
+async function updateCheck() {
+    // edgeOnFilteredNodes = document.getElementById("edgeOnFilteredNodes").checked;
+    removeIsolated = document.getElementById("removeIsolated").checked;
+    removeSurvey = document.getElementById("removeSurvey").checked;
+    await loadAuthorsData();
+    drawDistribution(selectedAuthors);
+}
+
+function valid(v) {
+    return v !== null && v !== undefined && !isNaN(v);
+}
+
+function rowClicked(authorID, isChecked) {
+    if (isChecked) {
+        selectedAuthors.push(authorID);
+    } else {
+        const index = selectedAuthors.indexOf(authorID);
+        if (index > -1) {
+            selectedAuthors.splice(index, 1);
+        }
+    }
+    drawDistribution(selectedAuthors);
+}
+
+// 一定要用异步加载！！！ 比同步快得多
+async function loadAuthorsData() {
+    console.log('start Loading Author Data', authorIDs_global)
+    // let promises = authorIDs_global.map(id => d3.json(`out/scigene_acl_anthology/graph/${id}.json`));
+    document.getElementById("loadingIndicator").style.display = "flex";
+    allAuthorsTopic = {};
+
+    let promises = authorIDs_global.map(id => d3.json(`/src/json/${field}/authors/${id}.json`).then(data => {
+        // Filter nodes and edges based on given probabilities
+        let filteredNodes = data.nodes.filter(node => node.isKeyPaper >= nodeProbFilter);
+        let filteredEdges = data.edges.filter(edge => edge.prob >= edgeProbFilter);
+        let ln = filteredNodes.length;
+        let le = filteredEdges.length;
+        if (removeSurvey) filteredNodes = filteredNodes.filter(node => !node.survey);
+        
+        authorTopic = {}
+
+        filteredNodes.forEach(d => {
+            if (authorTopic.hasOwnProperty(d.year)) {
+                authorTopic[d.year].push(d.topic);
+            } else {
+                authorTopic[d.year] = [d.topic];
+            }
+        })
+
+        allAuthorsTopic[id] = authorTopic
+        // console.log(id, filteredNodes, filteredEdges, outdegree)
+    }))
+    await Promise.all(promises);
+    console.log('allAuthorsTopic', allAuthorsTopic);
+    document.getElementById("loadingIndicator").style.display = "none";
+}
+
+function drawDistribution(authorIDs) {
+    console.log('selected', authorIDs)
+    let subMap = {}
+    let maxTopicID = 0;
+
+    authorIDs.forEach(key => {
+        let authorTopic = allAuthorsTopic[key];
+        Object.keys(authorTopic).forEach(year => {
+            if (subMap.hasOwnProperty(year)){
+                subMap[year] = subMap[year].concat(authorTopic[year]);
+            } else {
+                subMap[year] = authorTopic[year];
+            }
+            maxTopicID = Math.max(maxTopicID, ...authorTopic[year]);
+        });
+    });
+    console.log('subMap', subMap, maxTopicID)
+
+    let aggregatedMap = {};
+    let dataset = [];
+    let nodeCount = 0;
+    Object.keys(subMap).forEach(year => {
+        let yearData = subMap[year];
+        let countMap = {};
+
+        // for topic in range(0, maxTopicID+1)
+        for (let topic = 0; topic <= maxTopicID; topic++) {
+            countMap[topic] = 0;
+        }
+
+        yearData.forEach(topic => {
+            if (countMap.hasOwnProperty(topic)) {
+                countMap[topic]++;
+            } else {
+                countMap[topic] = 1;
+            }
+            nodeCount ++;
+        });
+        aggregatedMap[year] = countMap;
+
+        dataset.push({
+            ...countMap,
+            'year': year,
+        })
+    });
+    console.log('aggregatedMap', aggregatedMap);
+    console.log('dataset', dataset);
+
+    updateTitle(nodeCount);
+
+    drawStreamgraph(dataset);
+}
+
+
+function drawStreamgraph(data) {
+    // 设置SVG和图表的尺寸
+    const width = 1200;
+    const height = 800;
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+
+    d3.select("#streamgraph").html("");
+    // 创建SVG元素
+    const svg = d3.select("#streamgraph")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+    // 转换数据
+    const layers = d3.stack().keys(Object.keys(data[0]).filter(key => key !== 'year'))(data);
+    const xScale = d3.scaleLinear()
+                    .domain(d3.extent(data, d => d.year))
+                    .range([margin.left, width - margin.right]);
+    const yScale = d3.scaleLinear()
+                    .domain([0, d3.max(layers, layer => d3.max(layer, sequence => sequence[1]))])
+                    .range([height - margin.bottom, margin.top]);
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // 绘制流图
+    const area = d3.area()
+               .x((d, i) => xScale(d.data.year))
+               .y0(d => yScale(d[0]))
+               .y1(d => yScale(d[1]));
+    // 绘制流图
+    svg.selectAll("path")
+   .data(layers)
+   .join("path")
+   .attr("d", area)
+   .attr("fill", (d, i) => get_topic_color(i))
+   .style("opacity", 0.5)
+   .on("mouseover", function(event, d) {
+        d3.select(this).style("opacity", 1);
+
+        // 使用d3.mouse替代d3.pointer
+        const x = d3.mouse(this)[0];
+        const year = Math.round(xScale.invert(x));
+        const topicCount = d[year - data[0].year] ? d[year - data[0].year][1] - d[year - data[0].year][0] : 0;
+
+        focus.attr("display", null);
+        focus.select("line")
+            .attr("x1", xScale(year))
+            .attr("x2", xScale(year));
+
+        focus.select("text")
+            .attr("x", xScale(year) + 5)
+            .attr("y", margin.top)
+            .text(`${year} - ${d.key}: ${topicCount}`);
+   })
+   .on("mouseout", function() {
+       d3.select(this).style("opacity", 0.5);
+       focus.attr("display", "none");
+   });
+
+    // 添加竖线和文本
+    const focus = svg.append("g")
+                    .attr("class", "focus")
+                    .style("display", "none");
+
+    focus.append("line")
+        .attr("stroke", "red")
+        .attr("y1", margin.top)
+        .attr("y2", height - margin.bottom);
+
+    focus.append("text")
+        .attr("fill", "black")
+        .attr("alignment-baseline", "middle")
+        .attr("x", 9)
+        .attr("dy", ".35em");
+
+
+    // 添加坐标轴 (可选)
+    svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+    svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(yScale));
+
+}
+
+</script>
+</script>
+</body>
+</html>

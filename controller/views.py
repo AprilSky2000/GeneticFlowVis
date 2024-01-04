@@ -15,6 +15,7 @@ from collections import defaultdict
 from django.utils.safestring import mark_safe
 from django.core import serializers
 import logging
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 logger = logging.getLogger('log')
 
@@ -157,6 +158,34 @@ def degree(request):
         'topN': topN
     })
 
+@xframe_options_exempt
+def hypertree_view(request):
+    return render(request, 'hypertree.html')
+
+def topicflow(request):
+    field = request.GET.get("field")
+    topN = int(request.GET.get("topN", 200))
+
+    df = read_top_authors(field)
+    df = df[['authorID', 'name', 'paperCount', 'hIndex', 'fellow']]
+    df = df.sort_values(by='hIndex', ascending=False)
+    
+    df = df.head(topN)
+    for index, row in df.iterrows():
+        authorID = row['authorID']
+        load_author(field, authorID)
+
+    # keys = list(topAuthors.keys())
+    # print('load complete', df, keys, authorID2fellow)
+    return render(request, 'topicflow.html', {
+        'field': field,
+        'versionID': versionID,
+        'authorsData': mark_safe(json.dumps(df.values.tolist())),  # 直接传递 Python 对象
+        # 'topAuthors': mark_safe(json.dumps(topAuthors)),
+        'topN': topN,
+        'fields': get_fields(field),
+    })
+
 
 def create_node(dot, papers, nodeWidth):
     # 取出论文的所有年份
@@ -177,22 +206,21 @@ def create_node(dot, papers, nodeWidth):
             for paper in papers:
                 if int(paper['year']) == year:
                     # label: 第一作者首字+发表年份+论文标题首字
-                    authors = paper['authorsName'].split(', ')
-                    s1 = authors[0].split(' ')
-                    s2 = paper['title'].split(' ')
-                    if s1 == ['']:
-                        label = str(year) + s2[0]
-                    else:
-                        label = s1[-1] + str(year) + s2[0]
-                    if nodeWidth != 0 and nodeWidth < len(label):
-                        label = label[0:nodeWidth] + '...'
+                    # authors = paper['authorsName'].split(', ')
+                    # s1 = authors[0].split(' ')
+                    # s2 = paper['title'].split(' ')
+                    # if s1 == ['']:
+                    #     label = str(year) + s2[0]
+                    # else:
+                    #     label = s1[-1] + str(year) + s2[0]
+                    # if nodeWidth != 0 and nodeWidth < len(label):
+                    #     label = label[0:nodeWidth] + '...'
 
-                    # label下为该论文引用量
-                    if int(paper['citationCount']) == -1:
-                        paper_name = label + '\n' + '?'
-                    else:
-                        paper_name = label + '\n' + str(paper['citationCount'])
-                    s.node(name=paper['paperID'], label=paper_name)
+                    label = paper['title'].split(' ')[0][0:5]
+                    paper_name = label + '\n'
+                    suffix = '?' if int(paper['citationCount']) == -1 else str(paper['citationCount'])
+                
+                    s.node(name=paper['paperID'], label=suffix)
     # 将表示年份的点先连接
     for i in range(0, len(publication_time)):
         if i:
@@ -249,8 +277,7 @@ def get_node(nodes, papers):
                 'year': int(paper['year']),
                 'authors': paper['authorsName'],
                 'venu': paper['venu'],
-                'label': (paper['authorsName'].split(', ')[0].split(' ')[-1] if len(paper['authorsName']) else '') +
-                        str(paper['year']) + paper['title'].split(' ')[0],
+                'label': paper['title'].split(' ')[0][0:5],
                 'isKeyPaper': paper['isKeyPaper'],
                 'citationCount': paper['citationCount'],
                 'abstract': paper['abstract'],
@@ -337,7 +364,7 @@ def index(request):
             field2topics[fieldType] = json.load(f)
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
-        dot = graphviz.Digraph(filename=detail, format='svg')
+        dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'LR'})
 
         # 读取相应papers文件
         papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
@@ -383,7 +410,7 @@ def update(request):
 
     filename = f'static/json/{fieldType}/{detail}.json'
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
-        dot = graphviz.Digraph(filename=detail, format='svg')
+        dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'LR'})
 
         papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
         links = read_links(fieldType, authorID, extendsProb)

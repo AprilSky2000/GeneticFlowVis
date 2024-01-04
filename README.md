@@ -5,6 +5,7 @@
 ## 正式环境（actcloud:/home/xfl/pyCode/GFVisTest，端口9002）
 http://test.genetic-flow.com
 
+<<<<<<< HEAD
 1. 数据准备：将现有csv同步到本文件夹中，如
 ```
 rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv/ csv/
@@ -15,6 +16,21 @@ pip install -r requirements.txt
 # 根据系统是Ubuntu/centos，选择包管理器安装Graphviz
 sudo apt-get install graphviz graphviz-dev
 ```
+=======
+1. 数据准备：将现有csv同步到本文件夹中
+   ```
+   rsync -a root@82.156.152.182:/home/xfl/pyCode/GFVis/csv/ csv/ --progress=info2
+   ```
+2. 环境搭建
+   ```
+   # 安装需要的pip包
+   pip install -r requirements.txt
+
+
+   # 根据系统是Ubuntu/centos，选择包管理器安装Graphviz
+   sudo apt-get install graphviz graphviz-dev
+   ```
+>>>>>>> 5042b54 (sy-dev)
 3. 运行命令
 ```
 cd /home/xfl/pyCode/GFVisTest
