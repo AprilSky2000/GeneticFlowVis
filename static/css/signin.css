@@ -74,7 +74,7 @@ select {
 /* 基本按钮样式 */
 .custom-button {
     display: inline-block;
-    padding: 20px 30px;
+    padding: 10px 15px;
     background-color: #ffffff;
     /* border: 1px solid #f8f9fa; */
     color: #3c4043;
@@ -85,8 +85,8 @@ select {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 30px; /* 增大字号 */
     font-weight: bold; /* 加粗文本 */
-    box-shadow: 0 0 10px #3c4043;
-    margin: 10px;
+    box-shadow: 0 0 7px #3c4043;
+    margin: 7px;
 }
 
 /* 悬停时的按钮样式 */

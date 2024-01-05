@@ -1,4 +1,5 @@
 let tagCloudRatio = 0.25;
+window.onload = checkScreenSize;
 
 function guidence() {
     if (!localStorage.getItem('guidanceShown')) {

@@ -68,6 +68,7 @@
                             </li>
                             <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
                                 <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="2">Partial</option>
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
@@ -416,9 +417,9 @@ $(function () {
     var filename = `/src/json/${fieldType}/${authorID}`;
     if (fieldType == "acl") {
         $("#edge-value").text("≥0.4 prob.");
-        filename += '_1_0.5_0.4_10_1.json';
+        filename += '_2_0.5_0.4_10_1.json';
     }
-    else filename += '_1_0.5_0.5_10_1.json';
+    else filename += '_2_0.5_0.5_10_1.json';
 
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
@@ -477,8 +478,8 @@ $(function () {
                     'max': 1.0
                 }
             });
-            $('remove-survey').value = config['remove_survey']? '1': '0';
-            $('mode').value = config['remove_isolated']? '1': '0';
+            $('remove-survey').value = config['remove_survey'];
+            $('mode').value = config['remove_isolated'];
             
             onFullscreenChange();
 

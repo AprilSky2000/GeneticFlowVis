@@ -1,9 +1,10 @@
 {
     "default": {
-        "remove_survey": true,
-        "remove_isolated": true,
+        "remove_survey": "1",
+        "remove_isolated": "2",
         "node_prob": 0.5,
-        "edge_prob": 0.5
+        "edge_prob": 0.5,
+        "node_width": 10
     },
     "acl": {
         "edge_prob": 0.4,
@@ -14,6 +15,11 @@
     "CG": {
         "name": "Graphics",
         "icon": "fa-brands fa-codepen icon",
+        "description": "Computer Graphics"
+    },
+    "VCG": {
+        "name": "Graphics & Visualization",
+        "icon": "fa-solid fa-cubes icon",
         "description": "Computer Graphics and Visualization"
     },
     "database": {
@@ -38,6 +44,11 @@
         "name": "Turing Award",
         "icon": "fa-solid fa-trophy icon"
     },
+    "ACMfellowTuring": {
+        "name": "ACM Fellows & Turing Award",
+        "icon": "fa-solid fa-award icon",
+        "description": "Fellows of the ACM and Turing Award Winners"
+    },
     "SE": {
         "name": "Software & Programming Language",
         "icon": "fa-brands fa-microsoft icon"
@@ -49,6 +60,10 @@
     "CN": {
         "name": "Networking & Parallel/Distributed/Real-time/Embedded Computing",
         "icon": "fa-solid fa-network-wired icon"
+    },
+    "AI": {
+        "name": "Artificial Intelligence at Large",
+        "icon": "fa-solid fa-robot icon"
     }
 }
 

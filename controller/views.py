@@ -75,8 +75,7 @@ def load_author(field, authorID):
             'prob': to_number(row['extendsProb'])
         })
 
-    papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv')
-    papers_df['paperID'] = papers_df['paperID'].astype(str)
+    papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv', dtype={'paperID': str})
     papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
     papers_df = papers_df[['paperID', 'year', 'survey', 'isKeyPaper', 'topic']]
     
@@ -94,8 +93,7 @@ def read_top_authors(field):
     if field in field2top_authors:
         return field2top_authors[field]
     
-    df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',')
-    df['authorID'] = df['authorID'].astype(str)
+    df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',', dtype={'authorID': str})
     if field not in ['acl']:
         df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
         df['fellowYear'] = df['authorID'].apply(lambda x: authorID2fellowYear.get(x, 0))
@@ -108,6 +106,8 @@ def read_top_authors(field):
             return int(group.group(1)) if group else 0
         df['fellow'].fillna('', inplace=True)
         df['fellowYear'] = df['fellow'].apply(getYear)
+    if 'original' in df.columns:
+        df['name'] = df['original']
 
     if 'PaperCount' in df.columns and 'PaperCount_field' in df.columns:
         df = df.drop(columns=['PaperCount'])
@@ -209,15 +209,23 @@ def create_edge(dot, papers, links):
         if citedpaperID in papers and citingpaperID in papers:
             dot.edge(papers[citedpaperID]['paperID'], papers[citingpaperID]['paperID'])
 
-def create_partial_graph(dot, papers, links, nodeWidth):
-    # 当节点没有边与其相连时，删去
+def create_partial_graph(dot, papers, links, nodeWidth, mode):
+    if mode == 1:
+        create_node(dot, papers, nodeWidth)
+        create_edge(dot, papers, links)
+        return
     valid_nodes = set()
+    # 当节点没有边与其相连时，删去
     for link in links:
         a = link['childrenID']
         b = link['parentID']
         if a in papers and b in papers:
             valid_nodes.add(a)
             valid_nodes.add(b)
+    if mode == 2:
+        for k, v in papers.items():
+            if v['citationCount'] >= 50:
+                valid_nodes.add(k)
 
     papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
     create_node(dot, papers_backup, nodeWidth)
@@ -323,14 +331,15 @@ def index(request):
                 client_ip, fieldType, authorID, author["name"])
     
     fields = get_fields(fieldType)
-    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 1, 0.5, 0.5, 10, 1
+    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 2, 0.5, 0.5, 10, 1
     if fieldType == "acl":
         extendsProb = 0.4
     detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}'
     filename = f'static/json/{fieldType}/{detail}.json'
 
-    if os.path.exists(f'csv/{fieldType}/paperID2topic.json'):
-        field2topics[fieldType] = json.load(open(f'csv/{fieldType}/paperID2topic.json'))
+    if os.path.exists(f'csv/{fieldType}/paperID2topic.json') and fieldType not in field2topics:
+        with open(f'csv/{fieldType}/paperID2topic.json', 'r') as f:
+            field2topics[fieldType] = json.load(f)
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
@@ -340,7 +349,7 @@ def index(request):
         # 读取相应influence文件
         links = read_links(fieldType, authorID, extendsProb)
         # 创建图
-        create_partial_graph(dot, papers, links, nodeWidth)
+        create_partial_graph(dot, papers, links, nodeWidth, mode)
 
         dot.render(directory=f"static/image/svg/{fieldType}", view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
@@ -384,12 +393,7 @@ def update(request):
         papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
         links = read_links(fieldType, authorID, extendsProb)
 
-        if mode == 1:
-            create_partial_graph(dot, papers, links, nodeWidth)
-        else:
-            create_node(dot, papers, nodeWidth)
-            create_edge(dot, papers, links)
-
+        create_partial_graph(dot, papers, links, nodeWidth, mode)            
         dot.render(directory=f"static/image/svg/{fieldType}", view=False)
         # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
@@ -420,10 +424,8 @@ def showlist(request):
 def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
     path = f'csv/{fieldType}/papers/{authorID}.csv'
 
-    df = pd.read_csv(path, sep=',')
+    df = pd.read_csv(path, sep=',', dtype={'paperID': str})
     df = df.fillna('')
-
-    df['paperID'] = df['paperID'].astype(str).replace('.0', '')
     if fieldType in field2topics:
         paperID2topic = field2topics[fieldType]
         df['topic'] = df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
@@ -440,13 +442,12 @@ def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
     lis = df.to_dict(orient='records')
     return {x['paperID']: x for x in lis}
 
+
 def read_links(fieldType, authorID, extendsProb):
     path = f'csv/{fieldType}/links/{authorID}.csv'
     if os.path.exists(path) == False:
         return []
-    df = pd.read_csv(path, sep=',')
-    for col in ['childrenID', 'parentID']:
-        df[col] = df[col].astype(str).replace('.0', '')
+    df = pd.read_csv(path, sep=',', dtype={'childrenID': str, 'parentID': str})
     df['extendsProb'] = df["extendsProb"].replace('\\N', '0')
     df['extendsProb'] = df["extendsProb"].astype(float)
     df = df.where(df.notnull(), None)

@@ -295,7 +295,7 @@ async function startLoading() {
     $("#tophIndexValue").text(topN);
     $("#tophIndexSlider").val(topN);
 
-    let data = await d3.json(`/src/json/config.json`);
+    let data = await d3.json(`/src/config.json`);
     let config = data['default'];
     if (field in data) {
         Object.assign(config, data[field])
