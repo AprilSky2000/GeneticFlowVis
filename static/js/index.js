@@ -145,6 +145,7 @@ function onFullscreenChange() {
     // 在这里执行其他操作
     checkScreenSize();
 
+    d3.select("#echartsContainer").remove()
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
     d3.select("#topic-map-svg").remove();
@@ -594,15 +595,15 @@ function update_fields() {
             year_field[j].name += ': ' + year_field[j].num;
             year_field[j].x = x;
             year_field[j].y = y;
-            y -= year_field[j].num * 40;
+            x -= year_field[j].num * 40;
             year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
         }
 
         g.selectAll('circle').data(year_field).enter().append('rect')
-            .attr('y', d => d.y - d.num * 40 - 29)
-            .attr('x', d => d.x - 25)
-            .attr('height', d => d.num * 40)
-            .attr('width', 50)
+            .attr('x', d => d.x - d.num * 40 - 29)
+            .attr('y', d => d.y - 25)
+            .attr('width', d => d.num * 40)
+            .attr('height', 50)
             .attr('fill', d => hsvToColor(d.color))
             .attr('class', 'year-topic')
             .attr('id', d => d.id)
@@ -1194,6 +1195,167 @@ function probToWidth(prob, a=0.4, b=4) {
     return a + opacity * (b - a);
 }
 
+function evolution_force_layout() {
+    d3.select("#mainsvg").remove();
+    d3.select("#tagcloud").remove();
+    d3.select("#echartsContainer").remove();
+    d3.select(".middle-column").append("div")
+        .style("width", $(".middle-column").width() + "px")
+        .style("height", (mainPanalHeight * (1 - tagCloudRatio)) + "px")
+        .attr("id", "echartsContainer");
+    
+    let graph = get_graph();
+    var myChart = echarts.init(document.getElementById('echartsContainer'), null, {
+        renderer: 'canvas',
+        useDirtyRect: false
+        });
+        var app = {};
+        
+        var option;
+
+        const data = graph.nodes;
+        const edges = graph.links;
+        option = {
+        series: [
+            {
+            type: 'graph',
+            layout: 'force',
+            animation: false,
+            data: data,
+            force: {
+                // initLayout: 'circular'
+                // gravity: 0
+                repulsion: 100,
+                edgeLength: 5
+            },
+            edges: edges
+            }
+        ]
+        };
+        setInterval(function () {
+        data.push({
+            id: data.length + ''
+        });
+        var source = Math.round((data.length - 1) * Math.random());
+        var target = Math.round((data.length - 1) * Math.random());
+        if (source !== target) {
+            edges.push({
+            source: source,
+            target: target
+            });
+        }
+        myChart.setOption({
+            series: [
+            {
+                roam: true,
+                data: data,
+                edges: edges
+            }
+            ]
+        });
+        // console.log('nodes: ' + data.length);
+        // console.log('links: ' + data.length);
+        }, 200);
+}
+
+function get_graph() {
+    var categories = field_roots.map(line=> {
+        return {
+            "name": String(line[0])
+        }
+    });
+    var topic2catagory = {};
+    for (let i = 0; i < field_leaves.length; i++) {
+        topic2catagory[i] = field_leaves[i][8];
+    }
+
+    let node_data = nodes.map(node=> {
+        return {
+            "id": node.id,
+            "name": node.name,
+            "symbolSize": Math.cbrt(node.citationCount) + 5,
+            "category": topic2catagory[node.topic],
+            "value": node.citationCount,
+            "year": node.year,
+            "label": {
+                "normal": {
+                    "show": node.symbolSize > 10
+                }
+            }
+        }
+    });
+    let link_data = edges.map(edge=> {
+        return {
+            "source": edge.source,
+            "target": edge.target,
+        }
+    }).filter(edge=> {
+        return edge.source.length > 4;
+    });
+    return {
+        "nodes": node_data,
+        "links": link_data,
+        "categories": categories
+    }
+}
+
+function force_layout() {
+    // var chartDom = document.getElementById('main');
+    d3.select("#mainsvg").remove();
+    d3.select("#tagcloud").remove();
+    d3.select("#echartsContainer").remove();
+    d3.select(".middle-column").append("div")
+        .style("width", $(".middle-column").width() + "px")
+        .style("height", (mainPanalHeight * (1 - tagCloudRatio)) + "px")
+        .attr("id", "echartsContainer");
+    
+    var forceChart = echarts.init(document.getElementById('echartsContainer'), null, {
+        renderer: 'canvas',
+        useDirtyRect: false
+    });
+    // init_graph(viewBox, transform);
+    // var forceChart = echarts.init(g);
+    
+    let graph = get_graph();
+    let option = {
+        title: {
+        text: 'Self Extension Network',
+        top: 'bottom',
+        left: 'right'
+        },
+        tooltip: {},
+        legend: [
+        {
+            // selectedMode: 'single',
+            data: graph.categories.map(function (a) {
+                return a.name;
+            })
+        }
+        ],
+        series: [
+        {
+            name: 'Self Extension Network',
+            type: 'graph',
+            layout: 'force',
+            data: graph.nodes,
+            links: graph.links,
+            categories: graph.categories,
+            draggable: true,
+            roam: true,
+            label: {
+            position: 'right'
+            },
+            force: {
+            repulsion: 100
+            }
+        }
+        ]
+    };
+    forceChart.setOption(option);
+
+    draw_tag_cloud();
+}
+
 function visual_graph(polygon) {
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
         .attr('cx', d => d.cx)
@@ -1599,6 +1761,19 @@ function updateFillColor() {
 
 function updateFieldLevel() {
     updateFillColor();
+}
+
+function updateVisType() {
+    let visTypeVal = $("#vis-type").val();
+    if (visTypeVal == 0) {
+        onFullscreenChange();
+    }
+    else if (visTypeVal == 1) {
+        force_layout();
+    } else {
+
+    }
+
 }
 
 function sugiyama(years, nodes, edges) {

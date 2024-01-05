@@ -360,7 +360,7 @@ def index(request):
         field2topics[fieldType] = json.load(open(f'csv/{fieldType}/paperID2topic.json'))
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
-        dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'LR'})
+        dot = graphviz.Digraph(filename=detail, format='svg')
 
         # 读取相应papers文件
         papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)

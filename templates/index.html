@@ -19,6 +19,8 @@
     <script src="/src/js/d3-tip.js"></script>
     <script src="/src/js/d3-hsv.min.js"></script>
     <script src="/src/js/layui.js" charset="utf-8"></script>
+    <!-- <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script> -->
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
 
     <script src="/src/js/index.js"></script>
     <script src="/src/js/download-svg.js"></script>
@@ -52,7 +54,7 @@
                             <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: -0.5%;">node outline color</li>
                             <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node outline thickness</li>
                             <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node fill color</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">paper topic hierarchy</li>
+                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">visualization type</li>
                             <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node max width</li>
                             <li style="width: 1%; float: right; height: 14px; font-size: 13px !important;"></li>
                         </ul>
@@ -122,12 +124,13 @@
                                 </script>
                             </li>
                             <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
-                                <select id="field-level" class="form-select" name="fieldThreshold" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="2" selected>2</option>
-                                    <option value="1">1</option>
+                                <select id="vis-type" class="form-select" name="VisType" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
+                                    <option value="0" selected>sugiyama with year</option>
+                                    <option value="1">force layout</option>
+                                    <option value="2">Evolution force layout</option>
                                 </select>
                                 <script>
-                                    $("#field-level").change(updateFieldLevel);
+                                    $("#vis-type").change(updateVisType);
                                 </script>
                             </li>
                             <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
