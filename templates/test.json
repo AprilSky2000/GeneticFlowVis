@@ -1,0 +1,1420 @@
+{
+    "nodes": [
+        {
+            "id": "2138199375",
+            "name": "The eyes have it: a task by data type taxonomy for information visualizations",
+            "symbolSize": 20.69338030799478,
+            "category": 6,
+            "draggable": true,
+            "value": 3865,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1528597731",
+            "name": "Analyzing Social Media Networks with NodeXL: Insights from a Connected World",
+            "symbolSize": 14.121800967815446,
+            "category": 4,
+            "draggable": true,
+            "value": 759,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2995575468",
+            "name": "Designing the user interface: strategies for effective human-computer interaction",
+            "symbolSize": 12.617411603093272,
+            "category": 2,
+            "draggable": true,
+            "value": 442,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2032769849",
+            "name": "Leonardo's Laptop: Human Needs and the New Computing Technologies",
+            "symbolSize": 12.198404996481965,
+            "category": 5,
+            "draggable": true,
+            "value": 373,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2157887077",
+            "name": "Strategies for evaluating information visualization tools: multi-dimensional in-depth long-term case studies",
+            "symbolSize": 11.910423230011183,
+            "category": 2,
+            "draggable": true,
+            "value": 330,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2171826173",
+            "name": "LifeLines: Using Visualization to Enhance Navigation and Analysis of Patient Records",
+            "symbolSize": 11.847021277572242,
+            "category": 8,
+            "draggable": true,
+            "value": 321,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2167306162",
+            "name": "Network Visualization by Semantic Substrates",
+            "symbolSize": 11.767899452107008,
+            "category": 4,
+            "draggable": true,
+            "value": 310,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2062937620",
+            "name": "Interactively exploring hierarchical clustering results [gene identification]",
+            "symbolSize": 11.64185219534421,
+            "category": 6,
+            "draggable": true,
+            "value": 293,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2111736285",
+            "name": "Dynamic query tools for time series data sets: timebox widgets for interactive exploration",
+            "symbolSize": 11.471273626960365,
+            "category": 6,
+            "draggable": true,
+            "value": 271,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2149874318",
+            "name": "Snap-together visualization: a user interface for coordinating visualizations via relational schemata",
+            "symbolSize": 11.431227591379624,
+            "category": 8,
+            "draggable": true,
+            "value": 266,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2052255065",
+            "name": "The dynamic HomeFinder: evaluating dynamic queries in a real-estate information exploration system",
+            "symbolSize": 11.240251469155712,
+            "category": 4,
+            "draggable": true,
+            "value": 243,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2122060742",
+            "name": "LifeFlow: visualizing an overview of event sequences",
+            "symbolSize": 11.171005792776718,
+            "category": 6,
+            "draggable": true,
+            "value": 235,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2109076134",
+            "name": "Aligning temporal data by sentinel events: discovering patterns in electronic health records",
+            "symbolSize": 10.768998281229633,
+            "category": 8,
+            "draggable": true,
+            "value": 192,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2152245018",
+            "name": "Balancing Systematic and Flexible Exploration of Social Networks",
+            "symbolSize": 10.614672408001491,
+            "category": 4,
+            "draggable": true,
+            "value": 177,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2132631291",
+            "name": "A rank-by-feature framework for interactive exploration of multidimensional data",
+            "symbolSize": 10.604078661310774,
+            "category": 1,
+            "draggable": true,
+            "value": 176,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2067871637",
+            "name": "Creativity support tools: Report from a U.S. National Science Foundation sponsored workshop",
+            "symbolSize": 10.582770171658424,
+            "category": 4,
+            "draggable": true,
+            "value": 174,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2154559384",
+            "name": "Visualizing digital library search results with categorical and hierarchical axes",
+            "symbolSize": 10.506878446387354,
+            "category": 4,
+            "draggable": true,
+            "value": 167,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2071194258",
+            "name": "Snap-together visualization",
+            "symbolSize": 10.371685354944832,
+            "category": 1,
+            "draggable": true,
+            "value": 155,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "3022700673",
+            "name": "Inventing discovery tools: combining information visualization with data mining",
+            "symbolSize": 10.325074021614988,
+            "category": 2,
+            "draggable": true,
+            "value": 151,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1971458834",
+            "name": "Motif simplification: improving network visualization readability with fan, connector, and clique glyphs",
+            "symbolSize": 10.104468722001464,
+            "category": 4,
+            "draggable": true,
+            "value": 133,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2139817070",
+            "name": "Improving Healthcare with Interactive Visualization",
+            "symbolSize": 10.02652569531348,
+            "category": 8,
+            "draggable": true,
+            "value": 127,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2142349824",
+            "name": "Temporal Summaries: Supporting Temporal Categorical Searching, Aggregation and Comparison",
+            "symbolSize": 9.791419857062785,
+            "category": 6,
+            "draggable": true,
+            "value": 110,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2118150522",
+            "name": "A Rank-by-Feature Framework for Unsupervised Multidimensional Data Exploration Using Low Dimensional Projections",
+            "symbolSize": 9.717693980316533,
+            "category": 1,
+            "draggable": true,
+            "value": 105,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2120422643",
+            "name": "Extreme visualization: squeezing a billion records into a million pixels",
+            "symbolSize": 9.362070671454838,
+            "category": 2,
+            "draggable": true,
+            "value": 83,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2152330592",
+            "name": "Using Treemaps to Visualize the Analytic Hierarchy Process",
+            "symbolSize": 9.140817749422855,
+            "category": 4,
+            "draggable": true,
+            "value": 71,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2297826358",
+            "name": "Coping with Volume and Variety in Temporal Event Sequences: Strategies for Sharpening Analytic Focus",
+            "symbolSize": 9.020725758589059,
+            "category": 6,
+            "draggable": true,
+            "value": 65,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "3022858172",
+            "name": "Interactively Exploring Hierarchical Clustering Results",
+            "symbolSize": 9,
+            "category": 1,
+            "draggable": true,
+            "value": 64,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2100741257",
+            "name": "Cohort Comparison of Event Sequences with Balanced Integration of Visual Analytics and Statistics",
+            "symbolSize": 8.957891609680406,
+            "category": 6,
+            "draggable": true,
+            "value": 62,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2600662290",
+            "name": "EventAction: Visual analytics for temporal event sequence recommendation",
+            "symbolSize": 8.802952460761391,
+            "category": 6,
+            "draggable": true,
+            "value": 55,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2162336725",
+            "name": "Representing unevenly-spaced time series data for visualization and interactive exploration",
+            "symbolSize": 8.756285754221071,
+            "category": 6,
+            "draggable": true,
+            "value": 53,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1968891274",
+            "name": "An information architecture to support the visualization of personal histories",
+            "symbolSize": 8.684031498640387,
+            "category": 1,
+            "draggable": true,
+            "value": 50,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2149019354",
+            "name": "Integrating Statistics and Visualization for Exploratory Power: From Long-Term Case Studies to Design Guidelines",
+            "symbolSize": 8.659305710022972,
+            "category": 1,
+            "draggable": true,
+            "value": 49,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "5537492",
+            "name": "Creativity Support Tools: A Grand Challenge for HCI Researchers",
+            "symbolSize": 8.659305710022972,
+            "category": 4,
+            "draggable": true,
+            "value": 49,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2148806321",
+            "name": "Using interactive visualizations of WWW log data to characterize access patterns and inform site design",
+            "symbolSize": 8.63424118566428,
+            "category": 6,
+            "draggable": true,
+            "value": 48,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2061820835",
+            "name": "Extracting Insights from Electronic Health Records: Case Studies, a Visual Analytics Process Model, and Design Recommendations",
+            "symbolSize": 8.608826080138694,
+            "category": 8,
+            "draggable": true,
+            "value": 47,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1641238295",
+            "name": "Temporal visualization of social network dynamics: prototypes for nation of neighbors",
+            "symbolSize": 8.583047871015946,
+            "category": 4,
+            "draggable": true,
+            "value": 46,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2167852549",
+            "name": "Designing semantic substrates for visual network exploration",
+            "symbolSize": 8.44821724038273,
+            "category": 4,
+            "draggable": true,
+            "value": 41,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2611538506",
+            "name": "Finding Similar People to Guide Life Choices: Challenge, Design, and Evaluation",
+            "symbolSize": 8.419951893353394,
+            "category": 2,
+            "draggable": true,
+            "value": 40,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1506051703",
+            "name": "A user interface for coordinating visualizations based on relational schemata: snap-together visualization",
+            "symbolSize": 8.419951893353394,
+            "category": 2,
+            "draggable": true,
+            "value": 40,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1967024567",
+            "name": "Do You Know the Way to SNA?: A Process Model for Analyzing and Visualizing Social Media Network Data",
+            "symbolSize": 8.419951893353394,
+            "category": 4,
+            "draggable": true,
+            "value": 40,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2037677650",
+            "name": "Visual information seeking in multiple electronic health records: design recommendations and a process model",
+            "symbolSize": 8.361975406798964,
+            "category": 8,
+            "draggable": true,
+            "value": 38,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1966778625",
+            "name": "TopicFlow: visualizing topic alignment of Twitter data over time",
+            "symbolSize": 8.27106631018859,
+            "category": 4,
+            "draggable": true,
+            "value": 35,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2010911732",
+            "name": "Community Health Map: A geospatial and multivariate data visualization tool for public health datasets",
+            "symbolSize": 8.239611801277483,
+            "category": 8,
+            "draggable": true,
+            "value": 34,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2546140789",
+            "name": "NetVisia: Heat Map & Matrix Visualization of Dynamic Social Network Statistics & Content",
+            "symbolSize": 8.107232505953858,
+            "category": 4,
+            "draggable": true,
+            "value": 30,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1499239117",
+            "name": "Visualizing threaded conversation networks: mining message boards and email lists for actionable insights",
+            "symbolSize": 8.036588971875663,
+            "category": 4,
+            "draggable": true,
+            "value": 28,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2338338527",
+            "name": "Improving health and healthcare with interactive visualization methods",
+            "symbolSize": 8.036588971875663,
+            "category": 8,
+            "draggable": true,
+            "value": 28,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1965424776",
+            "name": "Understanding Patterns of User Visits to Web Sites: Interactive Starfield Visualization of WWW Log Data",
+            "symbolSize": 8,
+            "category": 4,
+            "draggable": true,
+            "value": 27,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2335772274",
+            "name": "High-Volume Hypothesis Testing: Systematic Exploration of Event Sequence Comparisons",
+            "symbolSize": 7.96249606840737,
+            "category": 5,
+            "draggable": true,
+            "value": 26,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2049025244",
+            "name": "Visual decision-making: using treemaps for the analytic hierarchy process",
+            "symbolSize": 7.884499140614817,
+            "category": 4,
+            "draggable": true,
+            "value": 24,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1894932800",
+            "name": "Design and evaluation of incremental data structures and algorithms for dynamic query interfaces",
+            "symbolSize": 7.8438669798515654,
+            "category": 4,
+            "draggable": true,
+            "value": 23,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2158864843",
+            "name": "Inventing Discovery Tools: Combining Information Visualization with Data Mining",
+            "symbolSize": 7.758924176381121,
+            "category": 2,
+            "draggable": true,
+            "value": 21,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2126926732",
+            "name": "Interactive color mosaic and dendrogram displays for signal/noise optimization in microarray data analysis",
+            "symbolSize": 7.758924176381121,
+            "category": 6,
+            "draggable": true,
+            "value": 21,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "116029855",
+            "name": "Interactive graphical querying of time series and linear sequence data sets",
+            "symbolSize": 7.714417616594906,
+            "category": 6,
+            "draggable": true,
+            "value": 20,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1656722466",
+            "name": "Sharpening Analytic Focus to Cope with Big Data Volume and Variety",
+            "symbolSize": 7.571281590658235,
+            "category": 2,
+            "draggable": true,
+            "value": 17,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1532692438",
+            "name": "Interactive network exploration to derive insights: filtering, clustering, grouping, and simplification",
+            "symbolSize": 7.519842099789747,
+            "category": 4,
+            "draggable": true,
+            "value": 16,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2165749800",
+            "name": "Innovation trajectories for information visualizations: comparing treemaps, cone trees, and hyperbolic trees",
+            "symbolSize": 7.519842099789747,
+            "category": 4,
+            "draggable": true,
+            "value": 16,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1994022095",
+            "name": "Readability metric feedback for aiding node-link visualization designers",
+            "symbolSize": 7.466212074330469,
+            "category": 4,
+            "draggable": true,
+            "value": 15,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2003595690",
+            "name": "Browsing large online data tables using generalized query previews",
+            "symbolSize": 7.41014226417523,
+            "category": 4,
+            "draggable": true,
+            "value": 14,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "58944872",
+            "name": "Snap-Together Visualization: Evaluating Coordination Usage and Construction",
+            "symbolSize": 7.41014226417523,
+            "category": 1,
+            "draggable": true,
+            "value": 14,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2099981284",
+            "name": "A knowledge integration framework for information visualization",
+            "symbolSize": 7.289428485106663,
+            "category": 1,
+            "draggable": true,
+            "value": 12,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2902308725",
+            "name": "Visual Interfaces for Recommendation Systems: Finding Similar and Dissimilar Peers",
+            "symbolSize": 7.080083823051904,
+            "category": 2,
+            "draggable": true,
+            "value": 9,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2969093670",
+            "name": "EventAction: A Visual Analytics Approach to Explainable Recommendation for Event Sequences",
+            "symbolSize": 6.91293118277239,
+            "category": 6,
+            "draggable": true,
+            "value": 7,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2088226432",
+            "name": "LifeFlow: visualizing an overview of event sequences (video preview)",
+            "symbolSize": 6.709975946676697,
+            "category": 0,
+            "draggable": true,
+            "value": 5,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "82356883",
+            "name": "Visualizing Functional Data with an Application to eBay’s Online Auctions",
+            "symbolSize": 6.709975946676697,
+            "category": 6,
+            "draggable": true,
+            "value": 5,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2922075972",
+            "name": "Interactive Visual Event Analytics: Opportunities and Challenges",
+            "symbolSize": 6.709975946676697,
+            "category": 2,
+            "draggable": true,
+            "value": 5,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2051202991",
+            "name": "The Dynamics of Web-Based Community Safety Groups: Lessons Learned from the Nation of Neighbors [Social Sciences]",
+            "symbolSize": 6.587401051968199,
+            "category": 4,
+            "draggable": true,
+            "value": 4,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2501618418",
+            "name": "Inventing discovery tools: combining information visualization with data mining†",
+            "symbolSize": 6.442249570307409,
+            "category": 2,
+            "draggable": true,
+            "value": 3,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1895074465",
+            "name": "Visualizing & exploring networks using semantic substrates",
+            "symbolSize": 6.259921049894873,
+            "category": 4,
+            "draggable": true,
+            "value": 2,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "3010758135",
+            "name": "Research report: design and evaluation of incremental data structures and algorithms for dynamic query interfaces",
+            "symbolSize": 6,
+            "category": 4,
+            "draggable": true,
+            "value": 1,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1545514695",
+            "name": "Multidimensional Analysis and Visualization on Large Biomedical Data",
+            "symbolSize": 6,
+            "category": 1,
+            "draggable": true,
+            "value": 1,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "3001599156",
+            "name": "Inventing Discovery Tools: Combining Information Visualization with Data Mining",
+            "symbolSize": 5,
+            "category": 2,
+            "draggable": true,
+            "value": 0,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2109280734",
+            "name": "A telescope for high-dimensional data",
+            "symbolSize": 5,
+            "category": 1,
+            "draggable": true,
+            "value": 0,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "2486577109",
+            "name": "Chapter 6 – Preparing Data and Filtering",
+            "symbolSize": 5,
+            "category": 4,
+            "draggable": true,
+            "value": 0,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        },
+        {
+            "id": "1839669264",
+            "name": "Chapter 4 – Getting Started with NodeXL, Layout, Visual Design, and Labeling",
+            "symbolSize": 5,
+            "category": 4,
+            "draggable": true,
+            "value": 0,
+            "label": {
+                "normal": {
+                    "show": false
+                }
+            }
+        }
+    ],
+    "links": [
+        {
+            "source": "2052255065",
+            "target": "2138199375"
+        },
+        {
+            "source": "2052255065",
+            "target": "3010758135"
+        },
+        {
+            "source": "2052255065",
+            "target": "3001599156"
+        },
+        {
+            "source": "2052255065",
+            "target": "2062937620"
+        },
+        {
+            "source": "2052255065",
+            "target": "3022700673"
+        },
+        {
+            "source": "2052255065",
+            "target": "2501618418"
+        },
+        {
+            "source": "2052255065",
+            "target": "2003595690"
+        },
+        {
+            "source": "2052255065",
+            "target": "1532692438"
+        },
+        {
+            "source": "2152330592",
+            "target": "2049025244"
+        },
+        {
+            "source": "2152330592",
+            "target": "2138199375"
+        },
+        {
+            "source": "2138199375",
+            "target": "2152245018"
+        },
+        {
+            "source": "2138199375",
+            "target": "2120422643"
+        },
+        {
+            "source": "2138199375",
+            "target": "2149019354"
+        },
+        {
+            "source": "2138199375",
+            "target": "2122060742"
+        },
+        {
+            "source": "2138199375",
+            "target": "1966778625"
+        },
+        {
+            "source": "1894932800",
+            "target": "116029855"
+        },
+        {
+            "source": "1968891274",
+            "target": "2171826173"
+        },
+        {
+            "source": "1968891274",
+            "target": "2902308725"
+        },
+        {
+            "source": "2171826173",
+            "target": "116029855"
+        },
+        {
+            "source": "2171826173",
+            "target": "2109076134"
+        },
+        {
+            "source": "2171826173",
+            "target": "2142349824"
+        },
+        {
+            "source": "2171826173",
+            "target": "2061820835"
+        },
+        {
+            "source": "2171826173",
+            "target": "2088226432"
+        },
+        {
+            "source": "2171826173",
+            "target": "2122060742"
+        },
+        {
+            "source": "2171826173",
+            "target": "2611538506"
+        },
+        {
+            "source": "2995575468",
+            "target": "2071194258"
+        },
+        {
+            "source": "1965424776",
+            "target": "2149874318"
+        },
+        {
+            "source": "58944872",
+            "target": "116029855"
+        },
+        {
+            "source": "58944872",
+            "target": "2111736285"
+        },
+        {
+            "source": "1506051703",
+            "target": "2071194258"
+        },
+        {
+            "source": "2071194258",
+            "target": "2149874318"
+        },
+        {
+            "source": "2071194258",
+            "target": "2148806321"
+        },
+        {
+            "source": "2071194258",
+            "target": "2111736285"
+        },
+        {
+            "source": "2149874318",
+            "target": "2148806321"
+        },
+        {
+            "source": "2149874318",
+            "target": "116029855"
+        },
+        {
+            "source": "2149874318",
+            "target": "2111736285"
+        },
+        {
+            "source": "2154559384",
+            "target": "116029855"
+        },
+        {
+            "source": "2154559384",
+            "target": "2120422643"
+        },
+        {
+            "source": "2148806321",
+            "target": "116029855"
+        },
+        {
+            "source": "2158864843",
+            "target": "1532692438"
+        },
+        {
+            "source": "2032769849",
+            "target": "2067871637"
+        },
+        {
+            "source": "2032769849",
+            "target": "5537492"
+        },
+        {
+            "source": "2062937620",
+            "target": "2126926732"
+        },
+        {
+            "source": "2062937620",
+            "target": "2111736285"
+        },
+        {
+            "source": "2062937620",
+            "target": "2132631291"
+        },
+        {
+            "source": "2062937620",
+            "target": "2109280734"
+        },
+        {
+            "source": "2062937620",
+            "target": "1545514695"
+        },
+        {
+            "source": "3022700673",
+            "target": "116029855"
+        },
+        {
+            "source": "3022700673",
+            "target": "2099981284"
+        },
+        {
+            "source": "3022700673",
+            "target": "2486577109"
+        },
+        {
+            "source": "3022858172",
+            "target": "2109280734"
+        },
+        {
+            "source": "2111736285",
+            "target": "2109076134"
+        },
+        {
+            "source": "2111736285",
+            "target": "2120422643"
+        },
+        {
+            "source": "2111736285",
+            "target": "2142349824"
+        },
+        {
+            "source": "2111736285",
+            "target": "2902308725"
+        },
+        {
+            "source": "2118150522",
+            "target": "2132631291"
+        },
+        {
+            "source": "2132631291",
+            "target": "2152245018"
+        },
+        {
+            "source": "2132631291",
+            "target": "2120422643"
+        },
+        {
+            "source": "2132631291",
+            "target": "82356883"
+        },
+        {
+            "source": "2162336725",
+            "target": "2167852549"
+        },
+        {
+            "source": "2162336725",
+            "target": "2109076134"
+        },
+        {
+            "source": "2067871637",
+            "target": "2157887077"
+        },
+        {
+            "source": "2152245018",
+            "target": "2546140789"
+        },
+        {
+            "source": "2152245018",
+            "target": "1994022095"
+        },
+        {
+            "source": "2157887077",
+            "target": "2152245018"
+        },
+        {
+            "source": "2157887077",
+            "target": "2037677650"
+        },
+        {
+            "source": "2157887077",
+            "target": "2061820835"
+        },
+        {
+            "source": "2157887077",
+            "target": "2122060742"
+        },
+        {
+            "source": "2157887077",
+            "target": "1532692438"
+        },
+        {
+            "source": "2157887077",
+            "target": "2165749800"
+        },
+        {
+            "source": "2157887077",
+            "target": "2100741257"
+        },
+        {
+            "source": "2157887077",
+            "target": "2335772274"
+        },
+        {
+            "source": "2157887077",
+            "target": "2969093670"
+        },
+        {
+            "source": "2167306162",
+            "target": "1839669264"
+        },
+        {
+            "source": "2167306162",
+            "target": "2546140789"
+        },
+        {
+            "source": "2167306162",
+            "target": "1971458834"
+        },
+        {
+            "source": "2167306162",
+            "target": "1994022095"
+        },
+        {
+            "source": "2167852549",
+            "target": "2061820835"
+        },
+        {
+            "source": "1895074465",
+            "target": "1994022095"
+        },
+        {
+            "source": "2109076134",
+            "target": "2122060742"
+        },
+        {
+            "source": "2109076134",
+            "target": "2297826358"
+        },
+        {
+            "source": "2109076134",
+            "target": "2611538506"
+        },
+        {
+            "source": "2109076134",
+            "target": "2969093670"
+        },
+        {
+            "source": "2120422643",
+            "target": "2122060742"
+        },
+        {
+            "source": "2142349824",
+            "target": "2600662290"
+        },
+        {
+            "source": "2142349824",
+            "target": "2297826358"
+        },
+        {
+            "source": "2142349824",
+            "target": "2922075972"
+        },
+        {
+            "source": "1499239117",
+            "target": "2051202991"
+        },
+        {
+            "source": "1528597731",
+            "target": "1532692438"
+        },
+        {
+            "source": "1528597731",
+            "target": "1971458834"
+        },
+        {
+            "source": "1528597731",
+            "target": "2139817070"
+        },
+        {
+            "source": "1528597731",
+            "target": "2338338527"
+        },
+        {
+            "source": "1641238295",
+            "target": "2546140789"
+        },
+        {
+            "source": "2061820835",
+            "target": "1656722466"
+        },
+        {
+            "source": "2122060742",
+            "target": "2338338527"
+        },
+        {
+            "source": "2122060742",
+            "target": "2600662290"
+        },
+        {
+            "source": "1967024567",
+            "target": "1499239117"
+        },
+        {
+            "source": "1967024567",
+            "target": "1839669264"
+        },
+        {
+            "source": "2010911732",
+            "target": "2338338527"
+        },
+        {
+            "source": "1971458834",
+            "target": "1994022095"
+        },
+        {
+            "source": "1656722466",
+            "target": "2297826358"
+        },
+        {
+            "source": "2335772274",
+            "target": "2600662290"
+        },
+        {
+            "source": "2297826358",
+            "target": "2600662290"
+        },
+        {
+            "source": "2297826358",
+            "target": "2611538506"
+        },
+        {
+            "source": "2611538506",
+            "target": "2969093670"
+        }
+    ],
+    "categories": [
+        {
+            "name": "0"
+        },
+        {
+            "name": "1"
+        },
+        {
+            "name": "2"
+        },
+        {
+            "name": "3"
+        },
+        {
+            "name": "4"
+        },
+        {
+            "name": "5"
+        },
+        {
+            "name": "6"
+        },
+        {
+            "name": "7"
+        },
+        {
+            "name": "8"
+        },
+        {
+            "name": "9"
+        }
+    ]
+}

@@ -1,0 +1,101 @@
+<!--
+	此示例下载自 https://echarts.apache.org/examples/zh/editor.html?c=graph-force-dynamic
+-->
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="height: 100%; margin: 0">
+  <div id="container" style="height: 100%"></div>
+
+  
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+  <!-- Uncomment this line if you want to dataTool extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/extension/dataTool.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to use gl extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts-gl/2/files/dist/echarts-gl.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to echarts-stat extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts-stat/latest/files/dist/ecStat.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to use map
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/4.9.0/files/map/js/china.js"></script>
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/4.9.0/files/map/js/world.js"></script>
+  -->
+  <!-- Uncomment these two lines if you want to use bmap extension
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=YOUR_API_KEY"></script>
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/extension/bmap.min.js"></script>
+  -->
+
+  <script type="text/javascript">
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var app = {};
+    
+    var option;
+
+    const data = [
+  {
+    fixed: true,
+    x: myChart.getWidth() / 2,
+    y: myChart.getHeight() / 2,
+    symbolSize: 20,
+    id: '-1'
+  }
+];
+const edges = [];
+option = {
+  series: [
+    {
+      type: 'graph',
+      layout: 'force',
+      animation: false,
+      data: data,
+      force: {
+        // initLayout: 'circular'
+        // gravity: 0
+        repulsion: 100,
+        edgeLength: 5
+      },
+      edges: edges
+    }
+  ]
+};
+setInterval(function () {
+  data.push({
+    id: data.length + ''
+  });
+  var source = Math.round((data.length - 1) * Math.random());
+  var target = Math.round((data.length - 1) * Math.random());
+  if (source !== target) {
+    edges.push({
+      source: source,
+      target: target
+    });
+  }
+  myChart.setOption({
+    series: [
+      {
+        roam: true,
+        data: data,
+        edges: edges
+      }
+    ]
+  });
+  // console.log('nodes: ' + data.length);
+  // console.log('links: ' + data.length);
+}, 200);
+
+    if (option && typeof option === 'object') {
+      myChart.setOption(option);
+    }
+
+    window.addEventListener('resize', myChart.resize);
+  </script>
+</body>
+</html>
