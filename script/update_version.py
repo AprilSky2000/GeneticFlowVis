@@ -12,7 +12,7 @@ from datetime import datetime
 # 2.增加新版本信息
 path = "../csv/version.csv"
 df = pd.read_csv(path, sep=',', header=0)
-dt = datetime(2023, 11, 29)
-data = ['v1.3', dt.date(), "GeneticFlow system has expanded into the new fields of Computer Graphics."]
+dt = datetime(2024, 1, 6)
+data = ['v1.4', dt.date(), "GeneticFlow system has expanded into several new fields, including Software & Programming Language, Human-Computer Interaction, and Networking & Parallel/Distributed/Real-time/Embedded Computing."]
 df.loc[len(df)] = data
 df.to_csv(path, sep=',', index=False)
