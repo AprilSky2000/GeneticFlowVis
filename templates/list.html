@@ -76,6 +76,15 @@
             return match ? match[1] : ''; // 返回匹配的数字部分，如果没有匹配则返回 null
         }
 
+        function findNumberAfterPattern(str) {
+            // 正则表达式用于匹配 "10:" 后面的数字
+            var regex = /10:(\d+)/;
+            var match = regex.exec(str);
+
+            // 如果找到匹配项，则返回匹配的数字，否则返回 null
+            return match ? match[1] : 0;
+        }
+
         function displayData(page) {
             $('table tbody').empty();
             const startIndex = (page - 1) * itemsPerPage;
@@ -84,6 +93,9 @@
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
                 var fellowStr = hasFellow? `<td>${scholar["fellowYear"]}</td>`: ''
+                if (fieldType == "fellowTuring") {
+                    fellowStr = `<td>${findNumberAfterPattern(scholar["fellow"])}</td>`;
+                }
                 var content = `
                     <tr>
                         <td>${i + 1}</td>
@@ -135,6 +147,9 @@
                 var headerRow = document.getElementById('tableHeaderRow');
                 var fellowTh = document.createElement('th');
                 fellowTh.textContent = 'Fellow Year';
+                if (fieldType == "fellowTuring") {
+                    fellowTh.textContent = 'Turing Year';
+                }
                 // Find the last <th> element in the row
                 var lastTh = headerRow.querySelector('th:last-child');
                 // Insert the new <th> before the last <th>

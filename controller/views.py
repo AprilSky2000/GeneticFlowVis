@@ -210,7 +210,7 @@ def create_edge(dot, papers, links):
             dot.edge(papers[citedpaperID]['paperID'], papers[citingpaperID]['paperID'])
 
 def create_partial_graph(dot, papers, links, nodeWidth, mode):
-    if mode == 1:
+    if mode == 0:
         create_node(dot, papers, nodeWidth)
         create_edge(dot, papers, links)
         return

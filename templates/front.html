@@ -52,8 +52,9 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 				delete data['default'];
 				isTestEnv().then(isTest => {
 					if(!isTest) {
-						delete data['fellow'];
-						delete data['turing'];
+						for (const key in ['fellow', 'fellowTuring', 'ACMfellowTuring', 'AI']) {
+							delete data[key];
+						}
 					}
 					// console.log(data);
 					createList(data);
