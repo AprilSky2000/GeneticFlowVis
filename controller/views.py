@@ -1,5 +1,6 @@
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import render
+import shutil
 import graphviz
 import csv
 import json
@@ -186,12 +187,11 @@ def create_node(dot, papers, nodeWidth):
                     s1 = authors[0].split(' ')
                     s2 = paper['title'].split(' ')
                     if s1 == ['']:
-                        label = str(year) + s2[0]
+                        label = str(year)[-2:] + s2[0]
                     else:
-                        label = s1[-1] + str(year) + s2[0]
+                        label = s1[-1] + str(year)[-2:] + s2[0]
                     if nodeWidth != 0 and nodeWidth < len(label):
-                        label = label[0:nodeWidth] + '...'
-
+                        label = label[0:nodeWidth] + '..'
                     # label下为该论文引用量
                     if int(paper['citationCount']) == -1:
                         paper_name = label + '\n' + '?'
@@ -255,7 +255,7 @@ def get_node(nodes, papers):
                 'authors': paper['authorsName'],
                 'venu': paper['venu'],
                 'label': (paper['authorsName'].split(', ')[0].split(' ')[-1] if len(paper['authorsName']) else '') +
-                        str(paper['year']) + paper['title'].split(' ')[0],
+                        str(paper['year'])[-2:] + paper['title'].split(' ')[0],
                 'isKeyPaper': paper['isKeyPaper'],
                 'citationCount': paper['citationCount'],
                 'abstract': paper['abstract'],
@@ -362,7 +362,6 @@ def index(request):
 
 
 def clean(request):
-    import shutil
     fieldType = request.GET.get("field")
     path = f"static/json/{fieldType}"
     try:
