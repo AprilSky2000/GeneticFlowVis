@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+    <title>Hyperbolic tree</title>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="dcterms.rightsHolder" content="Copyright © 2018 Glatzhofer Michael">
+
+    <link rel="stylesheet" href="/src/css/d3-hypertree-light.css" id="ldswitch">        
+
+    <script src="/src/js/d3.min.js"></script>
+    <script src="/src/js/d3-hypertree.js"></script>
+    </head>
+    <body>
+<script>    
+
+const ht = new hyt.Hypertree(
+    {
+        parent: document.body             
+    },
+    {
+        dataloader: hyt.loaders.fromFile('/src/json/test.d3.json'),
+        langInitBFS: (ht, n)=> n.precalc.label = n.data.name,
+    }
+)
+ht.initPromise
+    .then(()=> new Promise((ok, err)=> ht.animateUp(ok, err)))            
+    .then(()=> ht.drawDetailFrame())
+
+window.addEventListener('message', function(event) {
+// 检查 event.origin 是否是您期望的来源，以提高安全性
+// if (event.origin !== 'http://your-origin.com') return;
+
+// 接收 hypertreeData
+    const hypertreeData = event.data.hypertreeData;
+    const root = d3.hierarchy(hypertreeData);
+    console.log('root', root)
+
+    // 使用 hypertreeData 初始化 HyperTree
+    const ht = new hyt.Hypertree(
+        {
+            parent: document.body             
+        },
+        {
+            dataloader: ok => ok(root),
+            langInitBFS: (ht, n) => n.precalc.label = n.data.name,
+        }
+    )
+    ht.initPromise
+        .then(()=> new Promise((ok, err) => ht.animateUp(ok, err)))            
+        .then(()=> ht.drawDetailFrame())
+});
+</script>
+
+    </body>
+</html>

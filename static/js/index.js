@@ -1,5 +1,9 @@
-let tagCloudRatio = 0.25;
+let tagCloudRatio = 0.22;
 window.onload = checkScreenSize;
+let adjacent_ids = [];
+let extend_ids = [];
+let center_node = null;
+let label2color = {}
 
 function guidence() {
     if (!localStorage.getItem('guidanceShown')) {
@@ -142,6 +146,7 @@ function onFullscreenChange() {
     // 在这里执行其他操作
     checkScreenSize();
 
+    d3.select("#echartsContainer").remove();
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
     d3.select("#topic-map-svg").remove();
@@ -366,6 +371,9 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let height = ratio * lineHeight;
         let opacity = ratio * 0.8 + 0.1;
         let shortName = d.name.split("_").slice(0, 3).join(' ');
+        if (ratio < 0.5) {
+            shortName = d.name.split("_").slice(0, 2).join(' ');
+        }
         // let width = size * shortName.length * 0.5;
         let width = textSize(shortName, size).width * 1.06;
         if (currentLineWidth + width > svgWidth) {
@@ -507,6 +515,7 @@ function update_nodes() {
         // fields为当前是顶层field还是底层field，topic为当前论文在1层/2层情况下对应的topicID
         let topic = parseInt(nodes[i].topic);
         let fields = field_leaves;
+        let label = parseInt(field_leaves[topic][8]);
         if (fieldLevelVal == 1) {
             topic = parseInt(field_leaves[topic][8]);
             fields = field_roots;
@@ -514,6 +523,7 @@ function update_nodes() {
 
         // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
+        label2color[label] = nodes[i].color
         
         // 如果当前节点被点击，需要修改paper信息中的展示的topic-word
         if (nodes[i].status == 1) {
@@ -548,6 +558,7 @@ function update_fields() {
             dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
             dic.cx = parseFloat(fields[topic][3]);
             dic.cy = parseFloat(fields[topic][4]);
+            dic.label = parseInt(fields[topic][8]);
             self_field.push(dic);
         }
     }
@@ -616,23 +627,7 @@ function highlight_field(d, that) {
     
     let duration = 200;
     let field_id = d.id;
-    // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    // let field_color = hsvToColor(d.color);
-    // topic_map_tip.show(d);
-
     tip.show(d);
-
-    // if d is an item in paper_field
-    // if (d.hasOwnProperty('num')) {
-    //     let word = wordPosition.flat().find(item => item.id == d.id);
-    //     tip.show(word);
-    // }
-
-    // // if d is an item in wordPosition
-    // if (d.hasOwnProperty('ratio')) {
-    //     let field = paper_field.find(item => item.id == d.id);
-    //     tip.show(field);
-    // }
 
     // =========================tagcloud=========================
     d3.selectAll(".tag-rect")
@@ -679,7 +674,7 @@ function highlight_field(d, that) {
         .attr('stroke', function(d) {
             // 在箭头函数中使用 this 时，this 不会指向当前的 DOM 元素，而是指向定义该箭头函数的上下文。
             if (color_papers.indexOf(d.id) == -1) {
-                return d3.rgb(200, 200, 200);
+                return d3.rgb(224, 224, 224);
             } else {
                 return this.getAttribute('stroke');
             }
@@ -690,18 +685,18 @@ function highlight_field(d, that) {
             if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
                 return  probToColor(d.extends_prob);
             else
-                return d3.rgb(200, 200, 200);
+                return d3.rgb(224, 224, 224);
         });
     d3.selectAll(".year")
         .attr("fill", d3.rgb(250, 250, 250))
-        .attr('stroke', d3.rgb(200, 200, 200));
+        .attr('stroke', d3.rgb(224, 224, 224));
 
     $("#mainsvg").attr("style", "background-color: #FAFAFA;");
 }
 
-function hsvToColor(color) {
+function hsvToColor(color, sat=0.4) {
     // return d3.hsv(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    return d3.hsv(color[0], 0.4, color[2]) //  color[1]
+    return d3.hsv(color[0], sat, color[2]) //  color[1]
 }
 
 function reset_field(d) {
@@ -749,6 +744,251 @@ function reset_field(d) {
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
 }
 
+function find_child_nodes(id) { 
+    var ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].source) ids.push(edges[i].target);
+    }
+    return ids;
+}
+
+function find_parent_nodes(id) {
+    var ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].target) ids.push(edges[i].source);
+    }
+    return ids;
+}
+
+function buildTree(centerNodeId, nodes, edges) {
+    const idToNodeMap = new Map(nodes.map(node => [node.id, { ...node, children: [] }]));
+    edges.forEach(edge => {
+        if (idToNodeMap.has(edge.source) && idToNodeMap.has(edge.target)) {
+            idToNodeMap.get(edge.source).children.push(idToNodeMap.get(edge.target));
+        }
+    });
+    return idToNodeMap.get(centerNodeId);
+}
+
+function getAdjacentNodes(nodeId) {
+    let children = edges.filter(edge => edge.source === nodeId).map(edge => edge.target);
+    let parents = edges.filter(edge => edge.target === nodeId).map(edge => edge.source);
+    return Array.from(new Set(children.concat(parents)));
+}
+
+function simplifyNode(node) {
+    return {
+        name: node.name,
+        numLeafs: 0, // 初始设置为 0，稍后计算
+        ottId: node.paperID,
+        children: [],
+        parents: []
+    };
+}
+
+function buildTreeBFS(id) {
+    var parent_ids = [];
+    var new_parent_ids = [id];
+    let idToNodeMap = new Map(nodes.map(node => [node.id, simplifyNode(node)]));
+    console.log('idToNodeMap', idToNodeMap)
+
+    while (new_parent_ids.length != parent_ids.length) {
+        parent_ids = new_parent_ids;
+        for (let i = 0; i < parent_ids.length; i++) {
+            // console.log('node:', parent_ids[i], idToNodeMap[String(parent_ids[i])])
+            let parents = find_parent_nodes(parent_ids[i]);
+            new_parent_ids = new_parent_ids.concat(parents);
+            idToNodeMap.get(parent_ids[i]).parents = parents.map(id => idToNodeMap.get(id))
+        }
+        new_parent_ids = Array.from(new Set(new_parent_ids));
+    }
+
+    var child_ids = [];
+    var new_child_ids = [id];
+    while (new_child_ids.length != child_ids.length) {
+        child_ids = new_child_ids;
+        for (let i = 0; i < child_ids.length; i++) {
+            let childs = find_child_nodes(child_ids[i])
+            new_child_ids = new_child_ids.concat(childs);
+            idToNodeMap.get(child_ids[i]).children = childs.map(id => idToNodeMap.get(id))
+        }
+        new_child_ids = Array.from(new Set(new_child_ids));
+    }
+
+    // DAG图中出现了环！！！！！！！！！！！！！！！！！需要修复
+    // 删除没有子节点的节点的 children 属性
+    function removeEmptyChildren(node) {
+        if (node.children === undefined) return;
+        // console.log('node', node)
+        delete node.parents;
+        if (node.children.length === 0) {
+            delete node.children;
+        } else {
+            // node.children = node.children.concat(node.parents)
+            node.children.forEach(child => removeEmptyChildren(child));
+            node.numLeafs = node.children.reduce((sum, child) => sum + child.numLeafs, 0);
+            node.numLeafs += node.children.length;
+        }
+    }
+    removeEmptyChildren(idToNodeMap.get(id));
+    return idToNodeMap.get(id);
+}
+
+function draw_hyper_tree(id) {
+    const hypertreeData = buildTreeBFS(id);
+    console.log('hypertreeData', hypertreeData);
+    const iframeWindow = document.getElementById('hypertreeFrame').contentWindow;
+    // 使用 postMessage 发送 hypertreeData
+    iframeWindow.postMessage({ hypertreeData: hypertreeData }, '*');
+}
+
+
+function get_extend_ids(id) {
+    var parent_ids = [];
+    var new_parent_ids = [id];
+    while (new_parent_ids.length != parent_ids.length) {
+        parent_ids = new_parent_ids;
+        for (let i = 0; i < parent_ids.length; i++) {
+            new_parent_ids = new_parent_ids.concat(find_parent_nodes(parent_ids[i]));
+        }
+        new_parent_ids = Array.from(new Set(new_parent_ids));
+    }
+    var child_ids = [];
+    var new_child_ids = [id];
+    while (new_child_ids.length != child_ids.length) {
+        child_ids = new_child_ids;
+        for (let i = 0; i < child_ids.length; i++) {
+            new_child_ids = new_child_ids.concat(find_child_nodes(child_ids[i]));
+        }
+        new_child_ids = Array.from(new Set(new_child_ids));
+    }
+    var extend_ids = new_child_ids.concat(new_parent_ids);
+    // console.log('extend_ids:', extend_ids)
+    return extend_ids;
+}
+
+function get_graph() {
+    var categories = field_roots.map(line=> {
+        color = hsvToColor(label2color[line[0]], sat=0.7)
+        return {
+            "name": String(line[0]),
+            "color": hsvToHex(color.h, color.s, color.v)
+        }
+    });
+    var topic2catagory = {};
+    for (let i = 0; i < field_leaves.length; i++) {
+        topic2catagory[i] = field_leaves[i][8];
+    }
+    let node_data = nodes.map(node=> {
+        return {
+            "id": node.id,
+            "name": node.name,
+            "symbolSize": Math.cbrt(node.citationCount) + 5,
+            "category": topic2catagory[node.topic],
+            "value": node.citationCount,
+            "year": node.year,
+            "label": {
+                "normal": {
+                    "show": node.symbolSize > 10
+                }
+            }
+        }
+    });
+    let link_data = edges.map(edge=> {
+        return {
+            "source": edge.source,
+            "target": edge.target,
+        }
+    }).filter(edge=> {
+        return edge.source.length > 4;
+    });
+    return {
+        "nodes": node_data,
+        "links": link_data,
+        "categories": categories
+    }
+}
+
+
+function force_layout() {
+    // var chartDom = document.getElementById('main');
+    d3.select("#mainsvg").remove();
+    d3.select("#tagcloud").remove();
+    d3.select("#echartsContainer").remove();
+    d3.select(".middle-column").append("div")
+        .style("width", $(".middle-column").width() + "px")
+        .style("height", (mainPanalHeight * (1 - tagCloudRatio)) + "px")
+        .attr("id", "echartsContainer");
+
+    var forceChart = echarts.init(document.getElementById('echartsContainer'), null, {
+        renderer: 'canvas',
+        useDirtyRect: false
+    });
+    // init_graph(viewBox, transform);
+    // var forceChart = echarts.init(g);
+
+    let graph = get_graph();
+    console.log('graph', graph)
+    let option = {
+        title: {
+        text: 'Self Extension Network',
+        top: 'bottom',
+        left: 'right'
+        },
+        tooltip: {},
+        legend: [
+        {
+            // selectedMode: 'single',
+            data: graph.categories.map(function (a) {
+                return { name: a.name };
+            })
+        }
+        ],
+        color: graph.categories.map(a=> a.color),
+        series: [
+        {
+            name: 'Self Extension Network',
+            type: 'graph',
+            layout: 'force',
+            data: graph.nodes.map(node => {
+                // 设置每个节点的颜色为其类别的颜色
+                return {
+                    ...node,
+                    itemStyle: {
+                        color: graph.categories[node.category].color
+                    }
+                };
+            }),
+            links: graph.links,
+            categories: graph.categories,
+            draggable: true,
+            roam: true,
+            label: {
+            position: 'right'
+            },
+            force: {
+            repulsion: 100
+            }
+        }
+        ]
+    };
+    forceChart.setOption(option);
+    draw_tag_cloud();
+}
+
+function updateVisType() {
+    let visTypeVal = $("#vis-type").val();
+    if (visTypeVal == 0) {
+        onFullscreenChange();
+    }
+    else if (visTypeVal == 1) {
+        force_layout();
+    } else {
+
+    }
+}
+
+
 function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
     if (image_switch == 0)  return;
 
@@ -759,30 +999,30 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
     }
 
     // 找到当前节点的所有邻接点
-    var adjacent_ids = [];
+    adjacent_ids = [];
     if (highlight_neighbor) {
         for (let i = 0; i < edges.length; i++) {
             if (id == edges[i].source) {
                 adjacent_ids.push(edges[i].target);
-            }
-            else if (id == edges[i].target) {
+            } else if (id == edges[i].target) {
                 adjacent_ids.push(edges[i].source);
             }
         }
     }
+    extend_ids = get_extend_ids(id);
     
     // 改变当前节点颜色和相邻节点
     g.selectAll(".paper").data(nodes)
         .attr("fill-opacity", d => {
-            if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
+            if (d.id != id && extend_ids.indexOf(d.id) == -1) 
                 return virtualOpacity;
         })
         .attr('stroke', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+            if (d.id == id || extend_ids.indexOf(d.id) != -1)
                 return updateOutlineColor(d.isKeyPaper, d.citationCount);
         })
         .attr('stroke-width', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+            if (d.id == id || extend_ids.indexOf(d.id) != -1)
                 return updateOutlineThickness(d.isKeyPaper, d.citationCount);
         });
 
@@ -790,19 +1030,28 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
     d3.selectAll('.reference')
         .attr('stroke', d => {
             if (d.target == id || d.source == id)   return 'red';
-            else    return d3.rgb(200, 200, 200);
+            else if (extend_ids.includes(d.source) & extend_ids.includes(d.target)) return 'black';
+            else return d3.rgb(224, 224, 224);
         });
     for (let i = 0; i < edges.length; i++) {
-        if (edges[i].source != id && edges[i].target != id) {
-            edges[i].status = 1;
-        }
-        else {
+        if (edges[i].source == id && edges[i].target == id) {
             edges[i].status = 2;
+        } else if (extend_ids.includes(edges[i].source) && extend_ids.includes(edges[i].target)) {
+            edges[i].status = 0;
+        } else {
+            edges[i].status = 1;
         }
     }
     // 将当前节点及其邻接点所对应year的topic显示出来
+    let extend_year_topics = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (extend_ids.indexOf(nodes[i].id) != -1) {
+            extend_year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+        }
+    }
+        
     adjacent_ids.push(id);
-    let year_topics = [];
+    year_topics = [];
     for (let i = 0; i < nodes.length; i++) {
         if (adjacent_ids.indexOf(nodes[i].id) != -1) {
             year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
@@ -810,8 +1059,9 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
     }
     g.selectAll(".year-topic")
         .attr("fill-opacity", d => {
-            if (year_topics.indexOf(d.yearTopicId) == -1) return virtualOpacity;
-            return 1;
+            if (year_topics.indexOf(d.yearTopicId) != -1) return 1
+            if (extend_year_topics.indexOf(d.yearTopicId) != -1) return 0.5
+            return virtualOpacity;
         });
 }
 
@@ -910,7 +1160,7 @@ function visual_topics() {
 
 }
 
-function probToColor(prob, a=0.1, b=1) {
+function probToColor(prob, a=0, b=0.8) {
     // 将透明度从[0.3, 0.8]映射到 [a, b] 范围
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     const mappedOpacity = a + (b - a) * opacity;
@@ -919,7 +1169,7 @@ function probToColor(prob, a=0.1, b=1) {
     return color;
 }
 
-function probToWidth(prob, a=0.6, b=6) {
+function probToWidth(prob, a=0.5, b=5) {
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     return a + opacity * (b - a);
 }
@@ -972,7 +1222,7 @@ function visual_graph(polygon) {
         .attr('y', d => d.cy)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 20)
+        .attr('font-size', 24)
         .attr('class', 'text1')
         .attr("pointer-events", "none")
         .each(function(d) {
@@ -982,7 +1232,7 @@ function visual_graph(polygon) {
             for (var i = 0; i < lines.length; i++) {
                 d3.select(this).append('tspan')
                     .attr('x', d.cx)
-                    .attr('dy', i === 0 ? 0 : 20)  // Adjust dy for subsequent lines
+                    .attr('dy', i === 0 ? 0 : 22)  // Adjust dy for subsequent lines
                     .text(lines[i]);
             }
         });
@@ -1119,7 +1369,7 @@ function visual_graph(polygon) {
     .on('mouseover', function (d) {
         d3.select(this)
             .attr("stroke", "red")
-            .attr("stroke-width", 10)
+            .attr("stroke-width", 8)
             .attr('cursor', 'pointer');
     })
     .on('click', function () {
@@ -1154,7 +1404,7 @@ function visual_graph(polygon) {
         d3.selectAll('.reference').data(edges)
             .attr('stroke', d => {
                 if (d.status == 2)   return 'red';
-                else    return d3.rgb(200, 200, 200);
+                else    return d3.rgb(224, 224, 224);
             })
             .attr('stroke-width', d => {
                 if (d.id == id) return 10;
@@ -1201,9 +1451,10 @@ function visual_graph(polygon) {
     .on('mouseout', function () {
         d3.select(this)
             .attr("stroke", d => {
-                if (d.status == 1)    return d3.rgb(200, 200, 200);
-                else if (d.status == 2)   return "red";
-                else    return probToColor(d.extends_prob);
+                if (d.status == 0)  return "black"
+                if (d.status == 1)    return d3.rgb(224, 224, 224);
+                if (d.status == 2)   return "red";
+                return probToColor(d.extends_prob);
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-width", d => probToWidth(d.extends_prob))
@@ -1249,18 +1500,18 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
     let outlineThicknessVal = $("#outline-thickness").val();
     switch(outlineThicknessVal) {
         case '0':
-            outlineThickness = 1;
+            outlineThickness = 0;
             break;
         case '1':
-            if (isKeyPaper == 1)  outlineThickness = 10;
-            else if (isKeyPaper >= 0.5)   outlineThickness = 5;
-            else    outlineThickness = 1;
+            if (isKeyPaper == 1)  outlineThickness = 8;
+            else if (isKeyPaper >= 0.5)   outlineThickness = 4;
+            else    outlineThickness = 0;
             break;
         case '2':
-            if (citationCount >= 100)  outlineThickness = 10;
-            else if (citationCount >= 50)   outlineThickness = 5;
+            if (citationCount >= 100)  outlineThickness = 8;
+            else if (citationCount >= 50)   outlineThickness = 4;
             // else if (citationCount <= 50) outlineThickness = (citationCount - 10) * 9 / 40 + 1;
-            else    outlineThickness = 3;
+            else    outlineThickness = 0;
             break;
     }
     return outlineThickness;
