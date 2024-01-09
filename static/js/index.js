@@ -190,7 +190,7 @@ function onEscKeyPressed(event) {
 }
 
 function reset_graph() {
-    image_switch = 1;
+    image_status = image_data.length == 0 ? 0 : 2;
     $("#description").hide();
     $("#tagcloud").show();
     $("#mainsvg").show();
@@ -609,7 +609,7 @@ function update_fields() {
 }
 
 function highlight_field(d, that) {
-    if (image_switch == 0)  return;
+    if (image_status == 1)  return;
     // 选择具有特定ID的元素
     // d3.select("#circle" + field_id).select(".topic-map-tip")
     //     .style("display", "block");
@@ -705,7 +705,7 @@ function hsvToColor(color) {
 }
 
 function reset_field(d) {
-    if (image_switch == 0)  return;
+    if (image_status == 1)  return;
     // =========================tagcloud=========================
     // reset rect color
     d3.select(`#rect_${d.id}`)
@@ -750,7 +750,7 @@ function reset_field(d) {
 }
 
 function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
-    if (image_switch == 0)  return;
+    if (image_status == 1)  return;
 
     // 将被点击节点的状态设为1，未被点击的设为2
     for (let i = 0; i < nodes.length; i++) {
@@ -816,7 +816,7 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
 }
 
 function reset_node() {
-    if (image_switch == 0)  return;
+    if (image_status == 1)  return;
 
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
     g.selectAll('.paper').data(nodes)

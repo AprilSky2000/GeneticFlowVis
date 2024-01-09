@@ -401,7 +401,9 @@
     // text1 paperLabel; text2 paperCount; text3 year; text4 field
 
 $(function () {
-    image_switch = 1;
+    /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
+    image_status = 0;
+    image_data = "";
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
@@ -554,25 +556,33 @@ $(function () {
 
     <script>
         $("#info").click(function(){
-            if (image_switch == 0) {
-                reset_graph();
-                // draw_tag_cloud();
-            }
-            else {
+            if (image_status == 0) {
                 $.ajax({
                     url: '/description/',
                     type: 'GET',
                     success: function(data) {
-                        $("#imageToShow").attr("src", "data:image/jpeg;base64," + data.image);
+                        image_data = "data:image/jpeg;base64," + data.image;
+                        $("#imageToShow").attr("src", image_data);
                         $("#mainsvg").hide();
                         $("#tagcloud").hide();
                         $("#description").show();
-                        image_switch = 0;
+                        image_status = 1;
                     },
                     error: function(xhr, status, error) {
                         alert("An error occurred: " + error);
                     }
                 });
+            }
+            else if (image_status == 1) {
+                reset_graph();
+                image_status = 2;
+            }
+            else if (image_status == 2) {
+                $("#imageToShow").attr("src", image_data);
+                $("#mainsvg").hide();
+                $("#tagcloud").hide();
+                $("#description").show();
+                image_status = 1;
             }
         });
     </script>
