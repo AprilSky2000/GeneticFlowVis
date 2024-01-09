@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import re_path as url
-from controller.views import front, search, update, showlist, index, reference, changelog, degree, clean, image
+from controller.views import front, search, update, showlist, index, reference, changelog, degree, clean
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,8 +28,7 @@ urlpatterns = [
     path('reference/', reference),
     path('changelog/', changelog),
     path('degree/', degree),
-    path('clean/', clean),
-    path('description/', image)
+    path('clean/', clean)
     # url(r'^idx/([0-9]+)', index_id),
 ]
 

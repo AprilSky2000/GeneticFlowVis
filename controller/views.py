@@ -467,15 +467,6 @@ def get_fields(fieldType):
     leaves = pd.read_csv(leaves_path, sep=',').values.tolist()
     return [roots, leaves]
 
-
-def image(request):
-    path = f'static/image/'
-    image_path = os.path.join(path, "overview.png")
-    with open(image_path, 'rb') as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-    
-    return JsonResponse({'image': encoded_string})
-
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:

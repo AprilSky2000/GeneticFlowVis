@@ -1,52 +1,92 @@
-function downloadSvg(svg, fileName) {
-    //svg字符串化 => img.src属性
-    const svgString = new XMLSerializer().serializeToString(svg);
-    var source = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+function downloadSvg(svgList, fileName) {
+    var totalWidth = 0;
+    svgList.forEach(svg => {
+        totalWidth += svg.width.baseVal.value;
+    });
+    var averageWidth = totalWidth / svgList.length;
+    var maxWidth = Math.max(...svgList.map(svg => svg.width.baseVal.value));
 
-    var image = new Image();
-    image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
+    var imagesLoaded = 0;
+    var canvasList = [];
 
-    image.onload = function() {
-        //创建canvas对象，设置宽高
-        var canvas = document.createElement('canvas');
-        canvas.width = this.naturalWidth;
-        canvas.height = this.naturalHeight;
-        var context = canvas.getContext('2d');
-        //设置canvas对象背景
-        context.rect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = '#fff';
-        context.fill();
-        //img信息写入canvas，canvas => dataUrl => blob
-        context.drawImage(image, 0, 0);
-        var imgSrc = canvas.toDataURL("image/jpg", 1);
+    svgList.forEach(svg => {
+        const svgString = new XMLSerializer().serializeToString(svg);
+        var source = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
 
-        downloadFile(fileName, dataURLtoBlob(imgSrc));
-    };
+        var image = new Image();
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
+
+        image.onload = function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = maxWidth;
+
+            var scale = maxWidth / svg.width.baseVal.value;
+            canvas.height = svg.height.baseVal.value * scale;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (svg.width.baseVal.value < averageWidth) {
+                // 放大并居中
+                ctx.drawImage(image, 0, 0, svg.width.baseVal.value * scale, canvas.height);
+            } else {
+                // 直接居中
+                ctx.drawImage(image, (maxWidth - svg.width.baseVal.value * scale) / 2, 0, svg.width.baseVal.value * scale, canvas.height);
+            }
+
+            canvasList.push(canvas);
+            imagesLoaded++;
+
+            if (imagesLoaded === svgList.length) {
+                combineCanvases(canvasList, fileName);
+            }
+        };
+    });
+}
+
+function combineCanvases(canvasList, fileName) {
+    var totalHeight = canvasList.reduce((sum, canvas) => sum + canvas.height, 0);
+    var maxWidth = Math.max(...canvasList.map(canvas => canvas.width));
+
+    var finalCanvas = document.createElement('canvas');
+    finalCanvas.width = maxWidth;
+    finalCanvas.height = totalHeight;
+    var ctx = finalCanvas.getContext('2d');
+
+    var currentY = 0;
+    canvasList.forEach(canvas => {
+        ctx.drawImage(canvas, 0, currentY, canvas.width, canvas.height);
+        currentY += canvas.height;
+    });
+
+    var imgSrc = finalCanvas.toDataURL("image/png");
+
+    downloadFile(fileName, dataURLtoBlob(imgSrc));
+}
+
+function downloadFile(fileName, blob) {
+    var a = document.createElement('a');
+    var url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);  
+    }, 0); 
 }
 
 function dataURLtoBlob(dataurl) {
-    var arr = dataurl.split(','),
-        mime = arr[0].match(/:(.*?);/)[1],//MIME类型部分
-        bstr = atob(arr[1]),//Base64编码的数据内容
-        n = bstr.length,
-        u8arr = new Uint8Array(n);
-    while(n--) {
-        u8arr[n] = bstr.charCodeAt(n);//将解码后的二进制数据转换为Uint8Array数组
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
     }
-    return new Blob(
-        [u8arr],
-        {type: mime}
-    );
+    return new Blob([u8arr], {type:mime});
 }
 
-function downloadFile(fileName, blob) { //创建文件内容
-    var aLink = document.createElement('a');
-    var mouseEvent = document.createEvent("MouseEvents");
-    mouseEvent.initEvent("click", false, false);
-    aLink.download = fileName; //下载文件名
-    aLink.href = URL.createObjectURL(blob); //根据二进制文件生成对象
-    aLink.dispatchEvent(mouseEvent); //触发点击
-}
 
 function getZoomSvg(svgIdName, groupIdName) {
     var svg = d3.select(svgIdName).node();

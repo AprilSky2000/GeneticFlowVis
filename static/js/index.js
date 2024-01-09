@@ -72,9 +72,10 @@ function addAllListeners() {
     });
 
     $("#save").click(function () {
-        var zoomSvg = getZoomSvg('#mainsvg', '#maingroup');
+        var mainsvg = getZoomSvg('#mainsvg', '#maingroup');
+        var tagcloud = getZoomSvg('#tagcloud', null);
         var fileName = name + " GF profile.jpg";
-        downloadSvg(zoomSvg, fileName);
+        downloadSvg([mainsvg, tagcloud], fileName);
     });
     // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
     document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);

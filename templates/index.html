@@ -11,7 +11,8 @@
     <link rel='stylesheet' type='text/css' href="/src/css/d3tip.css">
     <link rel="stylesheet" type='text/css' href="/src/css/layui.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+		
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.js"></script>
     <script src="/src/js/jquery.min.js"></script>
     <script src="/src/js/bootstrap.js"></script>
@@ -232,18 +233,19 @@
                 <div id="tag-tooltip" class="tooltip"></div>
                 
                 <div id="toolbox">
-                    <button id="restore" class="icon-button" style="background-image: url('/src/image/restore.png');"></button>
-                    <button id="zoom-in" class="icon-button" style="background-image: url('/src/image/zoom-in.png');"></button>
-                    <button id="zoom-out" class="icon-button" style="background-image: url('/src/image/zoom-out.png');"></button>
-                    <button id="fullscreen" class="icon-button" style="background-image: url('/src/image/fullscreen.png');"></button>
-                    <button id="save" class="icon-button" style="background-image: url('/src/image/save.png');"></button>
-                    <button id="info" class="icon-button" style="background-image: url('/src/image/info.png');"></button>
+                    <button id="restore" class="icon-button"><i class="fa-solid fa-rotate-right icon"></i></button>
+                    <button id="zoom-in" class="icon-button"><i class="fa-solid fa-plus icon"></i></button>
+                    <button id="zoom-out" class="icon-button"><i class="fa-solid fa-minus icon"></i></button>
+                    <button id="fullscreen" class="icon-button"><i class="fa-solid fa-maximize icon"></i></button>
+                    <button id="save" class="icon-button"><i class="fa-solid fa-download icon"></i></button>
+                    <button id="info" class="icon-button"><i class="fa-solid fa-info icon"></i></button>
+
+                    
                     <span id="info-text">Visualization Guide</span>
                 </div>
                 <div id="overlay"></div>
 
                 <div id="description" style="display:none; margin-top: 10%; margin-bottom: 10%;">
-                    <img id="imageToShow" src="" style="width:100%;" />
                 </div>
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
@@ -555,30 +557,30 @@ $(function () {
     </script>
 
     <script>
-        $("#info").click(function(){
+        // Preload the image
+        var preloadedImage = new Image();
+        preloadedImage.src = '/src/image/overview.png';
+        preloadedImage.style.display = 'none'; // Hide the image initially
+        preloadedImage.style.width = '100%'; // Set width to 100% of the parent container
+        preloadedImage.style.height = 'auto';
+        $("#description").append(preloadedImage); // Assuming there's a div with id 'imageContainer' to hold the image
+
+        $("#info").click(function() {
             if (image_status == 0) {
-                $.ajax({
-                    url: '/description/',
-                    type: 'GET',
-                    success: function(data) {
-                        image_data = "data:image/jpeg;base64," + data.image;
-                        $("#imageToShow").attr("src", image_data);
-                        $("#mainsvg").hide();
-                        $("#tagcloud").hide();
-                        $("#description").show();
-                        image_status = 1;
-                    },
-                    error: function(xhr, status, error) {
-                        alert("An error occurred: " + error);
-                    }
-                });
+                // Display the preloaded image
+                $(preloadedImage).show();
+                $("#mainsvg").hide();
+                $("#tagcloud").hide();
+                $("#description").show();
+                image_status = 1;
             }
             else if (image_status == 1) {
                 reset_graph();
+                $(preloadedImage).hide(); // Hide the image
                 image_status = 2;
             }
             else if (image_status == 2) {
-                $("#imageToShow").attr("src", image_data);
+                $(preloadedImage).show(); // Show the image again
                 $("#mainsvg").hide();
                 $("#tagcloud").hide();
                 $("#description").show();
