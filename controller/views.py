@@ -22,14 +22,11 @@ version_df = pd.read_csv("csv/version.csv", sep=',')
 versionID = version_df.iloc[-1]['versionID']
 
 authorID2fellow = defaultdict(str)
-authorID2fellowYear = defaultdict(int)
 fellow_df = pd.read_csv("csv/award_authors.csv", sep=',', dtype={'MAGID': str})
 for index, row in fellow_df.iterrows():
     authorID = row['MAGID']
     if authorID and authorID != 'NULL':
         authorID2fellow[authorID] += str(row['type']) + ':' + str(row['year']) + ','
-    if row['type'] == 1:
-        authorID2fellowYear[authorID] = int(row['year'])
 # print('authorID2fellow', authorID2fellow)
 
 field2top_authors = {}
@@ -96,7 +93,6 @@ def read_top_authors(field):
     df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',', dtype={'authorID': str})
     if field not in ['acl']:
         df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
-        df['fellowYear'] = df['authorID'].apply(lambda x: authorID2fellowYear.get(x, 0))
     else:
         def getYear(s):
             if len(s) == 0:
@@ -105,7 +101,6 @@ def read_top_authors(field):
             group = re.search(pattern, s)
             return int(group.group(1)) if group else 0
         df['fellow'].fillna('', inplace=True)
-        df['fellowYear'] = df['fellow'].apply(getYear)
     if 'original' in df.columns:
         df['name'] = df['original']
 
@@ -121,8 +116,8 @@ def read_top_authors(field):
         'CoreCitationCount_field': 'CoreCitationCount',
         'CorehIndex_field': 'CorehIndex'
     })
-    df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex', 'fellow', 'fellowYear']]
-    # df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex', 'fellow', 'fellowYear']
+    df = df[['authorID','name','PaperCount','CitationCount','hIndex','CorePaperCount','CoreCitationCount','CorehIndex', 'fellow']]
+    # df.columns = ['authorID','name','paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex', 'fellow']
     df = df.rename(columns={
         'PaperCount': 'paperCount',
         'CitationCount': 'citationCount',

@@ -76,9 +76,9 @@
             return match ? match[1] : ''; // 返回匹配的数字部分，如果没有匹配则返回 null
         }
 
-        function findNumberAfterPattern(str) {
-            // 正则表达式用于匹配 "10:" 后面的数字
-            var regex = /10:(\d+)/;
+        function findNumberAfterPattern(str, pat=10) {
+            // 正则表达式用于匹配 pat 变量后面的数字，可以是 "^pat:" 或 ",pat:"
+            var regex = new RegExp('(?:^|,)' + pat + ':(\\d+)');
             var match = regex.exec(str);
 
             // 如果找到匹配项，则返回匹配的数字，否则返回 null
@@ -93,9 +93,7 @@
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
                 var fellowStr = hasFellow? `<td>${scholar["fellowYear"]}</td>`: ''
-                if (fieldType == "fellowTuring") {
-                    fellowStr = `<td>${findNumberAfterPattern(scholar["fellow"])}</td>`;
-                }
+                if (fieldType == "fellowTuring")  fellowStr = `<td>${scholar["turingYear"]}</td>`;
                 var content = `
                     <tr>
                         <td>${i + 1}</td>
@@ -140,6 +138,10 @@
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
+            scholarList.forEach(scholar => {
+                scholar['turingYear'] = findNumberAfterPattern(scholar["fellow"]);
+                scholar['fellowYear'] = findNumberAfterPattern(scholar["fellow"], 1);
+            })
             
             // 测试服（data有fellow字段）或者fellow领域
             if (data.hasOwnProperty('fellow') || fieldType.includes("fellow")) {
@@ -209,7 +211,8 @@
             var index = $(this).index();
             if (index != 0) {
                 const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex", 
-                "corePaperCount", "coreCitationCount", "corehIndex", 'fellowYear'];
+                "corePaperCount", "coreCitationCount", "corehIndex", 
+                fieldType == "fellowTuring"? 'turingYear': 'fellowYear'];
                 var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
                 console.log('sort on index', index, indexLabel[index], thClass)
                 scholarList.sort(compare(indexLabel[index], thClass));
