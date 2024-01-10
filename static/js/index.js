@@ -1,8 +1,12 @@
 window.onload = checkScreenSize;
 let tagCloudRatio = 0.2;
-let adjacent_nodes = [];
-let adjacent_edges = [];
+let adjacent_ids = [];
+let extend_ids = [];
 let center_node = null;
+let node2topic = {};
+let forceChart = null;
+let label2color = [];
+
 
 
 function guidence() {
@@ -150,6 +154,8 @@ function onFullscreenChange() {
     d3.select("#echartsContainer").remove()
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
+    d3.select("#sliderContainer").remove();
+
     d3.select("#topic-map-svg").remove();
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
     
@@ -517,10 +523,13 @@ function init_graph (viewBox, transform) {
 
 function update_nodes() {
     let fieldLevelVal = $("#field-level").val();
+    label2color = field_roots.map(d => (d[0], 
+        hsvToColor([parseFloat(d[5]), parseInt(d[6]), parseInt(d[7])])));
     for (let i = 0; i < nodes.length; i++) {
         // fields为当前是顶层field还是底层field，topic为当前论文在1层/2层情况下对应的topicID
         let topic = parseInt(nodes[i].topic);
         let fields = field_leaves;
+        let label = parseInt(field_leaves[topic][8]);
         if (fieldLevelVal == 1) {
             topic = parseInt(field_leaves[topic][8]);
             fields = field_roots;
@@ -533,7 +542,8 @@ function update_nodes() {
 
         // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
-        
+        node2topic[nodes[i].id] = topic;
+
         // 如果当前节点被点击，需要修改paper信息中的展示的topic-word
         if (nodes[i].status == 1) {
             $("#paper-field").text(fields[topic][2].split('_').join(', '));
@@ -567,7 +577,7 @@ function update_fields() {
             dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
             dic.cx = parseFloat(fields[topic][3]);
             dic.cy = parseFloat(fields[topic][4]);
-            dic.label = parseInt(fields[topic][8])
+            dic.label = parseInt(fields[topic][8]);
             self_field.push(dic);
         }
     }
@@ -637,23 +647,8 @@ function highlight_field(d, that) {
     
     let duration = 200;
     let field_id = d.id;
-    // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    // let field_color = hsvToColor(d.color);
-    // topic_map_tip.show(d);
-
     tip.show(d);
-
-    // if d is an item in paper_field
-    // if (d.hasOwnProperty('num')) {
-    //     let word = wordPosition.flat().find(item => item.id == d.id);
-    //     tip.show(word);
-    // }
-
-    // // if d is an item in wordPosition
-    // if (d.hasOwnProperty('ratio')) {
-    //     let field = paper_field.find(item => item.id == d.id);
-    //     tip.show(field);
-    // }
+    highlight_topic_forceChart(field_id);
 
     // =========================tagcloud=========================
     d3.selectAll(".tag-rect")
@@ -709,7 +704,8 @@ function highlight_field(d, that) {
     g.selectAll('.reference').data(edges)
         .attr('stroke', d => {
             if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
-                return  probToColor(d.extends_prob);
+                // return  probToColor(d.extends_prob);
+                return 'red';
             else
                 return d3.rgb(224, 224, 224);
         });
@@ -729,6 +725,7 @@ function reset_field(d) {
     if (image_status == 1)  return;
     // =========================tagcloud=========================
     // reset rect color
+    highlight_topic_forceChart(-1);
     d3.select(`#rect_${d.id}`)
         .attr("fill-opacity", 0.6)
         .attr("stroke", "none");
@@ -891,10 +888,9 @@ function draw_hyper_tree(id) {
     //     .then(()=> ht.drawDetailFrame());
 }
 
-function get_adjacent_ids(id) {
+function get_extend_ids(id) {
     var parent_ids = [];
     var new_parent_ids = [id];
-
     while (new_parent_ids.length != parent_ids.length) {
         parent_ids = new_parent_ids;
         for (let i = 0; i < parent_ids.length; i++) {
@@ -902,7 +898,6 @@ function get_adjacent_ids(id) {
         }
         new_parent_ids = Array.from(new Set(new_parent_ids));
     }
-
     var child_ids = [];
     var new_child_ids = [id];
     while (new_child_ids.length != child_ids.length) {
@@ -912,10 +907,9 @@ function get_adjacent_ids(id) {
         }
         new_child_ids = Array.from(new Set(new_child_ids));
     }
-
-    var adjacent_ids = new_child_ids.concat(new_parent_ids);
-    console.log('highlight ids:', adjacent_ids)
-    return adjacent_ids;
+    var extend_ids = new_child_ids.concat(new_parent_ids);
+    // console.log('extend_ids:', extend_ids)
+    return extend_ids;
 }
 
 function draw_radial_graph(centerNodeId, adjacent_ids) {
@@ -1037,9 +1031,7 @@ function draw_radial_graph(centerNodeId, adjacent_ids) {
     
 }
 
-// function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
-//     if (image_status == 1)  return;
-function highlight_node(id, draw_hypertree=false) {   // 输入：当前node的 id
+function highlight_node(id, draw_hypertree=false, show_node_info=false) {   // 输入：当前node的 id
     if (image_switch == 0)  return;
     center_node = id;
 
@@ -1049,44 +1041,63 @@ function highlight_node(id, draw_hypertree=false) {   // 输入：当前node的 
         else    nodes[i].status = 2;
     }
 
-    let adjacent_ids = get_adjacent_ids(id);
-    // draw_radial_graph(id, adjacent_ids)
+    adjacent_ids = [];
+    for (let i = 0; i < edges.length; i++) {
+        if (id == edges[i].source) {
+            adjacent_ids.push(edges[i].target);
+        }
+        else if (id == edges[i].target) {
+        } else if (id == edges[i].target) {
+            adjacent_ids.push(edges[i].source);
+        }
+    }
+    extend_ids = get_extend_ids(id);
+
     if (draw_hypertree) draw_hyper_tree(id);
     
     // 改变当前节点颜色和相邻节点
     g.selectAll(".paper").data(nodes)
         .attr("fill-opacity", d => {
-            if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
+            if (d.id != id && extend_ids.indexOf(d.id) == -1) 
                 return virtualOpacity;
         })
         .attr('stroke', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+            if (d.id == id || extend_ids.indexOf(d.id) != -1)
                 return updateOutlineColor(d.isKeyPaper, d.citationCount);
         })
         .attr('stroke-width', d => {
-            if (d.id == id || adjacent_ids.indexOf(d.id) != -1)
+            if (d.id == id || extend_ids.indexOf(d.id) != -1)
                 return updateOutlineThickness(d.isKeyPaper, d.citationCount);
         });
 
     // 改变当前节点与其相邻节点间线的颜色为红色
     d3.selectAll('.reference')
         .attr('stroke', d => {
-            if (adjacent_ids.includes(d.source) & adjacent_ids.includes(d.target)) return 'black'
-            else    return d3.rgb(224, 224, 224);
+            if (d.target == id || d.source == id)   return 'red';
+            else if (extend_ids.includes(d.source) & extend_ids.includes(d.target)) return 'black';
+            else return d3.rgb(224, 224, 224);
         });
 
     
     for (let i = 0; i < edges.length; i++) {
-        if (edges[i].source != id && edges[i].target != id) {
-            edges[i].status = 1;
-        }
-        else {
+        if (edges[i].source == id && edges[i].target == id) {
             edges[i].status = 2;
+        } else if (extend_ids.includes(edges[i].source) && extend_ids.includes(edges[i].target)) {
+            edges[i].status = 0;
+        } else {
+            edges[i].status = 1;
         }
     }
     // 将当前节点及其邻接点所对应year的topic显示出来
+    let extend_year_topics = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (extend_ids.indexOf(nodes[i].id) != -1) {
+            extend_year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+        }
+    }
+
     adjacent_ids.push(id);
-    let year_topics = [];
+    year_topics = [];
     for (let i = 0; i < nodes.length; i++) {
         if (adjacent_ids.indexOf(nodes[i].id) != -1) {
             year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
@@ -1094,13 +1105,46 @@ function highlight_node(id, draw_hypertree=false) {   // 输入：当前node的 
     }
     g.selectAll(".year-topic")
         .attr("fill-opacity", d => {
-            if (year_topics.indexOf(d.yearTopicId) == -1) return virtualOpacity;
-            return 1;
+            if (year_topics.indexOf(d.yearTopicId) != -1) return 1
+            if (extend_year_topics.indexOf(d.yearTopicId) != -1) return 0.5
+            return virtualOpacity;
         });
+
+    if (show_node_info) {
+        $("#paper-list, #up-line, #down-line, #edge-info").hide();
+        $("#selector, #node-info, #node-info-blank").show();
+
+        // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
+        $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
+        $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
+
+        //更新node-info里的内容
+        let fieldLevelVal = $("#field-level").val();
+        let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id == id) {
+                $('#paper-id').text(nodes[i].id);
+                $('#paper-name').text(nodes[i].name);
+                $('#paper-year').text(nodes[i].year);
+                $('#paper-citation').text(nodes[i].citationCount);
+                if (nodes[i].citationCount == '-1') {
+                    $('#paper-citation').text("Not available");
+                }
+                $('#paper-authors').text(nodes[i].authors);
+                $('#paper-prob').text((parseFloat(nodes[i].isKeyPaper)).toFixed(2));
+                $('#paper-venue').text(nodes[i].venu);
+
+                let topic = parseInt(nodes[i].topic);
+                topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
+                $('#paper-field').text(fields[topic][2].split('_').join(', '));
+                $('#abstract').text(nodes[i].abstract);
+            }
+        }
+    }
 }
 
-function reset_node() {
-    if (image_status == 1)  return;
+function reset_node(reset_info=false) {
+    if (image_switch == 0)  return;
 
     d3.selectAll('.year-topic').attr('fill-opacity', 1);
     g.selectAll('.paper').data(nodes)
@@ -1116,6 +1160,11 @@ function reset_node() {
     }
     for (let i = 0; i < edges.length; i++) {
         edges[i].status = 0;
+    }
+
+    if (reset_info) { 
+        $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+        $("#paper-list").show();
     }
 }
 
@@ -1194,7 +1243,7 @@ function visual_topics() {
 
 }
 
-function probToColor(prob, a=0.1, b=1) {
+function probToColor(prob, a=0, b=0.8) {
     // 将透明度从[0.3, 0.8]映射到 [a, b] 范围
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     const mappedOpacity = a + (b - a) * opacity;
@@ -1208,80 +1257,19 @@ function probToWidth(prob, a=0.4, b=4) {
     return a + opacity * (b - a);
 }
 
-function evolution_force_layout() {
-    d3.select("#mainsvg").remove();
-    d3.select("#tagcloud").remove();
-    d3.select("#echartsContainer").remove();
-    d3.select(".middle-column").append("div")
-        .style("width", $(".middle-column").width() + "px")
-        .style("height", (mainPanalHeight * (1 - tagCloudRatio)) + "px")
-        .attr("id", "echartsContainer");
-    
-    let graph = get_graph();
-    var myChart = echarts.init(document.getElementById('echartsContainer'), null, {
-        renderer: 'canvas',
-        useDirtyRect: false
-        });
-        var app = {};
-        
-        var option;
-
-        const data = graph.nodes;
-        const edges = graph.links;
-        option = {
-        series: [
-            {
-            type: 'graph',
-            layout: 'force',
-            animation: false,
-            data: data,
-            force: {
-                // initLayout: 'circular'
-                // gravity: 0
-                repulsion: 100,
-                edgeLength: 5
-            },
-            edges: edges
-            }
-        ]
-        };
-        setInterval(function () {
-        data.push({
-            id: data.length + ''
-        });
-        var source = Math.round((data.length - 1) * Math.random());
-        var target = Math.round((data.length - 1) * Math.random());
-        if (source !== target) {
-            edges.push({
-            source: source,
-            target: target
-            });
-        }
-        myChart.setOption({
-            series: [
-            {
-                roam: true,
-                data: data,
-                edges: edges
-            }
-            ]
-        });
-        // console.log('nodes: ' + data.length);
-        // console.log('links: ' + data.length);
-        }, 200);
-}
-
 function get_graph() {
+    console.log('field_roots', field_roots)
     var categories = field_roots.map(line=> {
+        color = label2color[line[0]]
         return {
-            "name": String(line[0])
+            "name": String(line[0]),
+            "color": hsvToHex(color.h, 0.7, color.v)
         }
     });
     var topic2catagory = {};
     for (let i = 0; i < field_leaves.length; i++) {
         topic2catagory[i] = field_leaves[i][8];
     }
-
     let node_data = nodes.map(node=> {
         return {
             "id": node.id,
@@ -1312,24 +1300,120 @@ function get_graph() {
     }
 }
 
-function force_layout() {
+function updateChart(graph, year) {
+    // 过滤节点
+    let filteredNodes = graph.nodes.filter(node => node.year <= year);
+
+    // 过滤边（只包括过滤后存在的节点）
+    let filteredLinks = graph.links.filter(link => {
+        return filteredNodes.find(node => node.id === link.source) &&
+               filteredNodes.find(node => node.id === link.target);
+    });
+
+    // 设置新的图表数据
+    forceChart.setOption({
+        series: [{
+            data: filteredNodes,
+            links: filteredLinks
+        }]
+    });
+}
+
+function create_evolution_slider(graph) {
+    // 定义最小年份和最大年份
+    let minYear = graph.nodes.map(node => node.year).reduce((a, b) => Math.min(a, b));
+    let maxYear = graph.nodes.map(node => node.year).reduce((a, b) => Math.max(a, b));
+
+    let sliderContainer = d3.select(".middle-column").append("div")
+        .style("width", $(".middle-column").width() + "px")
+        .style("height", (mainPanalHeight * 0.03) + "px")
+        .style("display", "flex") // 设置为flex布局
+        .style("align-items", "center") // 垂直居中
+        .attr("id", "sliderContainer");
+    // 创建滑块
+    sliderContainer.append("input")
+        .attr("type", "range")
+        .attr("id", "yearSlider")
+        .attr("min", minYear)
+        .attr("max", maxYear)
+        .attr("step", "1")
+        .attr("value", maxYear)
+        .style("width", "85%"); // 调整宽度以留出空间给播放按钮和刻度标签
+
+    // 创建播放按钮
+    sliderContainer.append("button")
+        .attr("id", "playButton")
+        .text("play")
+        .style("margin-left", "10px"); // 添加一些左边距
+
+    // 创建刻度标签
+    sliderContainer.append("div")
+        .attr("id", "sliderLabel")
+        .text(minYear)
+        .style("display", "inline-block")
+        .style("margin-left", "10px"); // 添加一些左边距
+
+    // 播放逻辑
+    let playInterval;
+    document.getElementById('playButton').addEventListener('click', function() {
+        if (playInterval) {
+            clearInterval(playInterval);
+            playInterval = null;
+            this.textContent = 'play';
+        } else {
+            let currentYear = minYear;
+            this.textContent = 'pause';
+            playInterval = setInterval(() => {
+                if (currentYear > maxYear) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                    document.getElementById('playButton').textContent = 'play';
+                    return;
+                }
+                updateSlider(currentYear);
+                currentYear++;
+            }, 300);
+        }
+    });
+
+    // 更新滑块和刻度标签的函数
+    function updateSlider(year) {
+        document.getElementById('yearSlider').value = year;
+        document.getElementById('sliderLabel').innerText = year;
+        updateChart(graph, year); // 确保您已经定义了 updateChart 函数
+    }
+
+    // 初始化滑块的事件监听器
+    document.getElementById('yearSlider').addEventListener('input', function() {
+        updateSlider(this.value);
+    });
+}
+
+function force_layout(evolution=false) {
     // var chartDom = document.getElementById('main');
     d3.select("#mainsvg").remove();
     d3.select("#tagcloud").remove();
     d3.select("#echartsContainer").remove();
+    d3.select("#sliderContainer").remove();
+
+    let sliderHeightRatio = evolution? 0.03: 0;
     d3.select(".middle-column").append("div")
         .style("width", $(".middle-column").width() + "px")
-        .style("height", (mainPanalHeight * (1 - tagCloudRatio)) + "px")
+        .style("height", (mainPanalHeight * (1 - tagCloudRatio - sliderHeightRatio)) + "px")
         .attr("id", "echartsContainer");
-    
-    var forceChart = echarts.init(document.getElementById('echartsContainer'), null, {
+
+    forceChart = echarts.init(document.getElementById('echartsContainer'), null, {
         renderer: 'canvas',
         useDirtyRect: false
     });
     // init_graph(viewBox, transform);
     // var forceChart = echarts.init(g);
-    
+
     let graph = get_graph();
+    console.log('graph', graph)
+
+    if (evolution) create_evolution_slider(graph); 
+
     let option = {
         title: {
         text: 'Self Extension Network',
@@ -1341,33 +1425,103 @@ function force_layout() {
         {
             // selectedMode: 'single',
             data: graph.categories.map(function (a) {
-                return a.name;
+                return { name: a.name };
             })
         }
         ],
+        color: graph.categories.map(a=> a.color),
         series: [
         {
             name: 'Self Extension Network',
             type: 'graph',
             layout: 'force',
-            data: graph.nodes,
+            data: graph.nodes.map(node => {
+                // 设置每个节点的颜色为其类别的颜色
+                return {
+                    ...node,
+                    itemStyle: {
+                        color: graph.categories[node.category].color
+                    }
+                };
+            }),
             links: graph.links,
             categories: graph.categories,
             draggable: true,
             roam: true,
             label: {
-            position: 'right'
+                position: 'right'
             },
             force: {
-            repulsion: 100
+                repulsion: 100
+            },
+            // 修改边的样式使其成为有向图
+            edgeSymbol: ['circle', 'arrow'],
+            edgeSymbolSize: [0, 6],
+            lineStyle: {
+                curveness: 0.1
+            },
+
+            // 设置节点和边的点击事件
+            emphasis: {
+                focus: 'adjacency',
+                lineStyle: {
+                    width: 6
+                }
             }
         }
         ]
     };
-    forceChart.setOption(option);
+    // 设置点击事件监听器
+    forceChart.on('click', function (params) {
+        console.log('click forceChart')
+        if (params.dataType === 'node') {
+            // console.log('click node', params.data.id)
+            highlight_node(params.data.id, true, true);
+        } else if (params.dataType === 'edge') {
+            highlight_edge(params.data.source + '->' + params.data.target);
+        } 
+    });
 
+    forceChart.setOption(option);
     draw_tag_cloud();
 }
+
+// 自定义函数，高亮显示特定topic的节点和边
+function highlight_topic_forceChart(topic) {
+    if (forceChart == undefined) return;
+    let graph = get_graph();
+    // 更新节点的样式
+    let updatedNodes = graph.nodes.map(node => {
+        return {
+            ...node,
+            itemStyle: {
+                ...node.itemStyle,
+                opacity: topic==-1 ? 1: (node2topic[node.id] === topic ? 1 : 0.1),
+            }
+        };
+    });
+    // 更新边的样式
+    let updatedLinks = graph.links.map(link => {
+        let highlight = node2topic[link.source] === topic || node2topic[link.target] === topic;
+        return {
+            ...link,
+            lineStyle: {
+                ...link.lineStyle,
+                opacity: topic==-1? 1: (highlight ? 1 : 0.1),
+                color: highlight & topic!=-1 ? 'red' : 'lightgrey' // 或者保留原来的颜色
+            }
+        };
+    });
+
+    // 应用更新到 ECharts 实例
+    forceChart.setOption({
+        series: [{
+            data: updatedNodes,
+            links: updatedLinks
+        }]
+    });
+}
+
 
 function visual_graph(polygon) {
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
@@ -1447,114 +1601,7 @@ function visual_graph(polygon) {
     })
     .on('click', function () {
         var id = d3.select(this).attr('id');    //当前节点id
-
-        highlight_node(id, true);
-
-        $("#paper-list, #up-line, #down-line, #edge-info").hide();
-        $("#selector, #node-info, #node-info-blank").show();
-
-        // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
-        $(".address-text button").css({ 'font-weight': 'normal', 'opacity': 0.5 });
-        $(".address-text button:first").css({ 'font-weight': 'bold', 'opacity': 1 });
-
-        //更新node-info里的内容
-        let fieldLevelVal = $("#field-level").val();
-        let fields = fieldLevelVal == 1 ? field_roots : field_leaves;
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].id == id) {
-                $('#paper-id').text(nodes[i].id);
-                $('#paper-name').text(nodes[i].name);
-                $('#paper-year').text(nodes[i].year);
-                $('#paper-citation').text(nodes[i].citationCount);
-                if (nodes[i].citationCount == '-1') {
-                    $('#paper-citation').text("Not available");
-                }
-                $('#paper-authors').text(nodes[i].authors);
-                $('#paper-prob').text((parseFloat(nodes[i].isKeyPaper)).toFixed(2));
-                $('#paper-venue').text(nodes[i].venu);
-
-                let topic = parseInt(nodes[i].topic);
-                topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-                $('#paper-field').text(fields[topic][2].split('_').join(', '));
-                $('#abstract').text(nodes[i].abstract);
-            }
-        }
-
-        /*
-         * 下面的代码均为构建引用和被引树
-         */
-        var vis = new Array(edges.length).fill(0);
-        var citedTraversal = function (root) {
-            var self_dict = {};
-            for (let i = 0; i < nodes.length; i++) {
-                if (nodes[i].id == root) {
-                    var title = nodes[i].name;
-                    break;
-                }
-            }
-            self_dict["title"] = title;
-            self_dict["children"] = [];
-            var flag = 0;
-            for (let i = 0; i < edges.length; i++) {
-                if (root == edges[i]['target']) {
-                    if (vis[i] == 1) {
-                        continue;
-                    }
-                    vis[i] = 1;
-                    flag = 1;
-                    self_dict["children"].push(citedTraversal(edges[i]['source']));
-                }
-            }
-            if (flag == 0) {
-                delete self_dict["children"];
-            }
-            return self_dict;
-        }
-        vis = new Array(edges.length).fill(0);
-        var citingTraversal = function (root) {
-            var self_dict = {};
-            for (let i = 0; i < nodes.length; i++) {
-                if (nodes[i].id == root) {
-                    var title = nodes[i].name;
-                    break;
-                }
-            }
-            self_dict["title"] = title;
-            self_dict["children"] = [];
-            var flag = 0;
-            for (let i = 0; i < edges.length; i++) {
-                if (root == edges[i]['source']) {
-                    if (vis[i] == 1) {
-                        continue;
-                    }
-                    vis[i] = 1;
-                    flag = 1;
-                    self_dict["children"].push(citingTraversal(edges[i]['target']));
-                }
-            }
-            if (flag == 0) {
-                delete self_dict["children"];
-            }
-            return self_dict;
-        }
-        var cited_list = [citedTraversal(id)];
-        var citing_list = [citingTraversal(id)];
-        layui.use(['tree', 'util'], function(){
-            var tree = layui.tree,
-            data = cited_list
-            tree.render({
-                elem: '#cited-papers', //默认是点击节点可进行收缩
-                data: data,
-            });
-        });
-        layui.use(['tree', 'util'], function(){
-            var tree = layui.tree,
-            data = citing_list
-            tree.render({
-                elem: '#citing-papers',
-                data: data,
-            });
-        });
+        highlight_node(id, true, true);
     })
     .on('mouseout', function (d) {
         tip.hide(d);
@@ -1570,85 +1617,15 @@ function visual_graph(polygon) {
     .on('click', function () {
         //得到source和target的id
         var id = d3.select(this).attr('id');
-        let id_arr = id.split('->');
-        var source = id_arr[0], target = id_arr[1];
-
-        for (let i = 0; i < edges.length; i++) {
-            if (edges[i].source == source && edges[i].target == target) {
-                edges[i].status = 2;
-            }
-            else {
-                edges[i].status = 1;
-            }
-        }
-
-        // 改变边的起点和终点颜色
-        g.selectAll(".paper").data(nodes)
-            .attr("fill-opacity", d => {
-                if (d.id != source && d.id != target) return virtualOpacity;
-            })
-            .attr('stroke', d => {
-                if (d.id == source || d.id == target)
-                    return updateOutlineColor(d.isKeyPaper, d.citationCount);
-            })
-            .attr('stroke-width', d => {
-                if (d.id == source || d.id == target)
-                    return updateOutlineThickness(d.isKeyPaper, d.citationCount);
-            })
-
-        d3.selectAll('.reference').data(edges)
-            .attr('stroke', d => {
-                if (d.status == 2)   return 'red';
-                else    return d3.rgb(224, 224, 224);
-            })
-            .attr('stroke-width', d => {
-                if (d.id == id) return 10;
-                else    return 2;
-            })
-
-        let year_topics = [];
-        for (let i = 0; i < nodes.length; i++) {
-            if (source == nodes[i].id || target == nodes[i].id) {
-                year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
-            }
-        }
-        g.selectAll(".year-topic")
-            .attr("fill-opacity", d => {
-                if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
-            });
-        
-        $("#paper-list, #selector, #node-info, #node-info-blank, #up-line, #down-line").hide();
-        $("#edge-info").show();
-        
-        //更新edge-info中的内容
-        for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].id == source) {
-                $('#source-paper').text(nodes[i].name);
-                $('#source-paper-year').text(nodes[i].year);
-                $('#source-paper-venu').text(nodes[i].venu);
-                $('#source-paper-citation').text(nodes[i].citationCount);
-            }
-            if (nodes[i].id == target) {
-                $('#target-paper').text(nodes[i].name);
-                $('#target-paper-year').text(nodes[i].year);
-                $('#target-paper-venu').text(nodes[i].venu);
-                $('#target-paper-citation').text(nodes[i].citationCount);
-            }
-        }
-        for (var i = 0; i < edges.length; i++) {
-            if (edges[i].source == source && edges[i].target == target) {
-                $('#citation-context').text(edges[i].citation_context);
-                $('#extend-prob').text(String(edges[i].extends_prob));
-                break;
-            }
-        }
+        highlight_edge(id);
     })
     .on('mouseout', function () {
         d3.select(this)
             .attr("stroke", d => {
+                if (d.status == 0)  return "black"
                 if (d.status == 1)    return d3.rgb(224, 224, 224);
-                else if (d.status == 2)   return "red";
-                else    return probToColor(d.extends_prob);
+                if (d.status == 2)   return "red";
+                return probToColor(d.extends_prob);
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-width", d => probToWidth(d.extends_prob))
@@ -1656,15 +1633,86 @@ function visual_graph(polygon) {
     });
 
     $(document).click(function(event) {
-        if ($(event.target).is('#mainsvg')) {
-            // const fillColorVal = $("#fill-color").val();
-            // if (fillColorVal == 0) {
-            // 点击的是空白处，隐藏元素
-            reset_node();
-            $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-            $("#paper-list").show();
-        }
+        if ($(event.target).is('#mainsvg') || $(event.target).is('#tagcloud'))
+            reset_node(true);
     });
+}
+
+
+
+function highlight_edge(id) {
+    let id_arr = id.split('->');
+    var source = id_arr[0], target = id_arr[1];
+
+    for (let i = 0; i < edges.length; i++) {
+        if (edges[i].source == source && edges[i].target == target) {
+            edges[i].status = 2;
+        }
+        else {
+            edges[i].status = 1;
+        }
+    }
+
+    // 改变边的起点和终点颜色
+    g.selectAll(".paper").data(nodes)
+        .attr("fill-opacity", d => {
+            if (d.id != source && d.id != target) return virtualOpacity;
+        })
+        .attr('stroke', d => {
+            if (d.id == source || d.id == target)
+                return updateOutlineColor(d.isKeyPaper, d.citationCount);
+        })
+        .attr('stroke-width', d => {
+            if (d.id == source || d.id == target)
+                return updateOutlineThickness(d.isKeyPaper, d.citationCount);
+        })
+
+    d3.selectAll('.reference').data(edges)
+        .attr('stroke', d => {
+            if (d.status == 2)   return 'red';
+            else    return d3.rgb(224, 224, 224);
+        })
+        .attr('stroke-width', d => {
+            if (d.id == id) return 10;
+            else    return 2;
+        })
+
+    let year_topics = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (source == nodes[i].id || target == nodes[i].id) {
+            year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+        }
+    }
+    g.selectAll(".year-topic")
+        .attr("fill-opacity", d => {
+            if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
+        });
+    
+    $("#paper-list, #selector, #node-info, #node-info-blank, #up-line, #down-line").hide();
+    $("#edge-info").show();
+    
+    //更新edge-info中的内容
+    for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].id == source) {
+            $('#source-paper').text(nodes[i].name);
+            $('#source-paper-year').text(nodes[i].year);
+            $('#source-paper-venu').text(nodes[i].venu);
+            $('#source-paper-citation').text(nodes[i].citationCount);
+        }
+        if (nodes[i].id == target) {
+            $('#target-paper').text(nodes[i].name);
+            $('#target-paper-year').text(nodes[i].year);
+            $('#target-paper-venu').text(nodes[i].venu);
+            $('#target-paper-citation').text(nodes[i].citationCount);
+        }
+    }
+    for (var i = 0; i < edges.length; i++) {
+        if (edges[i].source == source && edges[i].target == target) {
+            $('#citation-context').text(edges[i].citation_context);
+            $('#extend-prob').text(String(edges[i].extends_prob));
+            break;
+        }
+    }
 }
 
 function updateOutlineColor(isKeyPaper, citationCount) {
@@ -1783,8 +1831,10 @@ function updateVisType() {
     }
     else if (visTypeVal == 1) {
         force_layout();
-    } else {
-
+    } else if (visTypeVal == 2) {
+        force_layout(true);
+    } else if (visTypeVal == 3) {
+        ajaxRequest();
     }
 
 }

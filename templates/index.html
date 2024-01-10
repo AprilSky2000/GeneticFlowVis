@@ -130,7 +130,8 @@
                                 <select id="vis-type" class="form-select" name="VisType" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
                                     <option value="0" selected>sugiyama with year</option>
                                     <option value="1">force layout</option>
-                                    <option value="2">Evolution force layout</option>
+                                    <option value="2">evolution force layout</option>
+                                    <option value="3">sugiyama without year</option>
                                 </select>
                                 <script>
                                     $("#vis-type").change(updateVisType);
@@ -429,9 +430,9 @@ $(function () {
     var filename = `/src/json/${fieldType}/${authorID}`;
     if (fieldType == "acl") {
         $("#edge-value").text("≥0.4 prob.");
-        filename += '_2_0.5_0.4_10_1.json';
+        filename += '_2_0.5_0.4_10_1_1.json';
     }
-    else filename += '_2_0.5_0.5_10_1.json';
+    else filename += '_2_0.5_0.5_10_1_1.json';
 
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
@@ -524,6 +525,7 @@ $(function () {
             paramData.field = "{{ fieldType }}";
             paramData.isKeyPaper = nodeSlider.noUiSlider.get();
             paramData.extendsProb = edgeSlider.noUiSlider.get();
+            paramData.year = $("#vis-type").val() == 3? 0: 1;
 
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},

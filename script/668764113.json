@@ -6,101 +6,143 @@
         "1528597731",
         "2128938146"
     ],
-    "significantHubs": [
-        "2152330592",
-        "2128938146",
-        "2052255065"
-    ],
-    "significantOrigins": [
-        "2969093670",
-        "2902308725",
-        "2611538506"
-    ],
-    "topResearchTopics": {
-        "visualization_flow_use_data_analysis": {
-            "1994": 3,
-            "1997": 2,
-            "1998": 4,
-            "1999": 5,
-            "2000": 1,
-            "2001": 1,
-            "2003": 2,
-            "2006": 1,
-            "2007": 1,
-            "2010": 1,
-            "2012": 2,
-            "2014": 1
-        },
-        "big_data_visualization_analytics_information_visual_knowledge_research_challenge": {
-            "1996": 1,
-            "1999": 2,
-            "2000": 1,
-            "2001": 3,
-            "2002": 1,
-            "2003": 1,
-            "2004": 1,
-            "2005": 2,
-            "2006": 1,
-            "2007": 1,
-            "2010": 2,
-            "2012": 2,
-            "2014": 1,
-            "2015": 2,
-            "2019": 1
-        },
-        "social_twitter_network_sentiment_medium_tweet_opinion_analysis_news": {
-            "2006": 3,
-            "2008": 2,
-            "2009": 3,
-            "2010": 1,
-            "2011": 7,
-            "2012": 2,
-            "2013": 2,
-            "2020": 2
-        },
-        "tree_treemaps_hierarchical_node_hierarchy_space_layout": {
-            "1991": 1,
-            "1993": 1,
-            "1995": 2,
-            "1997": 1,
-            "2001": 1,
-            "2002": 1,
-            "2003": 2,
-            "2004": 1,
-            "2005": 1,
-            "2006": 1,
-            "2011": 1,
-            "2012": 1,
-            "2013": 3
-        },
-        "series_time_temporal_financial_data_visual_analysis_event_vary_pattern": {
-            "2001": 1,
+    "significantHubs": {
+        "2152330592": 617835,
+        "2128938146": 611988,
+        "2052255065": 336007
+    },
+    "significantOrigins": {
+        "2969093670": 1221868,
+        "2902308725": 493157,
+        "2611538506": 356161
+    },
+    "topTopics": {
+        "series_time_temporal_event_data_vary_pattern_visualization": {
+            "2001": 2,
             "2002": 1,
             "2003": 1,
             "2004": 1,
             "2005": 3,
             "2006": 2,
             "2007": 1,
-            "2008": 1,
+            "2008": 2,
             "2009": 2,
+            "2011": 1,
             "2012": 1,
-            "2016": 2
+            "2015": 1,
+            "2016": 2,
+            "2017": 1,
+            "2019": 1
+        },
+        "social_twitter_sentiment_network_medium_tweet_analysis_opinion_user": {
+            "2006": 3,
+            "2008": 3,
+            "2009": 3,
+            "2010": 1,
+            "2011": 3,
+            "2012": 2,
+            "2013": 2,
+            "2020": 2
+        },
+        "treemaps_tree_hierarchical_node_hierarchy_layout_space": {
+            "1991": 1,
+            "1995": 2,
+            "1997": 1,
+            "2001": 1,
+            "2002": 1,
+            "2003": 3,
+            "2004": 1,
+            "2005": 1,
+            "2006": 1,
+            "2011": 1,
+            "2012": 2,
+            "2013": 3
+        }
+    },
+    "topLabels": {
+        "software_code_metric_program_evolution_source_system_tool_developer_architecture,research_citation_patent_bibliometric_analysis_science_knowledge_literature_china_citespace,social_twitter_sentiment_network_medium_tweet_analysis_opinion_user,document_text_topic_search_corpus_information_word,graph_planar_draw_drawing_edge_vertex_orthogonal_straight,tag_cloud_word_content_text_social,ontology_knowledge_semantic_ontological_link_web_domain_concept,pareto_optimization_objective_multiobjective_evolutionary_genetic_decision_solution_problem,treemaps_tree_hierarchical_node_hierarchy_layout_space,graph_draw_algorithm_direct_force_layout_spring_drawing,diagram_euler_venn_diagrammatic_reason_spider_logic_circle_set,astronomical_astronomy_astrophysical_cosmological_universe_galaxy_astrophysics_simulation_observatory_star,graph_node_layout_large_edge_link_exploration_direct,network_node_dynamic_multilayer_complex_analysis_layout_large": {
+            "1991": 1,
+            "1992": 2,
+            "1995": 2,
+            "1997": 4,
+            "1998": 1,
+            "1999": 1,
+            "2000": 2,
+            "2001": 2,
+            "2002": 1,
+            "2003": 5,
+            "2004": 1,
+            "2005": 2,
+            "2006": 7,
+            "2007": 4,
+            "2008": 4,
+            "2009": 4,
+            "2010": 4,
+            "2011": 10,
+            "2012": 6,
+            "2013": 6,
+            "2014": 2,
+            "2015": 2,
+            "2020": 2
+        },
+        "protein_molecular_gene_biological_analysis_cell_genome_data,gi_map_spatial_geographic_geospatial_information_cartographic_data_geographical,series_time_temporal_event_data_vary_pattern_visualization,spatio_temporal_spatiotemporal_data_time_spatial_space_cube_event_information,trajectory_movement_pattern_data_analytics_object_temporal_spatio": {
+            "1996": 1,
+            "1998": 1,
+            "1999": 5,
+            "2001": 3,
+            "2002": 2,
+            "2003": 5,
+            "2004": 2,
+            "2005": 4,
+            "2006": 2,
+            "2007": 2,
+            "2008": 3,
+            "2009": 2,
+            "2010": 1,
+            "2011": 1,
+            "2012": 2,
+            "2015": 1,
+            "2016": 3,
+            "2017": 1,
+            "2019": 1
+        },
+        "student_learn_teach_data_education_big_analytics_mathematics_visualization,heritage_cultural_archaeological_3d_museum_digital_virtual_historical_documentation_archaeology,opengl_graphic_3d_program_library_api_stl_inventor,matlab_simulink_fortran_teach_program_toolbox_simulation_application_software_gui,guide_libguides_resource_library_research_data_tool_home_visualization,conference_proceeding_paper_symposium_international_acm_seminar_ieee_graphic_special,graphic_computer_animation_teach_course_cg_interactive_art_application,collaborative_collaboration_team_group_support_design_work_awareness_distribute,python_package_data_amp_library_program_numpy_jupyter_analysis_book,za_je_na_podataka_dan_yang_dengan_se_sustav_gt,simulation_agent_model_ma_simulator_system_network,iot_sensor_cloud_wireless_thing_internet_wsn_device_network_compute": {
+            "1993": 1,
+            "1994": 1,
+            "1996": 1,
+            "1997": 1,
+            "1998": 1,
+            "1999": 1,
+            "2000": 1,
+            "2001": 3,
+            "2002": 1,
+            "2003": 2,
+            "2004": 1,
+            "2005": 2,
+            "2006": 2,
+            "2008": 2,
+            "2010": 1,
+            "2011": 1,
+            "2014": 2,
+            "2015": 1,
+            "2017": 2,
+            "2018": 1,
+            "2019": 1
         }
     },
     "concerningPapers": {
         "1516293359": {
-            "paperID": "1516293359",
             "title": "Readings in Information Visualization: Using Vision to Think",
             "year": 1999,
-            "isKeyPaper": 0.681818181818182,
+            "isKeyPaper": 0.4090909090909091,
             "referenceCount": 0,
             "citationCount": 3105,
             "authorsName": "Stuart K. Card, Jock D. Mackinlay, Ben Shneiderman",
             "abstract": "1. Information Visualization 2. Space 3. Interaction 4. Focus  Context 5. Data Mapping: Text 6. Higher-Level Visualization 7. Using Vision to Think 8. Applications and Innovations 9. Conclusion Bibliography Index",
-            "topic": "visualization_flow_use_data_analysis"
+            "topic": "student_learn_teach_data_education_big_analytics_mathematics_visualization",
+            "label": "student_learn_teach_data_education_big_analytics_mathematics_visualization,heritage_cultural_archaeological_3d_museum_digital_virtual_historical_documentation_archaeology,opengl_graphic_3d_program_library_api_stl_inventor,matlab_simulink_fortran_teach_program_toolbox_simulation_application_software_gui,guide_libguides_resource_library_research_data_tool_home_visualization,conference_proceeding_paper_symposium_international_acm_seminar_ieee_graphic_special,graphic_computer_animation_teach_course_cg_interactive_art_application,collaborative_collaboration_team_group_support_design_work_awareness_distribute,python_package_data_amp_library_program_numpy_jupyter_analysis_book,za_je_na_podataka_dan_yang_dengan_se_sustav_gt,simulation_agent_model_ma_simulator_system_network,iot_sensor_cloud_wireless_thing_internet_wsn_device_network_compute"
         },
         "1528597731": {
-            "paperID": "1528597731",
             "title": "Analyzing Social Media Networks with NodeXL: Insights from a Connected World",
             "year": 2010,
             "isKeyPaper": 1.0,
@@ -108,10 +150,10 @@
             "citationCount": 759,
             "authorsName": "Derek L. Hansen, Ben Shneiderman, Marc A. Smith",
             "abstract": "Businesses, entrepreneurs, individuals, and government agencies alike are looking to social network analysis (SNA) tools for insight into trends, connections, and fluctuations in social media. Microsoft's NodeXL is a free, open-source SNA plug-in for use with Excel. It provides instant graphical representation of relationships of complex networked data. But it goes further than other SNA tools -- NodeXL was developed by a multidisciplinary team of experts that bring together information studies, computer science, sociology, human-computer interaction, and over 20 years of visual analytic theory and information visualization into a simple tool anyone can use. This makes NodeXL of interest not only to end-users but also to researchers and students studying visual and network analytics and their application in the real world.In Analyzing Social Media Networks with NodeXL, members of the NodeXL development team up provide readers with a thorough and practical guide for using the tool while also explaining the development behind each feature. Blending the theoretical with the practical, this book applies specific SNA instructions directly to NodeXL, but the theory behind the implementation can be applied to any SNA. Walks readers through using NodeXL while explaining the theory and development behind each step, providing takeaways thatcanapply any SNADemonstrates how visual analytics research can be applied to SNA tools for the mass marketPresents readers with case studies using NodeXL on popular networks like email, Facebook, Twitter, and wikis",
-            "topic": "social_twitter_network_sentiment_medium_tweet_opinion_analysis_news"
+            "topic": "social_twitter_sentiment_network_medium_tweet_analysis_opinion_user",
+            "label": "software_code_metric_program_evolution_source_system_tool_developer_architecture,research_citation_patent_bibliometric_analysis_science_knowledge_literature_china_citespace,social_twitter_sentiment_network_medium_tweet_analysis_opinion_user,document_text_topic_search_corpus_information_word,graph_planar_draw_drawing_edge_vertex_orthogonal_straight,tag_cloud_word_content_text_social,ontology_knowledge_semantic_ontological_link_web_domain_concept,pareto_optimization_objective_multiobjective_evolutionary_genetic_decision_solution_problem,treemaps_tree_hierarchical_node_hierarchy_layout_space,graph_draw_algorithm_direct_force_layout_spring_drawing,diagram_euler_venn_diagrammatic_reason_spider_logic_circle_set,astronomical_astronomy_astrophysical_cosmological_universe_galaxy_astrophysics_simulation_observatory_star,graph_node_layout_large_edge_link_exploration_direct,network_node_dynamic_multilayer_complex_analysis_layout_large"
         },
         "2052255065": {
-            "paperID": "2052255065",
             "title": "The dynamic HomeFinder: evaluating dynamic queries in a real-estate information exploration system",
             "year": 1992,
             "isKeyPaper": 1.0,
@@ -120,22 +162,22 @@
             "venu": "International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR)",
             "authorsName": "Christopher Williamson, Ben Shneiderman",
             "abstract": "We designed, implemented, and evaluated a new concept for visualizing and searching databases utilizing direct manipulation called dynamic queries . Dynamic queries allow users to formulate queries by adjusting graphical widgets, such as sliders, and see the results immediately. By providing a graphical visualization of the database and search results, users can find trends and exceptions easily. User testing was done with eighteen undergraduate students who performed significantly faster using a dynamic queries interface compared to both a natural language system and paper printouts. The interfaces were used to explore a real-estate database and find homes meeting specific search criteria.",
-            "topic": "document_text_topic_search_corpus_web_information_retrieval"
+            "topic": "document_text_topic_search_corpus_information_word",
+            "label": "software_code_metric_program_evolution_source_system_tool_developer_architecture,research_citation_patent_bibliometric_analysis_science_knowledge_literature_china_citespace,social_twitter_sentiment_network_medium_tweet_analysis_opinion_user,document_text_topic_search_corpus_information_word,graph_planar_draw_drawing_edge_vertex_orthogonal_straight,tag_cloud_word_content_text_social,ontology_knowledge_semantic_ontological_link_web_domain_concept,pareto_optimization_objective_multiobjective_evolutionary_genetic_decision_solution_problem,treemaps_tree_hierarchical_node_hierarchy_layout_space,graph_draw_algorithm_direct_force_layout_spring_drawing,diagram_euler_venn_diagrammatic_reason_spider_logic_circle_set,astronomical_astronomy_astrophysical_cosmological_universe_galaxy_astrophysics_simulation_observatory_star,graph_node_layout_large_edge_link_exploration_direct,network_node_dynamic_multilayer_complex_analysis_layout_large"
         },
         "2128938146": {
-            "paperID": "2128938146",
             "title": "LifeLines: visualizing personal histories",
             "year": 1996,
-            "isKeyPaper": 0.4189464570813799,
+            "isKeyPaper": 0.2513678742488279,
             "referenceCount": 19,
             "citationCount": 546,
             "venu": "Human Factors in Computing Systems (CHI)",
             "authorsName": "Catherine Plaisant, Brett Milash, Anne Rose, Seth Widoff, Ben Shneiderman",
             "abstract": "LifeLines provide a general visualization environment for personal histories that can be applied to medical and court records, professional histories and other types of biographical data. A one screen overview shows multiple facets of the records. Aspects, for example medical conditions or legal cases, are displayed as individual time lines, while icons indicate discrete events, such as physician consultations or legal reviews. Line color and thickness illustrate relationships or significance, rescaling tools and filters allow users to focus on part of the information. LifeLines reduce the chances of missing information, facilitate spotting anomalies and trends, streamline access to details, while remaining tailorable and easily transferable between applications. The paper describes the use of LifeLines for youth records of the Maryland Department of Juvenile Justice and also for medical records. User's feedback was collected using a Visual Basic prototype for the youth record. Techniques to deal with complex records are reviewed and issues of a standard personal record format are discussed.",
-            "topic": "patient_health_clinical_medical_care_healthcare_data_disease_record"
+            "topic": "patient_health_clinical_medical_care_healthcare_data_ehr_record",
+            "label": "virtual_reality_environment_augment_robot_vr_haptic_ar_interaction,power_device_method_data_module_invention_display_information_control_visualization,aircraft_flight_uav_simulation_unmanned_aerial_control_vehicle_mission,terrain_render_dem_elevation_lod_real_algorithm_3d_digital_large,patient_health_clinical_medical_care_healthcare_data_ehr_record,plant_tree_forest_growth_leaf_root_rice_stand,traffic_transportation_mobility_urban_road_travel_taxi_congestion_bus_data,localization_slam_odometry_visual_place_indoor_robot_camera_recognition_monocular,driver_vehicle_road_traffic_lane_car_detection,covid_19_pandemic_coronavirus_epidemic_spread_disease_outbreak_case,cloud_point_lidar_laser_3d_scan_data_airborne,nc_machining_simulation_opengl_milling_cnc_cut_grind_cam_machine,wildfire_smoke_forest_simulation_fight_flame_spread_real_base,pipeline_underground_network_gallery_3d_urban_dimensional"
         },
         "2138199375": {
-            "paperID": "2138199375",
             "title": "The eyes have it: a task by data type taxonomy for information visualizations",
             "year": 1996,
             "isKeyPaper": 1.0,
@@ -144,10 +186,10 @@
             "venu": "IEEE Symposium on Visual Languages (SVL)",
             "authorsName": "Ben Shneiderman",
             "abstract": "A useful starting point for designing advanced graphical user interfaces is the visual information seeking Mantra: overview first, zoom and filter, then details on demand. But this is only a starting point in trying to understand the rich and varied set of information visualizations that have been proposed in recent years. The paper offers a task by data type taxonomy with seven data types (one, two, three dimensional data, temporal and multi dimensional data, and tree and network data) and seven tasks (overview, zoom, filter, details-on-demand, relate, history, and extracts).",
-            "topic": "big_data_visualization_analytics_information_visual_knowledge_research_challenge"
+            "topic": "spatio_temporal_spatiotemporal_data_time_spatial_space_cube_event_information",
+            "label": "protein_molecular_gene_biological_analysis_cell_genome_data,gi_map_spatial_geographic_geospatial_information_cartographic_data_geographical,series_time_temporal_event_data_vary_pattern_visualization,spatio_temporal_spatiotemporal_data_time_spatial_space_cube_event_information,trajectory_movement_pattern_data_analytics_object_temporal_spatio"
         },
         "2146872957": {
-            "paperID": "2146872957",
             "title": "Tree-maps: a space-filling approach to the visualization of hierarchical information structures",
             "year": 1991,
             "isKeyPaper": 0.0,
@@ -156,10 +198,10 @@
             "venu": "IEEE Visualization (IEEE VIS)",
             "authorsName": "Brian Scott Johnson, Ben Shneiderman",
             "abstract": "A method for visualizing hierarchically structured information is described. The tree-map visualization technique makes 100% use of the available display space, mapping the full hierarchy onto a rectangular region in a space-filling manner. This efficient use of space allows very large hierarchies to be displayed in their entirety and facilitates the presentation of semantic information. Tree-maps can depict both the structure and content of the hierarchy. However, the approach is best suited to hierarchies in which the content of the leaf nodes and the structure of the hierarchy are of primary importance, and the content information associated with internal nodes is largely derived from their children. >",
-            "topic": "tree_treemaps_hierarchical_node_hierarchy_space_layout"
+            "topic": "treemaps_tree_hierarchical_node_hierarchy_layout_space",
+            "label": "software_code_metric_program_evolution_source_system_tool_developer_architecture,research_citation_patent_bibliometric_analysis_science_knowledge_literature_china_citespace,social_twitter_sentiment_network_medium_tweet_analysis_opinion_user,document_text_topic_search_corpus_information_word,graph_planar_draw_drawing_edge_vertex_orthogonal_straight,tag_cloud_word_content_text_social,ontology_knowledge_semantic_ontological_link_web_domain_concept,pareto_optimization_objective_multiobjective_evolutionary_genetic_decision_solution_problem,treemaps_tree_hierarchical_node_hierarchy_layout_space,graph_draw_algorithm_direct_force_layout_spring_drawing,diagram_euler_venn_diagrammatic_reason_spider_logic_circle_set,astronomical_astronomy_astrophysical_cosmological_universe_galaxy_astrophysics_simulation_observatory_star,graph_node_layout_large_edge_link_exploration_direct,network_node_dynamic_multilayer_complex_analysis_layout_large"
         },
         "2152330592": {
-            "paperID": "2152330592",
             "title": "Using Treemaps to Visualize the Analytic Hierarchy Process",
             "year": 1995,
             "isKeyPaper": 1.0,
@@ -168,42 +210,43 @@
             "venu": "Information Systems Research",
             "authorsName": "Toshiyuki Asahi, David Turo, Ben Shneiderman",
             "abstract": "Treemaps, a visualization method for large hierarchical data spaces, are used to augment the capabilities of the Analytic Hierarchy Process (AHP) for decision-making. Two direct manipulation tools, presented metaphorically as a xe2x80x9cpumpxe2x80x9d and a xe2x80x9chook,xe2x80x9d were developed and applied to the treemap to support AHP sensitivity analysis. Users can change the importance of criteria dynamically on the two-dimensional treemap and immediately see the impact on the outcome of the decision. This fluid process dramatically speeds up exploration and provides a better understanding of the relative impact of the component criteria. A usability study with six subjects using a prototype AHP application showed that treemap representation was acceptable from a visualization and data operation standpoint.",
-            "topic": "tree_treemaps_hierarchical_node_hierarchy_space_layout"
+            "topic": "treemaps_tree_hierarchical_node_hierarchy_layout_space",
+            "label": "software_code_metric_program_evolution_source_system_tool_developer_architecture,research_citation_patent_bibliometric_analysis_science_knowledge_literature_china_citespace,social_twitter_sentiment_network_medium_tweet_analysis_opinion_user,document_text_topic_search_corpus_information_word,graph_planar_draw_drawing_edge_vertex_orthogonal_straight,tag_cloud_word_content_text_social,ontology_knowledge_semantic_ontological_link_web_domain_concept,pareto_optimization_objective_multiobjective_evolutionary_genetic_decision_solution_problem,treemaps_tree_hierarchical_node_hierarchy_layout_space,graph_draw_algorithm_direct_force_layout_spring_drawing,diagram_euler_venn_diagrammatic_reason_spider_logic_circle_set,astronomical_astronomy_astrophysical_cosmological_universe_galaxy_astrophysics_simulation_observatory_star,graph_node_layout_large_edge_link_exploration_direct,network_node_dynamic_multilayer_complex_analysis_layout_large"
         },
         "2611538506": {
-            "paperID": "2611538506",
             "title": "Finding Similar People to Guide Life Choices: Challenge, Design, and Evaluation",
             "year": 2017,
-            "isKeyPaper": 1.0,
+            "isKeyPaper": 0.6153846153846154,
             "referenceCount": 40,
             "citationCount": 40,
             "venu": "Human Factors in Computing Systems (CHI)",
             "authorsName": "Fan Du, Catherine Plaisant, Neil Spring, Ben Shneiderman",
             "abstract": "People often seek examples of similar individuals to guide their own life choices. For example, students making academic plans refer to friends; patients refer to acquaintances with similar conditions, physicians mention past cases seen in their practice. How would they want to search for similar people in databases? We discuss the challenge of finding similar people to guide life choices and report on a need analysis based on 13 interviews. Our PeerFinder prototype enables users to find records that are similar to a seed record, using both record attributes and temporal events found in the records. A user study with 18 participants and four experts shows that users are more engaged and more confident about the value of the results to provide useful evidence to guide life choices when provided with more control over the search process and more context for the results, even at the cost of added complexity.",
-            "topic": "document_text_topic_search_corpus_web_information_retrieval"
+            "topic": "guide_libguides_resource_library_research_data_tool_home_visualization",
+            "label": "student_learn_teach_data_education_big_analytics_mathematics_visualization,heritage_cultural_archaeological_3d_museum_digital_virtual_historical_documentation_archaeology,opengl_graphic_3d_program_library_api_stl_inventor,matlab_simulink_fortran_teach_program_toolbox_simulation_application_software_gui,guide_libguides_resource_library_research_data_tool_home_visualization,conference_proceeding_paper_symposium_international_acm_seminar_ieee_graphic_special,graphic_computer_animation_teach_course_cg_interactive_art_application,collaborative_collaboration_team_group_support_design_work_awareness_distribute,python_package_data_amp_library_program_numpy_jupyter_analysis_book,za_je_na_podataka_dan_yang_dengan_se_sustav_gt,simulation_agent_model_ma_simulator_system_network,iot_sensor_cloud_wireless_thing_internet_wsn_device_network_compute"
         },
         "2902308725": {
-            "paperID": "2902308725",
             "title": "Visual Interfaces for Recommendation Systems: Finding Similar and Dissimilar Peers",
             "year": 2018,
-            "isKeyPaper": 1.0,
+            "isKeyPaper": 0.6153846153846154,
             "referenceCount": 58,
             "citationCount": 9,
             "venu": "ACM Transactions on Intelligent Systems and Technology",
             "authorsName": "Fan Du, Catherine Plaisant, Neil Spring, Ben Shneiderman",
             "abstract": "Recommendation applications can guide users in making important life choices by referring to the activities of similar peers. For example, students making academic plans may learn from the data of similar students, while patients and their physicians may explore data from similar patients to select the best treatment. Selecting an appropriate peer group has a strong impact on the value of the guidance that can result from analyzing the peer group data. In this article, we describe a visual interface that helps users review the similarity and differences between a seed record and a group of similar records and refine the selection. We introduce the LikeMeDonuts, Ranking Glyph, and History Heatmap visualizations. The interface was refined through three rounds of formative usability evaluation with 12 target users, and its usefulness was evaluated by a case study with a student review manager using real student data. We describe three analytic workflows observed during use and summarize how usersxe2x80x99 input shaped the final design.",
-            "topic": "student_learn_educational_learner_analytics_teacher_course"
+            "topic": "student_learn_teach_data_education_big_analytics_mathematics_visualization",
+            "label": "student_learn_teach_data_education_big_analytics_mathematics_visualization,heritage_cultural_archaeological_3d_museum_digital_virtual_historical_documentation_archaeology,opengl_graphic_3d_program_library_api_stl_inventor,matlab_simulink_fortran_teach_program_toolbox_simulation_application_software_gui,guide_libguides_resource_library_research_data_tool_home_visualization,conference_proceeding_paper_symposium_international_acm_seminar_ieee_graphic_special,graphic_computer_animation_teach_course_cg_interactive_art_application,collaborative_collaboration_team_group_support_design_work_awareness_distribute,python_package_data_amp_library_program_numpy_jupyter_analysis_book,za_je_na_podataka_dan_yang_dengan_se_sustav_gt,simulation_agent_model_ma_simulator_system_network,iot_sensor_cloud_wireless_thing_internet_wsn_device_network_compute"
         },
         "2969093670": {
-            "paperID": "2969093670",
             "title": "EventAction: A Visual Analytics Approach to Explainable Recommendation for Event Sequences",
             "year": 2019,
-            "isKeyPaper": 1.0,
+            "isKeyPaper": 0.6153846153846154,
             "referenceCount": 87,
             "citationCount": 7,
             "authorsName": "Fan Du, Catherine Plaisant, Neil Spring, Kenyon Crowley, Ben Shneiderman",
-            "abstract": "People use recommender systems to improve their decisions; for example, item recommender systems help them find films to watch or books to buy. Despite the ubiquity of item recommender systems, they can be improved by giving users greater transparency and control. This article develops and assesses interactive strategies for transparency and control, as applied to event sequence recommender systems, which provide guidance in critical life choices such as medical treatments, careers decisions, and educational course selections. This articlexe2x80x99s main contribution is the use of both record attributes and temporal event information as features to identify similar records and provide appropriate recommendations. While traditional item recommendations are based on choices by people with similar attributes, such as those who looked at this product or watched this movie, our event sequence recommendation approach allows users to select records that share similar attribute values and start with a similar event sequence. Then users see how different choices of actions and the orders and times between them might lead to usersxe2x80x99 desired outcomes. This paper applies a visual analytics approach to present and explain recommendations of event sequences. It presents a workflow for event sequence recommendation that is implemented in EventAction and reports on three case studies in two domains to illustrate the use of generating event sequence recommendations based on personal histories. It also offers design guidelines for the construction of user interfaces for event sequence recommendation and discusses ethical issues in dealing with personal histories. A demo video of EventAction is available at https://hcil.umd.edu/eventaction.",
-            "topic": "student_learn_educational_learner_analytics_teacher_course"
+            "abstract": "People use recommender systems to improve their decisions; for example, item recommender systems help them find films to watch or books to buy. Despite the ubiquity of item recommender systems, they can be improved by giving users greater transparency and control. This article develops and assesses interactive strategies for transparency and control, as applied to event sequence recommender systems, which provide guidance in critical life choices such as medical treatments, careers decisions, and educational course selections. This articlexe2x80x99s main contribution is the use of both record attributes and temporal event information as features to identify similar records and provide appropriate recommendations. While traditional item recommendations are based on choices by people with similar attributes, such as those who looked at this product or watched this movie, our event sequence recommendation approach allows users to select records that share similar attribute values and start with a similar event sequence. Then users see how different choices of actions and the orders and times between them might lead to usersxe2x80x99 desired outcomes. This paper applies a visual analytics approach to present and explain recommendations of event sequences. It presents a workflow for event sequence recommendation that is implemented in EventAction and reports on three case studies in two domains to illustrate the use of generating event sequence recommendations based on personal histories. It also offers design guidelines for the construction of user interfaces for event sequence recommendation and discusses ethical issues in dealing with personal histories. A demo video of EventAction is available at https://hcil.umd.edu/eventaction.\nPeople use recommender systems to improve their decisions; for example, item recommender systems help them find films to watch or books to buy. Despite the ubiquity of item recommender systems, they can be improved by giving users greater transparency and control. This article develops and assesses interactive strategies for transparency and control, as applied to event sequence recommender systems, which provide guidance in critical life choices such as medical treatments, careers decisions, and educational course selections. This article\u2019s main contribution is the use of both record attributes and temporal event information as features to identify similar records and provide appropriate recommendations. While traditional item recommendations are based on choices by people with similar attributes, such as those who looked at this product or watched this movie, our event sequence recommendation approach allows users to select records that share similar attribute values and start with a similar event sequence. Then users see how different choices of actions and the orders and times between them might lead to users\u2019 desired outcomes. This paper applies a visual analytics approach to present and explain recommendations of event sequences. It presents a workflow for event sequence recommendation that is implemented in EventAction and reports on three case studies in two domains to illustrate the use of generating event sequence recommendations based on personal histories. It also offers design guidelines for the construction of user interfaces for event sequence recommendation and discusses ethical issues in dealing with personal histories. A demo video of EventAction is available at https://hcil.umd.edu/eventaction.",
+            "topic": "series_time_temporal_event_data_vary_pattern_visualization",
+            "label": "protein_molecular_gene_biological_analysis_cell_genome_data,gi_map_spatial_geographic_geospatial_information_cartographic_data_geographical,series_time_temporal_event_data_vary_pattern_visualization,spatio_temporal_spatiotemporal_data_time_spatial_space_cube_event_information,trajectory_movement_pattern_data_analytics_object_temporal_spatio"
         }
     }
 }

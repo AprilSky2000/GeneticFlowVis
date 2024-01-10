@@ -187,9 +187,18 @@ def topicflow(request):
     })
 
 
-def create_node(dot, papers, nodeWidth):
+def create_node(dot, papers, nodeWidth, year=True):
     # 取出论文的所有年份
     papers = papers.values()
+    if not year:
+        for paper in papers:
+            label = paper['title'].split(' ')[0][0:5]
+            paper_name = label + '\n'
+            suffix = '?' if int(paper['citationCount']) == -1 else str(paper['citationCount'])
+        
+            dot.node(name=paper['paperID'], label=suffix)        
+        return
+
     if len(papers):
         min_year = min(item['year'] for item in papers)
         max_year = max(item['year'] for item in papers)
@@ -231,28 +240,6 @@ def create_edge(dot, papers, links):
         citingpaperID, citedpaperID = link['childrenID'], link['parentID']
         if citedpaperID in papers and citingpaperID in papers:
             dot.edge(papers[citedpaperID]['paperID'], papers[citingpaperID]['paperID'])
-
-def create_partial_graph(dot, papers, links, nodeWidth, mode):
-    if mode == 0:
-        create_node(dot, papers, nodeWidth)
-        create_edge(dot, papers, links)
-        return
-    valid_nodes = set()
-    # 当节点没有边与其相连时，删去
-    for link in links:
-        a = link['childrenID']
-        b = link['parentID']
-        if a in papers and b in papers:
-            valid_nodes.add(a)
-            valid_nodes.add(b)
-    if mode == 2:
-        for k, v in papers.items():
-            if v['citationCount'] >= 50:
-                valid_nodes.add(k)
-
-    papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
-    create_node(dot, papers_backup, nodeWidth)
-    create_edge(dot, papers_backup, links)
 
 def get_node(nodes, papers):
     nodeData = []
@@ -353,34 +340,85 @@ def index(request):
                 client_ip, fieldType, authorID, author["name"])
     
     fields = get_fields(fieldType)
-    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 2, 0.5, 0.5, 10, 1
+    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey, year = 2, 0.5, 0.5, 10, 1, 1
     if fieldType == "acl":
         extendsProb = 0.4
-    detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}'
+    detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}_{year}'
     filename = f'static/json/{fieldType}/{detail}.json'
 
     if os.path.exists(f'csv/{fieldType}/paperID2topic.json') and fieldType not in field2topics:
         with open(f'csv/{fieldType}/paperID2topic.json', 'r') as f:
             field2topics[fieldType] = json.load(f)
 
-    if os.path.exists(filename) == False or os.environ.get('TEST', False):
-        dot = graphviz.Digraph(filename=detail, format='svg')
-
-        # 读取相应papers文件
-        papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
-        # 读取相应influence文件
-        links = read_links(fieldType, authorID, extendsProb)
-        # 创建图
-        create_partial_graph(dot, papers, links, nodeWidth, mode)
-
-        dot.render(directory=f"static/image/svg/{fieldType}", view=False)
-        # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
-
-        write_d3_data(fieldType, detail, papers, links)
+    if os.path.exists(filename) == False:
+        create_partial_graph(fieldType, detail)
 
     return render(request, "index.html",
                   {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"], 
                    'citationCount': author["citationCount"], 'hIndex': author["hIndex"], 'fields': fields, 'fieldType': fieldType})
+
+
+def create_partial_graph(fieldType, detail):
+    dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'TB'})
+
+    authorID, mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey, year = detail.split('_')
+    mode = int(mode)
+    isKeyPaper = float(isKeyPaper)
+    extendsProb = float(extendsProb)
+    nodeWidth = int(nodeWidth)
+    removeSurvey = int(removeSurvey)
+    year = int(year)
+
+    papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
+    links = read_links(fieldType, authorID, extendsProb)
+
+    paper_year_map = papers.set_index('paperID')['year'].to_dict()
+    modified_links = []
+    for index, row in links.iterrows():
+        parent_year = paper_year_map.get(row['parentID'])
+        child_year = paper_year_map.get(row['childrenID'])
+        
+        # 检查年份并根据需要修正引用方向
+        if parent_year and child_year:
+            if parent_year > child_year:
+                # 反转引用方向
+                links.at[index, 'parentID'], links.at[index, 'childrenID'] = row['childrenID'], row['parentID']
+                modified_links.append(f"swap link {row['childrenID']}, {row['parentID']}")
+            elif parent_year == child_year and int(row['parentID']) > int(row['childrenID']):
+                # 删除引用
+                links.drop(index, inplace=True)
+                modified_links.append(f"delete link {row['parentID']}, {row['childrenID']}")
+
+    # 打印修改记录
+    for modification in modified_links:
+        print(modification)
+    papers = {x['paperID']: x for x in papers.to_dict(orient='records')}
+    links = links.to_dict(orient='records')
+
+    if mode == 0:
+        create_node(dot, papers, nodeWidth, year)
+        create_edge(dot, papers, links)
+        return
+    valid_nodes = set()
+    # 当节点没有边与其相连时，删去
+    for link in links:
+        a = link['childrenID']
+        b = link['parentID']
+        if a in papers and b in papers:
+            valid_nodes.add(a)
+            valid_nodes.add(b)
+    if mode == 2:
+        for k, v in papers.items():
+            if v['citationCount'] >= 50:
+                valid_nodes.add(k)
+
+    papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
+    create_node(dot, papers_backup, nodeWidth, year)
+    create_edge(dot, papers_backup, links)
+
+    # 保存为svg, json文件
+    dot.render(directory=f"static/image/svg/{fieldType}", view=False)
+    write_d3_data(fieldType, detail, papers, links)
 
 
 def clean(request):
@@ -401,25 +439,18 @@ def update(request):
     extendsProb = request.POST.get("extendsProb")
     nodeWidth = request.POST.get("nodeWidth")
     removeSurvey = request.POST.get("removeSurvey")
-    detail = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}'
+    year = request.POST.get("year")
+    detail = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}_{year}'
     mode = int(mode)
     isKeyPaper = float(isKeyPaper)
     extendsProb = float(extendsProb)
     nodeWidth = int(nodeWidth)
     removeSurvey = int(removeSurvey)
+    year = int(year)
 
     filename = f'static/json/{fieldType}/{detail}.json'
-    if os.path.exists(filename) == False or os.environ.get('TEST', False):
-        dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'LR'})
-
-        papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
-        links = read_links(fieldType, authorID, extendsProb)
-
-        create_partial_graph(dot, papers, links, nodeWidth, mode)            
-        dot.render(directory=f"static/image/svg/{fieldType}", view=False)
-        # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
-
-        write_d3_data(fieldType, detail, papers, links)
+    if os.path.exists(filename) == False:
+        create_partial_graph(fieldType, detail)
 
     param = {'detail': detail, 'fieldType': fieldType}
     return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
@@ -461,8 +492,7 @@ def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
     if removeSurvey == 1:
         # surveys = df.loc[df['title'].str.contains('survey|Survey'), 'paperID'].tolist() # 抽取所有title中含有survey的paperID作为list
         df = df[~df['title'].str.contains(r'survey|surveys', case=False, regex=True)]
-    lis = df.to_dict(orient='records')
-    return {x['paperID']: x for x in lis}
+    return df
 
 
 def read_links(fieldType, authorID, extendsProb):
@@ -476,7 +506,7 @@ def read_links(fieldType, authorID, extendsProb):
     df = df[df["extendsProb"] >= extendsProb]
     # df = df[~df["childrenID"].isin(surveys)]
     # df = df[~df["parentID"].isin(surveys)]
-    return df.to_dict(orient='records')
+    return df
 
     
 def get_fields(fieldType):
