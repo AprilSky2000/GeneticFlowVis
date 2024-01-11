@@ -10,7 +10,7 @@ body {
     -ms-flex-align: center;
     -ms-flex-pack: center;
     -webkit-box-align: center;
-    align-items: center;
+    /* align-items: center; */
     -webkit-box-pack: center;
     justify-content: center;
     padding-top: 40px;
@@ -44,8 +44,8 @@ select {
     width: 300%;
     /* max-width: 600px; */
     padding: 15px;
-    margin-top: -10%;
-    margin-bottom: -10%;
+    /* margin-top: -10%;
+    margin-bottom: -10%; */
 }
 .form-signin .checkbox {
     font-weight: 400;
