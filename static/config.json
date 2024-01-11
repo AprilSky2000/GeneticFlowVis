@@ -38,16 +38,19 @@
     "fellow": {
         "name": "Fellows",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)"
+        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
+        "year": "fellowYear"
     },
     "fellowTuring": {
         "name": "Turing Award",
-        "icon": "fa-solid fa-trophy icon"
+        "icon": "fa-solid fa-trophy icon",
+        "year": "turingYear"
     },
     "ACMfellowTuring": {
         "name": "ACM Fellows & Turing Award",
         "icon": "fa-solid fa-award icon",
-        "description": "Fellows of the ACM and Turing Award Winners"
+        "description": "Fellows of the ACM and Turing Award Winners",
+        "year": "fellowYear"
     },
     "SE": {
         "name": "Software & Programming Language",

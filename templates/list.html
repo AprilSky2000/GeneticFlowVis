@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        let hasFellow = false;
+        let setting;
         function compare(index, sortType) {
             return function(row1, row2) {
                 var aValue = row1[index];
@@ -92,8 +92,7 @@
             
             for (let i = startIndex; i < endIndex && i < scholarList.length; i++) {
                 let scholar = scholarList[i];
-                var fellowStr = hasFellow? `<td>${scholar["fellowYear"]}</td>`: ''
-                if (fieldType == "fellowTuring")  fellowStr = `<td>${scholar["turingYear"]}</td>`;
+                var fellowStr = setting['year']? `<td>${scholar[setting['year']]}</td>`: ''
                 var content = `
                     <tr>
                         <td>${i + 1}</td>
@@ -134,24 +133,20 @@
             displayData(1);
         }
 
-        function createList(data) {
+        function createList() {
             itemsPerPage = 1000;    // 每页显示的数据数量
             scholarList = {{ scholarList|safe }};
             fieldType = "{{ fieldType }}";
-            scholarList.forEach(scholar => {
-                scholar['turingYear'] = findNumberAfterPattern(scholar["fellow"]);
-                scholar['fellowYear'] = findNumberAfterPattern(scholar["fellow"], 1);
-            })
             
-            // 测试服（data有fellow字段）或者fellow领域
-            if (data.hasOwnProperty('fellow') || fieldType.includes("fellow")) {
-                hasFellow = true;
+            
+            if (setting.hasOwnProperty('year')) {
+                scholarList.forEach(scholar => {
+                    scholar['turingYear'] = findNumberAfterPattern(scholar["fellow"]);
+                    scholar['fellowYear'] = findNumberAfterPattern(scholar["fellow"], 1);
+                })
                 var headerRow = document.getElementById('tableHeaderRow');
                 var fellowTh = document.createElement('th');
-                fellowTh.textContent = 'Fellow Year';
-                if (fieldType == "fellowTuring") {
-                    fellowTh.textContent = 'Turing Year';
-                }
+                fellowTh.textContent = setting['year'].replace('fellow', 'Fellow ').replace('turing', 'Turing ');
                 // Find the last <th> element in the row
                 var lastTh = headerRow.querySelector('th:last-child');
                 // Insert the new <th> before the last <th>
@@ -159,7 +154,7 @@
             }
 
             var fieldlabel, questionContent, imgHeight;
-            fieldlabel = data[fieldType].name;
+            fieldlabel = setting.name;
             imgHeight = $("img").css("height");
             $("#field").css("height", imgHeight);
             $("#field").css("line-height", imgHeight);
@@ -197,11 +192,13 @@
 			fetch('/src/config.json')
 			.then(response => response.json())
 			.then(data => {
-				delete data['default'];
 				isTestEnv().then(isTest => {
-					if(!isTest) delete data['fellow'];
-					// console.log(data);
-					createList(data);
+					fieldType = "{{ fieldType }}";
+                    setting = data[fieldType];
+                    if (isTest) {
+                        setting['year'] = setting['year'] || "fellowYear";
+                    }
+					createList();
 				})
 			})
 			.catch(error => console.error('Error:', error));
@@ -211,8 +208,7 @@
             var index = $(this).index();
             if (index != 0) {
                 const indexLabel = ["rank", "name", "paperCount", "citationCount", "hIndex", 
-                "corePaperCount", "coreCitationCount", "corehIndex", 
-                fieldType == "fellowTuring"? 'turingYear': 'fellowYear'];
+                "corePaperCount", "coreCitationCount", "corehIndex", setting['year']];
                 var thClass = $(this).hasClass('asc') ? 'desc' : 'asc';
                 console.log('sort on index', index, indexLabel[index], thClass)
                 scholarList.sort(compare(indexLabel[index], thClass));
@@ -222,6 +218,8 @@
                 displayData(1);
             }
         });
+    // 对于year字段，在config.json中定义各个领域显示的year
+    // 如果没有定义：test环境下显示fellowYear，正式服下不显示
     </script>
 </body>
 </html>
