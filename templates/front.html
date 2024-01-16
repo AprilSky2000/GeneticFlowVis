@@ -19,7 +19,16 @@
             <input type="hidden" name="csrfmiddlewaretoken" value="Yse6cgbnpqJr4Xjn1flWIVqE5knZ5Ty44Z0GtTvzdxFypbn46s9aILmj2eTgPCWJ">
 			<a href="/"><img class="mb-4" src="/src/image/logo-search.jpg" alt="" width="420" height="110"></a>
 			<br />
-            <div id="dynamicList" style="display: inline;"></div>
+            <div id="dynamicList" style="display: inline;">
+				<div class="category">
+					<div class="category-header" onclick="toggleCategory('category1')">CS-Subfield</div>
+					<div class="category-content" id="category1"></div>
+				</div>
+				<div class="category">
+					<div class="category-header" onclick="toggleCategory('category2')">Top-Scholar</div>
+					<div class="category-content" id="category2"></div>
+				</div>
+			</div>
 			<br />
 			<br />
 			<br />
@@ -63,20 +72,27 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 			.catch(error => console.error('Error:', error));
 		});
 
+		function toggleCategory(categoryId) {
+			$("#" + categoryId).toggle();
+		}
 		// icon: https://fontawesome.com/search?o=r&s=solid&f=classic
 		// https://www.flaticon.com/free-icons/ai
 		function createList(data) {
-			const container = document.getElementById('dynamicList');
-			
+			const container1 = $('#category1');
+			const container2 = $('#category2');
+
 			for (const key in data) {
 				const item = data[key];
-				const link = document.createElement('a');
-				link.href = `search?field=${key}`;
-				link.className = 'custom-button';
-				link.innerHTML = `<i class="${item.icon}"></i> ${item.name}`;
-				link.title = item.description || item.name;
-				container.appendChild(link);
+				const link = $('<a>').attr('href', `search?field=${key}`)
+									 .addClass('custom-button')
+									 .html(`<i class="${item.icon}"></i> ${item.name}`)
+									 .attr('title', item.description || item.name);
+				switch (item["type"]) {
+					case "CS Subfield": container1.append(link); break;
+					case "Top Scholar": container2.append(link); break;
+				}
 			}
 		}
+
 	</script>
 </html>

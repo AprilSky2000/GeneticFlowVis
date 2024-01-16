@@ -10,63 +10,76 @@
         "edge_prob": 0.4,
         "name": "NLP",
         "icon": "fa-solid fa-pencil icon",
-        "description": "Natural Language Processing"
+        "description": "Natural Language Processing",
+        "type": "CS Subfield"
     },
     "CG": {
         "name": "Graphics",
         "icon": "fa-brands fa-codepen icon",
-        "description": "Computer Graphics"
+        "description": "Computer Graphics",
+        "type": "CS Subfield"
     },
     "VCG": {
         "name": "Graphics & Visualization",
         "icon": "fa-solid fa-cubes icon",
-        "description": "Computer Graphics and Visualization"
+        "description": "Computer Graphics and Visualization",
+        "type": "CS Subfield"
     },
     "database": {
         "name": "Database & Data Science",
-        "icon": "fa-solid fa-database icon"
+        "icon": "fa-solid fa-database icon",
+        "type": "CS Subfield"
     },
     "visualization": {
         "name": "Visualization",
-        "icon": "fas fa-eye icon"
+        "icon": "fas fa-eye icon",
+        "type": "CS Subfield"
     },
     "ACMfellow": {
         "name": "ACM Fellows",
         "icon": "fa-solid fa-graduation-cap icon",
-        "description": "Fellows of the ACM"
+        "description": "Fellows of the ACM",
+        "type": "Top Scholar"
     },
     "fellow": {
         "name": "Fellows",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
-        "year": "fellowYear"
+        "year": "fellowYear",
+        "type": "Top Scholar"
     },
     "fellowTuring": {
         "name": "Turing Award",
         "icon": "fa-solid fa-trophy icon",
-        "year": "turingYear"
+        "year": "turingYear",
+        "type": "Top Scholar"
     },
     "ACMfellowTuring": {
         "name": "ACM Fellows & Turing Award",
         "icon": "fa-solid fa-award icon",
         "description": "Fellows of the ACM and Turing Award Winners",
-        "year": "fellowYear"
+        "year": "fellowYear",
+        "type": "Top Scholar"
     },
     "SE": {
         "name": "Software & Programming Language",
-        "icon": "fa-brands fa-microsoft icon"
+        "icon": "fa-brands fa-microsoft icon",
+        "type": "CS Subfield"
     },
     "HCI": {
         "name": "Human-Computer Interaction",
-        "icon": "fa-solid fa-display icon"
+        "icon": "fa-solid fa-display icon",
+        "type": "CS Subfield"
     },
     "CN": {
         "name": "Networking & Parallel/Distributed/Real-time/Embedded Computing",
-        "icon": "fa-solid fa-network-wired icon"
+        "icon": "fa-solid fa-network-wired icon",
+        "type": "CS Subfield"
     },
     "AI": {
         "name": "Artificial Intelligence at Large",
-        "icon": "fa-solid fa-robot icon"
+        "icon": "fa-solid fa-robot icon",
+        "type": "CS Subfield"
     }
 }
 
