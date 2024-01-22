@@ -438,6 +438,7 @@ $(function () {
         $("#field h1").append(`<span>- ${fieldlabel}</span>`);
 
         d3.json(filename).then( data => {
+            console.log('data', data);
             years = data[1];            //年份节点
             nodes = data[2];            //论文节点
             edges = data[3];            //path

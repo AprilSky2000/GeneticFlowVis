@@ -35,6 +35,11 @@
         "icon": "fas fa-eye icon",
         "type": "CS Subfield"
     },
+    "ACMfellow.0112": {
+        "name": "ACM Fellows (old version)",
+        "icon": "fa-solid fa-graduation-cap icon",
+        "description": "Fellows of the ACM"
+    },
     "ACMfellow": {
         "name": "ACM Fellows",
         "icon": "fa-solid fa-graduation-cap icon",
@@ -49,7 +54,12 @@
         "type": "Top Scholar"
     },
     "fellowTuring": {
-        "name": "Turing Award",
+        "name": "Turing Award (old version)",
+        "icon": "fa-solid fa-trophy icon",
+        "year": "turingYear"
+    },
+    "turing": {
+        "name": "Turing Award Winners",
         "icon": "fa-solid fa-trophy icon",
         "year": "turingYear",
         "type": "Top Scholar"
