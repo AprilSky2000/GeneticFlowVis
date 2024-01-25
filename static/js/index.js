@@ -513,6 +513,11 @@ function update_nodes() {
             fields = field_roots;
         }
 
+        console.log('topic', fields[topic], fields.length, topic, nodes[i])
+        if (fields[topic] == undefined) {
+            console.log('topic > fields.length !!!')
+        }
+
         // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
         
