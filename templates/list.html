@@ -146,7 +146,7 @@
                 })
                 var headerRow = document.getElementById('tableHeaderRow');
                 var fellowTh = document.createElement('th');
-                fellowTh.textContent = setting['year'].replace('fellow', 'Fellow ').replace('turing', 'Turing ');
+                fellowTh.textContent = setting['year'].replace('fellow', 'Fellow ').replace('turing', 'Turing ').replace('Fellow Year', 'ACM Fellow');
                 // Find the last <th> element in the row
                 var lastTh = headerRow.querySelector('th:last-child');
                 // Insert the new <th> before the last <th>

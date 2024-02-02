@@ -332,11 +332,9 @@ def index(request):
     detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}'
     filename = f'static/json/{fieldType}/{detail}.json'
 
-    if os.path.exists(f'csv/{fieldType}/paperID2topic.json'): # and fieldType not in field2topics:
+    if os.path.exists(f'csv/{fieldType}/paperID2topic.json') and fieldType not in field2topics:
         with open(f'csv/{fieldType}/paperID2topic.json', 'r') as f:
             field2topics[fieldType] = json.load(f)
-        
-        print('field2topics', field2topics[fieldType]["2006523031"])
 
     if os.path.exists(filename) == False or os.environ.get('TEST', False):
         dot = graphviz.Digraph(filename=detail, format='svg')
