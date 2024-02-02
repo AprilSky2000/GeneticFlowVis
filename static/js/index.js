@@ -413,7 +413,12 @@ function draw_tag_cloud() {
         .attr("height", svgHeight)
         .attr("id", "tagcloud");
 
-    const sortedData = paper_field.sort((a, b) => b.num - a.num);
+    let topicThreshold = parseInt(paperCount / 20) > 5 ? 5 : parseInt(paperCount / 20);
+    var paper_field_filter = [];
+    for (let i = 0; i < paper_field.length; i++) {
+        if (paper_field[i].num >= topicThreshold) paper_field_filter.push(paper_field[i]);
+    }
+    const sortedData = paper_field_filter.sort((a, b) => b.num - a.num);
 
     const wordCloud = svg.append("g");
         // .attr("transform", "translate(10, 10)");
