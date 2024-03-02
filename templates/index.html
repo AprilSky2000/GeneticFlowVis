@@ -17,11 +17,13 @@
     <script src="/src/js/jquery.min.js"></script>
     <script src="/src/js/bootstrap.js"></script>
     <script src="/src/js/d3.min.js"></script>
+    <script src="/src/js/fisheye.js"></script>
     <script src="/src/js/d3-tip.js"></script>
     <script src="/src/js/d3-hsv.min.js"></script>
     <script src="/src/js/layui.js" charset="utf-8"></script>
+    <script src="/src/js/d3-ForceEdgeBundling.js"></script>
     <!-- <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script> -->
-  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+    <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
 
     <script src="/src/js/index.js"></script>
     <script src="/src/js/download-svg.js"></script>
@@ -128,10 +130,13 @@
                             </li>
                             <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
                                 <select id="vis-type" class="form-select" name="VisType" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0" selected>sugiyama with year</option>
+                                    <option value="0" selected>sugiyama</option>
                                     <option value="1">force layout</option>
                                     <option value="2">evolution force layout</option>
                                     <option value="3">sugiyama without year</option>
+                                    <option value="4">sugiyama(OH)</option>
+                                    <option value="5">Temporal-Thematic Flow</option>
+                                    <option value="6">Temporal-Thematic Flow(OH)</option>
                                 </select>
                                 <script>
                                     $("#vis-type").change(updateVisType);
@@ -213,6 +218,25 @@
                 <div id="overlay"></div>
 
                 <div id="description" style="display:none; margin-top: 10%; margin-bottom: 10%;">
+                </div>
+
+                <div id="draw-area">
+                    <div style="display: flex;">
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-switch">
+                            <span class="slider round"></span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-fisheye">
+                            <span class="slider round"></span>
+                        </label>
+                        <label for="yearGridSlider">Year Grid:</label>
+                        <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="updateYearGrid(this.value)" style="max-width: 200px;">    
+                    </div>
+                    
+                    
+                    <div id="mainsvg" width="100%" height="80%"></div>
+                    <div id="tagcloud" width="100%" height="20%"></div>
                 </div>
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
@@ -409,6 +433,7 @@
 <script type="text/javascript">
     // text1 paperLabel; text2 paperCount; text3 year; text4 field
 
+let graph, originalGraph, params, years, nodes, edges, polygon, config, g, visType;
 $(function () {
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
     image_status = 0;
@@ -446,6 +471,7 @@ $(function () {
         $("#field h1").append(`<span>- ${fieldlabel}</span>`);
 
         d3.json(filename).then( data => {
+<<<<<<< HEAD
             console.log('data', data);
             years = data[1];            //年份节点
             nodes = data[2];            //论文节点
@@ -454,6 +480,11 @@ $(function () {
             const params = data[0];
             viewBox = params[0];
             transform = params[1];
+=======
+            originalGraph = data;
+            graph = data;
+            [params, years, nodes, edges, polygon] = graph;
+>>>>>>> ffd059f (add all)
             // 正常情况下node状态为0，但发生点击事件时，被点击的点状态为1，没有被点击的点状态为0
             for (let i = 0; i < nodes.length; i++) {
                 nodes[i]['status'] = 0;
@@ -510,62 +541,6 @@ $(function () {
     })
 });
 </script>
-
-    <!--ajax提交表单-->
-    <script type="text/javascript">
-        function ajaxRequest() {
-            var paramData = {};
-            var formData = $("#update-info").serialize();
-            formData = formData.split("&");
-            for (let i = 1; i < formData.length; i++) {
-                const temp = formData[i].split('=');
-                paramData[temp[0]] = temp[1];
-            }
-            paramData.authorID = "{{ authorID }}"
-            paramData.field = "{{ fieldType }}";
-            paramData.isKeyPaper = nodeSlider.noUiSlider.get();
-            paramData.extendsProb = edgeSlider.noUiSlider.get();
-            paramData.year = $("#vis-type").val() == 3? 0: 1;
-
-            $.ajax({
-                headers: {"X-CSRFToken": getCookie("csrftoken")},
-                type: "POST",
-                dataType: "json",
-                url: "/update/",
-                data: paramData,
-                success: function (param) {
-                    $("#mainsvg, #tagcloud").remove();
-                    $("#abstract, #citation-context, #timeline").empty();
-                    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-                    d3.tip().destroy();
-                    var detail = param['detail'],
-                        fieldType = param['fieldType'];
-                    var filename = `/src/json/${fieldType}/${detail}.json`;
-                    d3.json(filename).then( data => {
-                        years = data[1];
-                        nodes = data[2];
-                        edges = data[3];
-                        polygon = data[4];
-                        const params = data[0];
-                        viewBox = params[0];
-                        transform = params[1];
-                        for (let i = 0; i < nodes.length; i++) {
-                            nodes[i]['status'] = 0;
-                        }
-                        name = "{{name}}";
-                        onFullscreenChange();
-                    });
-                    reset_graph();
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("AJAX request failed:", textStatus, errorThrown);
-                    console.log("Response:", jqXHR.responseText);
-                }
-            });
-        }
-        $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
-    </script>
-
     <script>
         // Preload the image
         var preloadedImage = new Image();
