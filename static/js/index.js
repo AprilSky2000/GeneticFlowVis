@@ -616,7 +616,7 @@ function init_graph(curGraph=graph) {
         g.selectAll('.text3').data(years).enter().append('text')
         .attr('x', d => d.cx - 20)
         .attr('y', d => d.cy + 20)
-        .text(d => d.id)
+        .text(d => d.label)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
         .attr('font-size', 50)

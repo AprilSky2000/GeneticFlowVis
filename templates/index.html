@@ -465,6 +465,69 @@ function buildCurvedPath(points) {
     return line(points);
 }
 
+function generateD3Path(points, curve = false) {
+    // 使用D3的线条生成器，根据curve参数决定是否使用curveBasis
+    const lineGenerator = d3.line();
+    if (curve) {
+        lineGenerator.curve(d3.curveBasis);
+    }
+
+    const pathData = lineGenerator(points);
+    return pathData;
+}
+
+function convertToPointsArray(pathString) {
+    // 从路径字符串中提取坐标点
+    const points = pathString.split(' ')
+        .slice(1) // 去除路径字符串开头的 "e," 或其他字符
+        .map(pair => {
+            const cleanedPair = pair.trim().replace(/ +/g, ',');
+            const coords = cleanedPair.split(',');
+            if (coords.length === 2 && !isNaN(parseFloat(coords[0])) && !isNaN(parseFloat(coords[1]))) {
+                return [parseFloat(coords[0]), -parseFloat(coords[1])]; // 注意：转换y坐标为负值以适应SVG坐标系统
+            }
+            return null;
+        })
+        .filter(p => p !== null); // 过滤掉任何无效坐标点
+
+    return points;
+}
+
+
+function removeNewlinesAndAdjust(input) {
+    // 将输入字符串分割成行
+    const lines = input.split('\n');
+    let result = '';
+
+    for (let i = 0; i < lines.length; i++) {
+        let currentLine = lines[i];
+        // 检查当前行是否以';', '{', 或 '}'结尾
+        if (currentLine.trim().match(/[;{}]\s*$/)) {
+            // 如果是，保留换行符
+            result += currentLine + '\n';
+        } else {
+            // 如果当前行的末尾有反斜杠，去除它并去除换行符
+            if (currentLine.trim().endsWith('\\')) {
+                currentLine = currentLine.substring(0, currentLine.lastIndexOf('\\')).trim();
+            }
+
+            // 下一行如果以制表符开头，预处理下一行去掉开头的制表符
+            if (i < lines.length - 1 && lines[i + 1].startsWith('\t')) {
+                lines[i + 1] = lines[i + 1].replace(/^\t+/, '');
+            }
+
+            // 将处理过的当前行添加到结果字符串，不添加换行符
+            result += currentLine;
+
+            // 如果下一行存在且不是以; } { 开始，添加空格作为分隔
+            if (i < lines.length - 1 && !/^[};{]/.test(lines[i + 1].trim())) {
+                result += ' ';
+            }
+        }
+    }
+    return result;
+}
+
 
 let graph, originalGraph, params, years, nodes, edges, polygon, config, g, visType, authorData;
 $(function () {
@@ -595,29 +658,28 @@ $(function () {
             const maxYear = Math.max(...filteredNodes.map(node => node.year));
 
             let dot = 'digraph G {\n';
-            let years = {};
+            let yearDic = {};
 
             for (let year = minYear; year <= maxYear; year++) {
-                dot += `${year} [label="${year}"];\n`;
+                dot += `year${year} [label="${year}"];\n`;
+                yearDic[year] = [`year${year}`]
             }
             filteredNodes.forEach(node => {
                 // const label = node.name.replace(/"/g, '\\"'); // 转义名称中的双引号
                 let label = node.topic;
-                dot += `${node.id} [label="${label}"];\n`;
-                
+                dot += `${node.id} [label="${node.citationCount}"];\n`;
                 // 对于每个年份，收集节点ID
-                if (!years[node.year]) years[node.year] = [node.year];
-                years[node.year].push(node.id);
+                yearDic[node.year].push(node.id);
             });
             // 对每个年份的节点使用rank=same来强制它们在同一层
-            for (let year of Object.keys(years)) {
-                dot += `{ rank=same; ${years[year].join('; ')}; }\n`;
+            for (let year of Object.keys(yearDic)) {
+                dot += `{ rank=same; ${yearDic[year].join('; ')}; }\n`;
             }
             for (let year = minYear; year < maxYear; year++) {
-                dot += `${year} -> ${year+1};\n`;
+                dot += `year${year}->year${year+1};\n`;
             }
             filteredEdges.forEach(edge => {
-                dot += `${edge.source} -> ${edge.target};\n`;
+                dot += `${edge.source}->${edge.target};\n`;
             });
 
             dot += '}';
@@ -625,79 +687,79 @@ $(function () {
 
             // 使用viz.js计算布局
             // 注意：你需要在你的项目中引入viz.js库
-            Viz.instance().then(function(viz) {
-                let result = viz.renderString(dot)
-                console.log('viz result', result);
-            });
-
-            //////////////////////////////////////////////////////////////////
-            var g = new dagre.graphlib.Graph();
-            g.setGraph({});
-            g.setDefaultEdgeLabel(function() { return {}; });
-
-            for (let year = minYear; year <= maxYear+1; year++) {
-                g.setNode(`year${year}`, {width: 0, height: 0, style: "opacity: 0;", rank: year - minYear + 1 }); // 虚拟节点样式调整
-            }
-            for (let year = minYear; year <= maxYear; year++) {
-                g.setEdge(`year${year}`, `year${year + 1}`);
-            }
-            filteredNodes.forEach(node => {
-                g.setNode(node.id, {width: 20, height: 20, rank: node.year - minYear + 1});
-            });
-            filteredEdges.forEach(edge => {
-                g.setEdge(edge.source, edge.target);
-            });
-
-            dagre.layout(g);
-            let id2attr = {};
-            years = [];
-            g.nodes().forEach(function(v) {
-                if (v.startsWith('year')) {
-                    years.push({
-                        id: v.substring(4),
-                        // cx: g.node(v).x,
-                        cx: 0,
-                        cy: g.node(v).y,
-                        rx: 20,
-                        ry: 20
-                    });
-                    return;
-                }
-                console.log("Node " + v + ": " + JSON.stringify(g.node(v)));
-                id2attr[v] = g.node(v);
-            });
-            g.edges().forEach(function(e) {
-                if (e.v.startsWith('year') || e.w.startsWith('year')) return;
-                console.log("Edge " + e.v + " -> " + e.w + ": " + JSON.stringify(g.edge(e)));
-                id2attr[e.v + '-' + e.w] = g.edge(e);
-            });
-
-            filteredNodes.forEach(node => {
-                node.cx = id2attr[node.id].x;
-                node.cy = id2attr[node.id].y;
-                node.rx = 20;
-                node.ry = 20;
-            });
-            filteredEdges.forEach(edge => {
-                edge.points = id2attr[edge.source + '-' + edge.target].points;
-                edge.d = buildCurvedPath(edge.points);
-            });
-            console.log('computed layout:', graph);
             
-            let maxX = Math.max(...filteredNodes.map(node => node.cx));
-            let maxY = Math.max(...filteredNodes.map(node => node.cy));
-            viewBox = `0 0 ${maxX} ${maxY}`;
-            transform = `translate(0, 0)`;
-            params = [viewBox, transform]
+            Viz.instance().then(function(viz) {
+                let result = removeNewlinesAndAdjust(viz.renderString(dot)).replaceAll(' -> ', '->');
+                console.log('viz result', result);
 
-            graph = [params, years, filteredNodes, filteredEdges, null];
-            [params, years, nodes, edges, polygon] = graph;
-            onFullscreenChange();
+                // 解析节点和边
+                let id2attr = {};
+                let lines = result.split(';');
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
-            $("#overall-topic-map").hide();
-            $("#paper-topic-map").show();
-            // sugiyama(years, nodes, edges);
-            addAllListeners();
+                lines.forEach(line => {
+                    if (line.includes('pos=')) {
+                        const id = line.match(/(\S+)\s*\[/)[1];
+                        const pos = line.match(/pos="([^"]+)"/)[1];
+
+                        if (line.includes('->')) { // 处理边
+                            let points = convertToPointsArray(pos);
+                            id2attr[id] = generateD3Path(points, true); // 用d3或其他方法生成平滑路径
+                            console.log('line', pos, id,id2attr[id] )
+                        } else { // 处理节点
+                            let label = line.match(/label=([^,]+)/)[1].replace(/"/g, '');
+                            let [x, y] = pos.split(',').map(Number);
+                            y = -y;
+                            const width = parseFloat(line.match(/width=([^,]+)/)[1]);
+                            const height = parseFloat(line.match(/height=([^,]+)/)[1]);
+                            id2attr[id] = { cx: x, cy: y, rx: width, ry: height, label:label };
+                            
+                            console.log(id,id2attr[id] )
+                            // 更新边界值
+                            minX = Math.min(minX, x - width);
+                            maxX = Math.max(maxX, x + width);
+                            minY = Math.min(minY, y - height);
+                            maxY = Math.max(maxY, y + height);
+                        }
+                    }
+                });
+                viewBox = `0 0 ${maxX - minX} ${maxY - minY}`;
+                // transform = `translate(${-minX}, ${-minY})`;
+                transform = `translate(0, 0)`;
+                
+                console.log('id2attr', id2attr)
+                // 遍历 id2attr，生成最终的节点和边
+                let years = [];
+                for (let id in id2attr) {
+                    if (id.startsWith('year') && !id.includes('->')) {
+                        years.push({ ...id2attr[id] });
+                    }
+                }
+
+                filteredNodes.forEach(node => {
+                    node.cx = id2attr[node.id].cx;
+                    node.cy = id2attr[node.id].cy;
+                    node.rx = id2attr[node.id].rx * 40;
+                    node.ry = id2attr[node.id].ry * 40;
+                    node.label = id2attr[node.id].label;
+                });
+                filteredEdges.forEach(edge => {
+                    edge.d = id2attr[edge.source + '->' + edge.target];
+                });
+                console.log('computed layout:', graph);
+                
+                params = [viewBox, transform]
+                graph = [params, years, filteredNodes, filteredEdges, null];
+                [params, years, nodes, edges, polygon] = graph;
+                onFullscreenChange();
+
+                $("#overall-topic-map").hide();
+                $("#paper-topic-map").show();
+                // sugiyama(years, nodes, edges);
+                addAllListeners();
+
+            });
+
         });
 
         // d3.json(filename).then( data => {
