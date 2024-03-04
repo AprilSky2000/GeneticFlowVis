@@ -12,8 +12,6 @@ let lastMouseX, lastMouseY; // 上一个鼠标X坐标
 let y_focus = 0.5;
 let enable_y_focus = false;
 let highlighted = [];
-let selectedField = null;
-
 
 
 function guidence() {
@@ -78,11 +76,11 @@ function addAllListeners() {
 
     nodeSlider.noUiSlider.on("change", function () {
         $("#node-value").text("≥" + nodeSlider.noUiSlider.get() + " prob.");
-        ajaxRequest();
+        loadAndRender();
     });
     edgeSlider.noUiSlider.on("change", function () {
         $("#edge-value").text("≥" + edgeSlider.noUiSlider.get() + " prob.");
-        ajaxRequest();
+        loadAndRender();
     });
 
     $("#save").click(function () {
@@ -515,13 +513,8 @@ function draw_tag_cloud() {
         .on('mouseover', function(d) {highlight_field(d, this)})
         .on('mouseout', reset_field)
         .on('click', d => {
-            if (selectedField == d.id) {
-                selectedField = null;
-                init_graph(graph);
-            } else {
-                selectedField = d.id;
-                draw_subfield();
-            }
+            selectedTopic = selectedTopic == d.id? null: d.id;
+            loadAndRender();
         })
 
     words.selectAll("text")
@@ -601,19 +594,7 @@ function init_graph(curGraph=graph) {
             .attr('points', d => d);
     }
 
-    if (years != null) {
-        // g.selectAll('circle').data(years).enter().append('ellipse')
-        // .attr('cx', d => d.cx)
-        // .attr('cy', d => d.cy)
-        // .attr('rx', d => d.rx)
-        // .attr('ry', d => d.rx)
-        // .attr('fill', 'white')
-        // .attr('stroke', 'black')
-        // .attr('stroke-width', 1)
-        // .attr('id', d => d.id)
-        // .attr('class', 'year');
-
-        g.selectAll('.text3').data(years).enter().append('text')
+    g.selectAll('.text3').data(years).enter().append('text')
         .attr('x', d => d.cx - 20)
         .attr('y', d => d.cy + 20)
         .text(d => d.label)
@@ -621,28 +602,27 @@ function init_graph(curGraph=graph) {
         .attr('font-family', 'Times New Roman,serif')
         .attr('font-size', 50)
         .attr('class', 'text3');
-    }
     
-
-    // g.selectAll('.text1').data(nodes).enter().append('text')
-    //     .attr('x', d => d.cx)
-    //     .attr('y', d => d.cy)
-    //     .attr('text-anchor', 'middle')
-    //     .attr('font-family', 'Times New Roman,serif')
-    //     .attr('font-size', 28)
-    //     .attr('class', 'text1')
-    //     .attr("pointer-events", "none")
-    //     .each(function(d) {
-    //         let text = d.text === undefined? d.text1 + '\n' + d.text2 : String(d.citationCount)
+    g.selectAll('.text1').data(nodes).enter().append('text')
+        .attr('x', d => d.cx)
+        .attr('y', d => d.cy)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Times New Roman,serif')
+        .attr('font-size', 28)
+        .attr('class', 'text1')
+        .attr("pointer-events", "none")
+        .each(function(d) {
+            // let text = d.text === undefined? d.text1 + '\n' + d.text2 : String(d.citationCount)
+            let text = d.label;
             
-    //         var lines = text.split('\n');
-    //         for (var i = 0; i < lines.length; i++) {
-    //             d3.select(this).append('tspan')
-    //                 .attr('x', d.cx)
-    //                 .attr('dy', 10)  // Adjust dy for subsequent lines
-    //                 .text(lines[i]);
-    //         }
-    //     });
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                d3.select(this).append('tspan')
+                    .attr('x', d.cx)
+                    .attr('dy', 10)  // Adjust dy for subsequent lines
+                    .text(lines[i]);
+            }
+        });
     
 
     g.selectAll('.reference').data(edges).enter().append('path')
@@ -738,6 +718,8 @@ function update_fields() {
     self_field.sort(op('num'));
     self_field.sort(op('label'));
 
+    console.log('self_field', self_field)
+
     // 处理左侧柱状图
     g.selectAll('.year-topic').remove();
     // 因为需要统计各个年份的各个field的分布，是一个二维向量，要绘制柱状图只能在每年的时候将field柱状分布图画出来，所以没有放到visual_topic函数里
@@ -776,7 +758,7 @@ function update_fields() {
         }
 
         g.selectAll('circle').data(year_field).enter().append('rect')
-            .attr('x', d => d.x - d.num * 40 - 29)
+            .attr('x', d => d.x - d.num * 40 - 80)
             .attr('y', d => d.y - 25)
             .attr('width', d => d.num * 40)
             .attr('height', 50)
@@ -793,25 +775,226 @@ function update_fields() {
     return self_field;
 }
 
-function draw_subfield() {
-    console.log('draw_subfield', selectedField);
+function generateD3Path(points, curve = false) {
+    // 使用D3的线条生成器，根据curve参数决定是否使用curveBasis
+    const lineGenerator = d3.line();
+    if (curve) {
+        lineGenerator.curve(d3.curveBasis);
+    }
 
-    [params, years, nodes, edges, polygon] = graph;
+    const pathData = lineGenerator(points);
+    return pathData;
+}
 
-    let curNodes = nodes.filter(d => d.topic == selectedField);
-    let curIDs = curNodes.map(d => d.id);
-    years.forEach(d => curIDs.push(d.id));
-    let validEdgeIdx = edges.map(d => curIDs.includes(d.source) && curIDs.includes(d.target)); 
+function convertToPointsArray(pathString) {
+    // 从路径字符串中提取坐标点
+    const points = pathString.split(' ')
+        .slice(1) // 去除路径字符串开头的 "e," 或其他字符
+        .map(pair => {
+            const cleanedPair = pair.trim().replace(/ +/g, ',');
+            const coords = cleanedPair.split(',');
+            if (coords.length === 2 && !isNaN(parseFloat(coords[0])) && !isNaN(parseFloat(coords[1]))) {
+                return [parseFloat(coords[0]), -parseFloat(coords[1])]; // 注意：转换y坐标为负值以适应SVG坐标系统
+            }
+            return null;
+        })
+        .filter(p => p !== null); // 过滤掉任何无效坐标点
 
-    let curGraph = [
-        params,
-        years,
-        curNodes,
-        edges.filter((d, i) => validEdgeIdx[i]),
-        polygon.filter((d, i) => validEdgeIdx[i])
-    ]
+    return points;
+}
+
+
+function removeNewlinesAndAdjust(input) {
+    // 将输入字符串分割成行
+    const lines = input.split('\n');
+    let result = '';
+
+    for (let i = 0; i < lines.length; i++) {
+        let currentLine = lines[i];
+        // 检查当前行是否以';', '{', 或 '}'结尾
+        if (currentLine.trim().match(/[;{}]\s*$/)) {
+            // 如果是，保留换行符
+            result += currentLine + '\n';
+        } else {
+            // 如果当前行的末尾有反斜杠，去除它并去除换行符
+            if (currentLine.trim().endsWith('\\')) {
+                currentLine = currentLine.substring(0, currentLine.lastIndexOf('\\')).trim();
+            }
+
+            // 下一行如果以制表符开头，预处理下一行去掉开头的制表符
+            if (i < lines.length - 1 && lines[i + 1].startsWith('\t')) {
+                lines[i + 1] = lines[i + 1].replace(/^\t+/, '');
+            }
+
+            // 将处理过的当前行添加到结果字符串，不添加换行符
+            result += currentLine;
+
+            // 如果下一行存在且不是以; } { 开始，添加空格作为分隔
+            if (i < lines.length - 1 && !/^[};{]/.test(lines[i + 1].trim())) {
+                result += ' ';
+            }
+        }
+    }
+    return result;
+}
+
+function renderDot(viz, dot, filteredNodes, filteredEdges) {
+    let result = removeNewlinesAndAdjust(viz.renderString(dot)).replaceAll(' -> ', '->');
+    console.log('viz result', result);
+    // 解析节点和边
+    let id2attr = {};
+    let lines = result.split(';');
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+    lines.forEach(line => {
+        if (line.includes('pos=')) {
+            const id = line.match(/(\S+)\s*\[/)[1];
+            const pos = line.match(/pos="([^"]+)"/)[1];
+
+            if (line.includes('->')) { // 处理边
+                let points = convertToPointsArray(pos);
+                id2attr[id] = generateD3Path(points, true); // 用d3或其他方法生成平滑路径
+                // console.log('line', pos, id,id2attr[id] )
+            } else { // 处理节点
+                let label = line.match(/label=([^,]+)/)[1].replace(/"/g, '');
+                let [x, y] = pos.split(',').map(Number);
+                y = -y;
+                const width = parseFloat(line.match(/width=([^,]+)/)[1]);
+                const height = parseFloat(line.match(/height=([^,]+)/)[1]);
+                id2attr[id] = { cx: x, cy: y, rx: width, ry: height, label:label };
+                
+                // console.log(id,id2attr[id] )
+                // 更新边界值
+                minX = Math.min(minX, x - width);
+                maxX = Math.max(maxX, x + width);
+                minY = Math.min(minY, y - height);
+                maxY = Math.max(maxY, y + height);
+            }
+        }
+    });
+    viewBox = `0 0 ${maxX - minX} ${maxY - minY}`;
+    transform = `translate(${-minX}, ${-minY})`;
+    // transform = `translate(0, 0)`;
     
-    init_graph(curGraph);
+    // console.log('id2attr', id2attr)
+    // 遍历 id2attr，生成最终的节点和边
+    let years = [];
+    for (let id in id2attr) {
+        if (id.startsWith('year') && !id.includes('->')) {
+            years.push({ id: id2attr[id].label, ...id2attr[id] });
+        }
+    }
+
+    filteredNodes.forEach(node => {
+        node.cx = id2attr[node.id].cx;
+        node.cy = id2attr[node.id].cy;
+        node.rx = id2attr[node.id].rx * 40;
+        node.ry = id2attr[node.id].ry * 40;
+        node.label = id2attr[node.id].label;
+    });
+    filteredEdges.forEach(edge => {
+        edge.d = id2attr[edge.source + '->' + edge.target];
+    });
+    
+    params = [viewBox, transform]
+    graph = [params, years, filteredNodes, filteredEdges, null];
+    [params, years, nodes, edges, polygon] = graph;
+    onFullscreenChange();
+
+    $("#overall-topic-map").hide();
+    $("#paper-topic-map").show();
+    // sugiyama(years, nodes, edges);
+    addAllListeners();
+}
+
+function loadAndRender() {
+    let filteredNodes = authorData['nodes'].filter(d => d.isKeyPaper >= nodeSlider.noUiSlider.get());
+    let filteredEdges = authorData['edges'].filter(d => d.extends_prob >= edgeSlider.noUiSlider.get());
+    
+    if (selectedTopic) {
+        filteredNodes = filteredNodes.filter(d => d.topic == selectedTopic);
+    }
+
+    let ln = filteredNodes.length, le = filteredEdges.length;
+    let modeValue = document.getElementById('mode').value;
+    let surveyValue = document.getElementById('remove-survey').value;
+    
+    if (surveyValue == '1') filteredNodes = filteredNodes.filter(node => !node.survey);
+    let lnr = filteredNodes.length;
+    // Compute indegree, outdegree, and total degree
+    let indegree = {}, outdegree = {}, alldegree = {};
+    // set other nodes in filteredNodes outdegree/indegree =0
+    filteredNodes.forEach(node => {
+        outdegree[node.id] = 0;
+        indegree[node.id] = 0;
+        alldegree[node.id] = 0;
+    })
+    let nodeSet = new Set(filteredNodes.map(node => node.id));
+    
+    let edgeCount = 0;
+    let connectedEdges = [];
+    filteredEdges.forEach(edge => {
+        src = String(edge.source);
+        tgt = String(edge.target);
+        if (nodeSet.has(src) && nodeSet.has(tgt)) {
+            outdegree[src] += 1;
+            indegree[tgt] += 1;
+            alldegree[src] += 1;
+            alldegree[tgt] += 1;
+            connectedEdges.push(edge);
+        }
+    });
+    if (modeValue == '1') {
+        // remove isolated
+        filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0);
+    } else if (modeValue == '2') {
+        // partially remove, high citationCount papers are not removed
+        filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0 || node.citationCount >= 50);
+    }
+    filteredEdges = connectedEdges;
+    
+    console.log('original data:', authorData, 
+        '#nodes:', authorData['nodes'].length, ln, lnr, filteredNodes.length, 
+        '#edges:', authorData['edges'].length, le, filteredEdges.length,
+        filteredNodes, filteredEdges);
+    
+    const minYear = Math.min(...filteredNodes.map(node => node.year));
+    const maxYear = Math.max(...filteredNodes.map(node => node.year));
+
+    let dot = 'digraph G {\n';
+    let yearDic = {};
+
+    for (let year = minYear; year <= maxYear; year++) {
+        dot += `year${year} [label="${year}"];\n`;
+        yearDic[year] = [`year${year}`]
+    }
+    filteredNodes.forEach(node => {
+        // const label = node.name.replace(/"/g, '\\"'); // 转义名称中的双引号
+        let label = node.topic;
+        dot += `${node.id} [label="${node.citationCount}"];\n`;
+        // 对于每个年份，收集节点ID
+        yearDic[node.year].push(node.id);
+    });
+    // 对每个年份的节点使用rank=same来强制它们在同一层
+    for (let year of Object.keys(yearDic)) {
+        dot += `{ rank=same; ${yearDic[year].join('; ')}; }\n`;
+    }
+    for (let year = minYear; year < maxYear; year++) {
+        dot += `year${year}->year${year+1};\n`;
+    }
+    filteredEdges.forEach(edge => {
+        dot += `${edge.source}->${edge.target};\n`;
+    });
+
+    dot += '}';
+    console.log('dot', dot);
+
+    // 使用viz.js计算布局
+    // 注意：你需要在你的项目中引入viz.js库
+    
+    Viz.instance().then(function(viz) {
+        renderDot(viz, dot, filteredNodes, filteredEdges);
+    });
 }
 
 function highlight_field(d, that) {
@@ -1807,7 +1990,7 @@ function updateVisType() {
     } else if (visType == 2) {
         force_layout(true);
     } else if (visType == 3) {
-        ajaxRequest();
+        loadAndRender();
     } else if (visType == 4) {
         // ajaxRequest(true);
         

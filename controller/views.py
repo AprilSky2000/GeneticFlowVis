@@ -59,7 +59,6 @@ def to_number(x):
     except:
         return 0.0
 
-
 def load_author(field, authorID):
     filename = f'static/json/{field}/authors/{authorID}.json'
     if os.path.exists(filename):
@@ -206,149 +205,6 @@ def topicflow(request):
         'fields': get_fields(field),
     })
 
-
-def create_node(dot, papers, nodeWidth, year=True):
-    # 取出论文的所有年份
-    papers = papers.values()
-    if not year:
-        for paper in papers:
-            label = paper['title'].split(' ')[0][0:5]
-            paper_name = label + '\n'
-            suffix = '?' if int(paper['citationCount']) == -1 else str(paper['citationCount'])
-        
-            dot.node(name=paper['paperID'], label=suffix)        
-        return
-
-    if len(papers):
-        min_year = min(item['year'] for item in papers)
-        max_year = max(item['year'] for item in papers)
-        publication_time = [i for i in range(min_year, max_year + 1)]
-    else:
-        publication_time = []
-
-    # 根据已有年份对论文重新分类，每个年份的论文构成一个子图，分成subgraph()
-    papers = sorted(papers, key=lambda x:int(x['year']))
-    for year in publication_time:
-        with dot.subgraph() as s:
-            s.attr(rank='same')
-            s.node(name=str(year), style='filled', fillcolor='white')
-            for paper in papers:
-                if int(paper['year']) == year:
-                    # label: 第一作者首字+发表年份+论文标题首字
-                    # authors = paper['authorsName'].split(', ')
-                    # s1 = authors[0].split(' ')
-                    # s2 = paper['title'].split(' ')
-                    # if s1 == ['']:
-                    #     label = str(year) + s2[0]
-                    # else:
-                    #     label = s1[-1] + str(year) + s2[0]
-                    # if nodeWidth != 0 and nodeWidth < len(label):
-                    #     label = label[0:nodeWidth] + '...'
-
-                    label = paper['title'].split(' ')[0][0:5]
-                    paper_name = label + '\n'
-                    suffix = '?' if int(paper['citationCount']) == -1 else str(paper['citationCount'])
-                
-                    s.node(name=paper['paperID'], label=suffix)
-    # 将表示年份的点先连接
-    for i in range(0, len(publication_time)):
-        if i:
-            dot.edge(str(publication_time[i - 1]), str(publication_time[i]), arrowsize='0')
-
-def create_edge(dot, papers, links):
-    for link in links:
-        citingpaperID, citedpaperID = link['childrenID'], link['parentID']
-        if citedpaperID in papers and citingpaperID in papers:
-            dot.edge(papers[citedpaperID]['paperID'], papers[citingpaperID]['paperID'])
-
-def get_node(nodes, papers):
-    nodeData = []
-    yearData = []
-    for node in nodes:
-        id = node.find('title').string
-        ellipse = node.find('ellipse')
-        text = node.find_all('text')
-        dic = {
-            'id': id,
-            'cx': float(ellipse['cx']),
-            'cy': float(ellipse['cy']),
-            'rx': float(ellipse['rx']),
-            'ry': float(ellipse['ry']),
-            'text': text[0].string
-        }
-        if id in papers:
-            paper = papers[id]
-            dic.update({
-                'paperID': paper['paperID'],
-                'name': paper['title'],
-                'year': int(paper['year']),
-                'authors': paper['authorsName'],
-                'venu': paper['venu'],
-                'label': paper['title'].split(' ')[0][0:5],
-                'isKeyPaper': paper['isKeyPaper'],
-                'citationCount': paper['citationCount'],
-                'abstract': paper['abstract'],
-                'topic': int(paper['topic']),
-            })
-            nodeData.append(dic)
-        else:
-            yearData.append(dic)
-    return nodeData, yearData
-
-def get_edge(edges, influence):
-    edgeData = []
-    for edge in edges:
-        edgePath = edge.find('path')
-        source, target = edge.find('title').string.split('->')  # temp为起始点->终点
-        dic = {
-            'source': source,
-            'target': target,
-            'd': edgePath['d']
-            }
-        for link in influence:
-            if target == link['childrenID'] and source == link['parentID']:
-                dic['extends_prob'] = link['extendsProb']
-                dic['citation_context'] = link['citationContext']
-        edgeData.append(dic)
-    return edgeData
-
-def get_polygon(edges):
-    polygon = []
-    for edge in edges:
-        edge_polygon = edge.find('polygon')
-        d = edge_polygon['points']
-        polygon.append(d)
-    return polygon
-
-def write_d3_data(fieldType, detail, papers, influence):
-    # cmd = "dot -Ksfdp -Ebundle=0.9 ./static/image/svg/" + detail + " -Tsvg -o ./templates/" + detail + ".html"
-    # os.system(cmd)
-    # filename = './templates/' + detail + '.html'
-    filename = f'static/image/svg/{fieldType}/{detail}.svg'
-    soup = BeautifulSoup(open(filename))
-    nodes = soup.select('.node')
-    edges = soup.select('.edge')
-
-    nodeData, yearData = get_node(nodes, papers)    # 节点怎么画
-    edgeData = get_edge(edges, influence)     # 边怎么画
-    polygon = get_polygon(edges)    # 边的箭头
-
-    svg = soup.find('svg')
-    viewBox = svg['viewbox']
-    g = soup.find('g')
-    transform = g['transform']
-    # viewBox属性, g的transform
-    graph = [viewBox, transform]
-
-    data = json.dumps([graph, yearData, nodeData, edgeData, polygon], indent=4, separators=(',', ': '))
-    filename = f'static/json/{fieldType}/{detail}.json'
-    # make the directory if it doesn't exist already
-    if not os.path.exists(os.path.dirname(filename)):
-        os.makedirs(os.path.dirname(filename))
-    f = open(filename, 'w')
-    f.write(data)
-    f.close()
-
 def index(request):
     fieldType = request.GET.get("field")
     authorID = request.GET.get("id")
@@ -362,85 +218,13 @@ def index(request):
     fields = get_fields(fieldType)
     load_author(fieldType, authorID)
 
-    mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey, year = 2, 0.5, 0.5, 10, 1, 1
-    if fieldType == "acl":
-        extendsProb = 0.4
-    detail = f'{authorID}_{mode}_{str(isKeyPaper)}_{str(extendsProb)}_{nodeWidth}_{removeSurvey}_{year}'
-    filename = f'static/json/{fieldType}/{detail}.json'
-
     if os.path.exists(f'csv/{fieldType}/paperID2topic.json') and fieldType not in field2topics:
         with open(f'csv/{fieldType}/paperID2topic.json', 'r') as f:
             field2topics[fieldType] = json.load(f)
 
-    if os.path.exists(filename) == False:
-        create_partial_graph(fieldType, detail)
-
     return render(request, "index.html",
                   {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"], 
                    'citationCount': author["citationCount"], 'hIndex': author["hIndex"], 'fields': fields, 'fieldType': fieldType})
-
-
-def create_partial_graph(fieldType, detail):
-    dot = graphviz.Digraph(filename=detail, format='svg', graph_attr={'rankdir': 'TB'})
-
-    authorID, mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey, year = detail.split('_')
-    mode = int(mode)
-    isKeyPaper = float(isKeyPaper)
-    extendsProb = float(extendsProb)
-    nodeWidth = int(nodeWidth)
-    removeSurvey = int(removeSurvey)
-    year = int(year)
-
-    papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
-    links = read_links(fieldType, authorID, extendsProb)
-
-    paper_year_map = papers.set_index('paperID')['year'].to_dict()
-    modified_links = []
-    for index, row in links.iterrows():
-        parent_year = paper_year_map.get(row['parentID'])
-        child_year = paper_year_map.get(row['childrenID'])
-        
-        # 检查年份并根据需要修正引用方向
-        if parent_year and child_year:
-            if parent_year > child_year:
-                # 反转引用方向
-                links.at[index, 'parentID'], links.at[index, 'childrenID'] = row['childrenID'], row['parentID']
-                modified_links.append(f"swap link {row['childrenID']}, {row['parentID']}")
-            elif parent_year == child_year and int(row['parentID']) > int(row['childrenID']):
-                # 删除引用
-                links.drop(index, inplace=True)
-                modified_links.append(f"delete link {row['parentID']}, {row['childrenID']}")
-
-    # 打印修改记录
-    for modification in modified_links:
-        print(modification)
-    papers = {x['paperID']: x for x in papers.to_dict(orient='records')}
-    links = links.to_dict(orient='records')
-
-    if mode == 0:
-        create_node(dot, papers, nodeWidth, year)
-        create_edge(dot, papers, links)
-    else:
-        valid_nodes = set()
-        # 当节点没有边与其相连时，删去
-        for link in links:
-            a = link['childrenID']
-            b = link['parentID']
-            if a in papers and b in papers:
-                valid_nodes.add(a)
-                valid_nodes.add(b)
-        if mode == 2:
-            for k, v in papers.items():
-                if v['citationCount'] >= 50:
-                    valid_nodes.add(k)
-
-        papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
-        create_node(dot, papers_backup, nodeWidth, year)
-        create_edge(dot, papers_backup, links)
-
-    # 保存为svg, json文件
-    dot.render(directory=f"static/image/svg/{fieldType}", view=False)
-    write_d3_data(fieldType, detail, papers, links)
 
 
 def clean(request):
@@ -452,32 +236,6 @@ def clean(request):
         return HttpResponse("Successfully deleted " + path)
     except Exception as e:
         return HttpResponse("Failed to delete " + path + " because: " + e.__str__())
-
-def update(request):
-    fieldType = request.POST.get("field")
-    authorID = request.POST.get("authorID")
-    mode = request.POST.get("mode")
-    isKeyPaper = request.POST.get("isKeyPaper")
-    extendsProb = request.POST.get("extendsProb")
-    nodeWidth = request.POST.get("nodeWidth")
-    removeSurvey = request.POST.get("removeSurvey")
-    year = request.POST.get("year")
-    detail = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}_{year}'
-    mode = int(mode)
-    isKeyPaper = float(isKeyPaper)
-    extendsProb = float(extendsProb)
-    nodeWidth = int(nodeWidth)
-    removeSurvey = int(removeSurvey)
-    year = int(year)
-
-    filename = f'static/json/{fieldType}/{detail}.json'
-    if os.path.exists(filename) == False:
-        create_partial_graph(fieldType, detail)
-
-    print('detail', detail)
-
-    param = {'detail': detail, 'fieldType': fieldType}
-    return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
 
 def showlist(request):
     fieldType = request.GET.get("field")
@@ -496,41 +254,6 @@ def showlist(request):
         return render(request, 'search.html', {'error': error, 'fieldType': fieldType, 'versionID': versionID})
     else:
         return render(request, "list.html", {'scholarList': scholarList, 'fieldType': fieldType})
-
-
-def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
-    path = f'csv/{fieldType}/papers/{authorID}.csv'
-
-    df = pd.read_csv(path, sep=',', dtype={'paperID': str})
-    df = df.fillna('')
-    if fieldType in field2topics:
-        paperID2topic = field2topics[fieldType]
-        df['topic'] = df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
-    elif 'topic' not in df.columns:
-        df['topic'] = 0
-    
-    for col in ['year', 'referenceCount', 'citationCount', 'topic']:
-        df[col] = df[col].astype(int)
-    df["isKeyPaper"] = df["isKeyPaper"].astype(float)
-    df = df[df["isKeyPaper"] >= isKeyPaper]
-    if removeSurvey == 1:
-        # surveys = df.loc[df['title'].str.contains('survey|Survey'), 'paperID'].tolist() # 抽取所有title中含有survey的paperID作为list
-        df = df[~df['title'].str.contains(r'survey|surveys', case=False, regex=True)]
-    return df
-
-
-def read_links(fieldType, authorID, extendsProb):
-    path = f'csv/{fieldType}/links/{authorID}.csv'
-    if os.path.exists(path) == False:
-        return []
-    df = pd.read_csv(path, sep=',', dtype={'childrenID': str, 'parentID': str})
-    df['extendsProb'] = df["extendsProb"].replace('\\N', '0')
-    df['extendsProb'] = df["extendsProb"].astype(float)
-    df = df.where(df.notnull(), None)
-    df = df[df["extendsProb"] >= extendsProb]
-    # df = df[~df["childrenID"].isin(surveys)]
-    # df = df[~df["parentID"].isin(surveys)]
-    return df
 
     
 def get_fields(fieldType):
