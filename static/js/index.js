@@ -468,17 +468,14 @@ function draw_tag_cloud() {
         .attr("width", "100%")
         .attr("height", "100%");
 
-<<<<<<< HEAD
-    let topicThreshold = parseInt(paperCount / 20) > 5 ? 5 : parseInt(paperCount / 20);
+    // let topicThreshold = Math.max(3, parseInt(Math.sqrt(paperCount) / 5));
+    let topicThreshold = 1;
     var paper_field_filter = [];
     for (let i = 0; i < paper_field.length; i++) {
         if (paper_field[i].num >= topicThreshold) paper_field_filter.push(paper_field[i]);
     }
     const sortedData = paper_field_filter.sort((a, b) => b.num - a.num);
 
-=======
-    const sortedData = paper_field.sort((a, b) => b.num - a.num);
->>>>>>> ffd059f (add all)
     const wordCloud = svg.append("g");
         // .attr("transform", "translate(10, 10)");
 
@@ -517,7 +514,15 @@ function draw_tag_cloud() {
         .attr("fill-opacity", 0.8)
         .on('mouseover', function(d) {highlight_field(d, this)})
         .on('mouseout', reset_field)
-        .on('click', draw_subfield)
+        .on('click', d => {
+            if (selectedField == d.id) {
+                selectedField = null;
+                init_graph(graph);
+            } else {
+                selectedField = d.id;
+                draw_subfield();
+            }
+        })
 
     words.selectAll("text")
         .data(d => d)
@@ -588,21 +593,36 @@ function init_graph(curGraph=graph) {
             tip.hide(d);
         });
 
-    g.selectAll('polygon').data(polygon).enter().append('polygon')
-        .attr('fill', 'black')
-        .attr('stroke', 'black')
-        .attr('points', d => d);
+    // if polygon != null
+    if (polygon != null) {
+        g.selectAll('polygon').data(polygon).enter().append('polygon')
+            .attr('fill', 'black')
+            .attr('stroke', 'black')
+            .attr('points', d => d);
+    }
 
-    g.selectAll('circle').data(years).enter().append('ellipse')
-        .attr('cx', d => d.cx)
-        .attr('cy', d => d.cy)
-        .attr('rx', d => d.rx)
-        .attr('ry', d => d.rx)
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 1)
-        .attr('id', d => d.id)
-        .attr('class', 'year');
+    if (years != null) {
+        // g.selectAll('circle').data(years).enter().append('ellipse')
+        // .attr('cx', d => d.cx)
+        // .attr('cy', d => d.cy)
+        // .attr('rx', d => d.rx)
+        // .attr('ry', d => d.rx)
+        // .attr('fill', 'white')
+        // .attr('stroke', 'black')
+        // .attr('stroke-width', 1)
+        // .attr('id', d => d.id)
+        // .attr('class', 'year');
+
+        g.selectAll('.text3').data(years).enter().append('text')
+        .attr('x', d => d.cx - 20)
+        .attr('y', d => d.cy + 20)
+        .text(d => d.id)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Times New Roman,serif')
+        .attr('font-size', 50)
+        .attr('class', 'text3');
+    }
+    
 
     // g.selectAll('.text1').data(nodes).enter().append('text')
     //     .attr('x', d => d.cx)
@@ -623,14 +643,7 @@ function init_graph(curGraph=graph) {
     //                 .text(lines[i]);
     //         }
     //     });
-    g.selectAll('.text3').data(years).enter().append('text')
-        .attr('x', d => d.cx)
-        .attr('y', d => d.cy + 8.7)
-        .text(d => d.text)
-        .attr('text-anchor', 'middle')
-        .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 28)
-        .attr('class', 'text3');
+    
 
     g.selectAll('.reference').data(edges).enter().append('path')
         .attr('fill', 'none')
@@ -681,7 +694,7 @@ function update_nodes() {
             fields = field_roots;
         }
 
-        console.log('topic', fields[topic], fields.length, topic, nodes[i])
+        // console.log('topic', fields[topic], fields.length, topic, nodes[i])
         if (fields[topic] == undefined) {
             console.log('topic > fields.length !!!')
         }
@@ -689,11 +702,6 @@ function update_nodes() {
         // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
         paperID2topic[nodes[i].id] = topic;
-
-        // 如果当前节点被点击，需要修改paper信息中的展示的topic-word
-        // if (nodes[i].status == 1) {
-        //     $("#paper-field").text(fields[topic][2].split('_').join(', '));
-        // }
     }
     // sort nodes by citationCount
     nodes.sort((a, b) =>  b.citationCount - a.citationCount);
@@ -785,11 +793,25 @@ function update_fields() {
     return self_field;
 }
 
-function draw_subfield(d) {
-    let field_id = d.id;
-    tip.show(d);
+function draw_subfield() {
+    console.log('draw_subfield', selectedField);
 
-    let curGraph = graph
+    [params, years, nodes, edges, polygon] = graph;
+
+    let curNodes = nodes.filter(d => d.topic == selectedField);
+    let curIDs = curNodes.map(d => d.id);
+    years.forEach(d => curIDs.push(d.id));
+    let validEdgeIdx = edges.map(d => curIDs.includes(d.source) && curIDs.includes(d.target)); 
+
+    let curGraph = [
+        params,
+        years,
+        curNodes,
+        edges.filter((d, i) => validEdgeIdx[i]),
+        polygon.filter((d, i) => validEdgeIdx[i])
+    ]
+    
+    init_graph(curGraph);
 }
 
 function highlight_field(d, that) {
@@ -2162,60 +2184,6 @@ function temporalThematicFlow(yearGrid=2, topNRatio=0.6) {
     //         console.log(d);
     //     });
 }
-
-
-function ajaxRequest(hyperbolic=false) {
-    var paramData = {};
-    var formData = $("#update-info").serialize();
-    formData = formData.split("&");
-    for (let i = 1; i < formData.length; i++) {
-        const temp = formData[i].split('=');
-        paramData[temp[0]] = temp[1];
-    }
-    paramData.authorID = "{{ authorID }}"
-    paramData.field = "{{ fieldType }}";
-    paramData.isKeyPaper = nodeSlider.noUiSlider.get();
-    paramData.extendsProb = edgeSlider.noUiSlider.get();
-    paramData.year = $("#vis-type").val() == 3? 0: 1;
-
-    $.ajax({
-        headers: {"X-CSRFToken": getCookie("csrftoken")},
-        type: "POST",
-        dataType: "json",
-        url: "/update/",
-        data: paramData,
-        success: function (param) {
-            $("#abstract, #citation-context, #timeline").empty();
-            $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-            d3.tip().destroy();
-            var detail = param['detail'],
-                fieldType = param['fieldType'];
-            var filename = `/src/json/${fieldType}/${detail}.json`;
-            d3.json(filename).then( data => {
-                graph = data;
-                years = data[1];
-                nodes = data[2];
-                edges = data[3];
-                polygon = data[4];
-                const params = data[0];
-                viewBox = params[0];
-                transform = params[1];
-                
-                for (let i = 0; i < nodes.length; i++) {
-                    nodes[i]['status'] = 0;
-                }
-                name = "{{name}}";
-                onFullscreenChange();
-            });
-            reset_graph();
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("AJAX request failed:", textStatus, errorThrown);
-            console.log("Response:", jqXHR.responseText);
-        }
-    });
-}
-$("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
 
 function sugiyama(years, nodes, edges) {
     var layers = new Array;

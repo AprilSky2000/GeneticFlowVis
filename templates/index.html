@@ -20,6 +20,7 @@
     <script src="/src/js/fisheye.js"></script>
     <script src="/src/js/d3-tip.js"></script>
     <script src="/src/js/d3-hsv.min.js"></script>
+    <script src="/src/js/dagre.js"></script>
     <script src="/src/js/layui.js" charset="utf-8"></script>
     <script src="/src/js/d3-ForceEdgeBundling.js"></script>
     <!-- <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script> -->
@@ -433,7 +434,38 @@
 <script type="text/javascript">
     // text1 paperLabel; text2 paperCount; text3 year; text4 field
 
-let graph, originalGraph, params, years, nodes, edges, polygon, config, g, visType;
+function buildPathDFromPoints(points) {
+    // 检查points数组是否有效
+    if (!points || points.length === 0) {
+        return '';
+    }
+
+    // 使用第一个点作为起点，初始化'd'属性
+    let d = `M${points[0].x},${points[0].y}`;
+
+    // 连接所有后续的点
+    for (let i = 1; i < points.length; i++) {
+        d += ` L${points[i].x},${points[i].y}`;
+    }
+
+    return d;
+}
+
+function buildCurvedPath(points) {
+    // build curved path from points using d3.line and d3.curveBasis
+    if (!points || points.length === 0) {
+        return '';
+    }
+
+    let line = d3.line()
+        .x(d => d.x)
+        .y(d => d.y)
+        .curve(d3.curveBasis);
+    return line(points);
+}
+
+
+let graph, originalGraph, params, years, nodes, edges, polygon, config, g, visType, authorData;
 $(function () {
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
     image_status = 0;
@@ -469,68 +501,161 @@ $(function () {
         $("#field").css("height", imgHeight);
         $("#field").css("line-height", imgHeight);
         $("#field h1").append(`<span>- ${fieldlabel}</span>`);
-
-        d3.json(filename).then( data => {
-<<<<<<< HEAD
-            console.log('data', data);
-            years = data[1];            //年份节点
-            nodes = data[2];            //论文节点
-            edges = data[3];            //path
-            polygon = data[4];          //箭头
-            const params = data[0];
-            viewBox = params[0];
-            transform = params[1];
-=======
-            originalGraph = data;
-            graph = data;
-            [params, years, nodes, edges, polygon] = graph;
->>>>>>> ffd059f (add all)
-            // 正常情况下node状态为0，但发生点击事件时，被点击的点状态为1，没有被点击的点状态为0
-            for (let i = 0; i < nodes.length; i++) {
-                nodes[i]['status'] = 0;
+        
+        rangeSlider = document.getElementById("range-slider");
+        rangeLabel = document.getElementById("range-label");
+        noUiSlider.create(rangeSlider, {
+            start: [0, 100], // 初始值
+            connect: true,   // 连接两个滑块
+            range: {
+                'min': 0,
+                'max': 100
+            },
+            step: 1
+        });
+        nodeSlider = document.getElementById('range-node');
+        edgeSlider = document.getElementById('range-edge');
+        noUiSlider.create(nodeSlider, {
+            start: config["node_prob"],
+            behaviour: 'tap',
+            connect: [false, true],
+            step: 0.05,
+            range: {
+                'min': 0,
+                'max': 1.0
             }
-            // 正常情况下，edge状态为0，但发生点击事件时，需要区分高亮的边和没有高亮的边
-            // 没有高亮的边状态为1，高亮的边状态为2
-            for (let i = 0; i < edges.length; i++) {
-                edges[i]['status'] = 0;
+        });
+        
+        noUiSlider.create(edgeSlider, {
+            start: config["edge_prob"],
+            behaviour: 'tap',
+            connect: [false, true],
+            step: 0.05,
+            range: {
+                'min': 0,
+                'max': 1.0
             }
+        });
+        $('#remove-survey').value = config['remove_survey'];
+        $('#mode').value = config['remove_isolated'];
 
-            rangeSlider = document.getElementById("range-slider");
-            rangeLabel = document.getElementById("range-label");
-            noUiSlider.create(rangeSlider, {
-                start: [0, 100], // 初始值
-                connect: true,   // 连接两个滑块
-                range: {
-                    'min': 0,
-                    'max': 100
-                },
-                step: 1
-            });
-            nodeSlider = document.getElementById('range-node');
-            noUiSlider.create(nodeSlider, {
-                start: config["node_prob"],
-                behaviour: 'tap',
-                connect: [false, true],
-                step: 0.05,
-                range: {
-                    'min': 0,
-                    'max': 1.0
-                }
-            });
-            edgeSlider = document.getElementById('range-edge');
-            noUiSlider.create(edgeSlider, {
-                start: config["edge_prob"],
-                behaviour: 'tap',
-                connect: [false, true],
-                step: 0.05,
-                range: {
-                    'min': 0,
-                    'max': 1.0
-                }
-            });
-            $('remove-survey').value = config['remove_survey'];
-            $('mode').value = config['remove_isolated'];
+        d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
+            authorData = data;
+            // $("#node-num").text(data['nodes'].length);
+            // $("#edge-num").text(data['edges'].length);
             
+            let filteredNodes = data['nodes'].filter(d => d.isKeyPaper >= nodeSlider.noUiSlider.get());
+            let filteredEdges = data['edges'].filter(d => d.extends_prob >= edgeSlider.noUiSlider.get());
+            
+            let ln = filteredNodes.length, le = filteredEdges.length;
+            let modeValue = document.getElementById('mode').value;
+            let surveyValue = document.getElementById('remove-survey').value;
+            
+            if (surveyValue == '1') filteredNodes = filteredNodes.filter(node => !node.survey);
+            let lnr = filteredNodes.length;
+            // Compute indegree, outdegree, and total degree
+            let indegree = {}, outdegree = {}, alldegree = {};
+            // set other nodes in filteredNodes outdegree/indegree =0
+            filteredNodes.forEach(node => {
+                outdegree[node.id] = 0;
+                indegree[node.id] = 0;
+                alldegree[node.id] = 0;
+            })
+            let nodeSet = new Set(filteredNodes.map(node => node.id));
+            
+            let edgeCount = 0;
+            let connectedEdges = [];
+            filteredEdges.forEach(edge => {
+                src = String(edge.source);
+                tgt = String(edge.target);
+                if (nodeSet.has(src) && nodeSet.has(tgt)) {
+                    outdegree[src] += 1;
+                    indegree[tgt] += 1;
+                    alldegree[src] += 1;
+                    alldegree[tgt] += 1;
+                    connectedEdges.push(edge);
+                }
+            });
+            if (modeValue == '1') {
+                // remove isolated
+                filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0);
+            } else if (modeValue == '2') {
+                // partially remove, high citationCount papers are not removed
+                filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0 || node.citationCount >= 50);
+            }
+            filteredEdges = connectedEdges;
+            
+            console.log('original data:', authorData, 
+                '#nodes:', data['nodes'].length, ln, lnr, filteredNodes.length, 
+                '#edges:', data['edges'].length, le, filteredEdges.length,
+                filteredNodes, filteredEdges);
+            
+            const minYear = Math.min(...filteredNodes.map(node => node.year));
+            const maxYear = Math.max(...filteredNodes.map(node => node.year));
+
+            var g = new dagre.graphlib.Graph();
+            g.setGraph({});
+            g.setDefaultEdgeLabel(function() { return {}; });
+
+            for (let year = minYear; year <= maxYear+1; year++) {
+                g.setNode(`year${year}`, {width: 0, height: 0, style: "opacity: 0;" }); // 虚拟节点样式调整
+            }
+            for (let year = minYear; year <= maxYear; year++) {
+                g.setEdge(`year${year}`, `year${year + 1}`);
+            }
+            filteredNodes.forEach(node => {
+                g.setNode(node.id, {width: 20, height: 20, y: node.year - minYear + 1});
+                g.setEdge(`year${node.year}`, node.id); // 连接到对应年份的虚拟节点
+                g.setEdge(node.id, `year${node.year + 1}`); // 连接到对应年份的虚拟节点
+            });
+            filteredEdges.forEach(edge => {
+                g.setEdge(edge.source, edge.target);
+            });
+
+            dagre.layout(g);
+            let id2attr = {};
+            years = [];
+            g.nodes().forEach(function(v) {
+                if (v.startsWith('year')) {
+                    years.push({
+                        id: v.substring(4),
+                        // cx: g.node(v).x,
+                        cx: 0,
+                        cy: g.node(v).y,
+                        rx: 20,
+                        ry: 20
+                    });
+                    return;
+                }
+                console.log("Node " + v + ": " + JSON.stringify(g.node(v)));
+                id2attr[v] = g.node(v);
+            });
+            g.edges().forEach(function(e) {
+                if (e.v.startsWith('year') || e.w.startsWith('year')) return;
+                console.log("Edge " + e.v + " -> " + e.w + ": " + JSON.stringify(g.edge(e)));
+                id2attr[e.v + '-' + e.w] = g.edge(e);
+            });
+
+            filteredNodes.forEach(node => {
+                node.cx = id2attr[node.id].x;
+                node.cy = id2attr[node.id].y;
+                node.rx = 20;
+                node.ry = 20;
+            });
+            filteredEdges.forEach(edge => {
+                edge.points = id2attr[edge.source + '-' + edge.target].points;
+                edge.d = buildCurvedPath(edge.points);
+            });
+            console.log('computed layout:', graph);
+            
+            let maxX = Math.max(...filteredNodes.map(node => node.cx));
+            let maxY = Math.max(...filteredNodes.map(node => node.cy));
+            viewBox = `0 0 ${maxX} ${maxY}`;
+            transform = `translate(0, 0)`;
+            params = [viewBox, transform]
+
+            graph = [params, years, filteredNodes, filteredEdges, null];
+            [params, years, nodes, edges, polygon] = graph;
             onFullscreenChange();
 
             $("#overall-topic-map").hide();
@@ -538,40 +663,110 @@ $(function () {
             // sugiyama(years, nodes, edges);
             addAllListeners();
         });
+
+        // d3.json(filename).then( data => {
+        //     originalGraph = data;
+        //     graph = data;
+        //     [params, years, nodes, edges, polygon] = graph;
+        //     onFullscreenChange();
+
+        //     $("#overall-topic-map").hide();
+        //     $("#paper-topic-map").show();
+        //     // sugiyama(years, nodes, edges);
+        //     addAllListeners();
+        // });
     })
 });
 </script>
-    <script>
-        // Preload the image
-        var preloadedImage = new Image();
-        preloadedImage.src = '/src/image/overview.png';
-        preloadedImage.style.display = 'none'; // Hide the image initially
-        preloadedImage.style.width = '100%'; // Set width to 100% of the parent container
-        preloadedImage.style.height = 'auto';
-        $("#description").append(preloadedImage); // Assuming there's a div with id 'imageContainer' to hold the image
+<script type="text/javascript">
 
-        $("#info").click(function() {
-            if (image_status == 0) {
-                // Display the preloaded image
-                $(preloadedImage).show();
-                $("#mainsvg").hide();
-                $("#tagcloud").hide();
-                $("#description").show();
-                image_status = 1;
-            }
-            else if (image_status == 1) {
-                reset_graph();
-                $(preloadedImage).hide(); // Hide the image
-                image_status = 2;
-            }
-            else if (image_status == 2) {
-                $(preloadedImage).show(); // Show the image again
-                $("#mainsvg").hide();
-                $("#tagcloud").hide();
-                $("#description").show();
-                image_status = 1;
-            }
-        });
-    </script>
+function ajaxRequest() {
+    var paramData = {};
+    var formData = $("#update-info").serialize();
+    formData = formData.split("&");
+    for (let i = 1; i < formData.length; i++) {
+        const temp = formData[i].split('=');
+        paramData[temp[0]] = temp[1];
+    }
+    paramData.authorID = "{{ authorID }}"
+    paramData.field = "{{ fieldType }}";
+    paramData.isKeyPaper = nodeSlider.noUiSlider.get();
+    paramData.extendsProb = edgeSlider.noUiSlider.get();
+    paramData.year = $("#vis-type").val() == 3? 0: 1;
+
+    // console.log('paramData', paramData)
+
+    $.ajax({
+        headers: {"X-CSRFToken": getCookie("csrftoken")},
+        type: "POST",
+        dataType: "json",
+        url: "/update/",
+        data: paramData,
+        success: function (param) {
+            $("#abstract, #citation-context, #timeline").empty();
+            $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+            d3.tip().destroy();
+            var detail = param['detail'],
+                fieldType = param['fieldType'];
+            var filename = `/src/json/${fieldType}/${detail}.json`;
+            d3.json(filename).then( data => {
+                graph = data;
+                years = data[1];
+                nodes = data[2];
+                edges = data[3];
+                polygon = data[4];
+                const params = data[0];
+                viewBox = params[0];
+                transform = params[1];
+                
+                for (let i = 0; i < nodes.length; i++) {
+                    nodes[i]['status'] = 0;
+                }
+                name = "{{name}}";
+                onFullscreenChange();
+            });
+            reset_graph();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error("AJAX request failed:", textStatus, errorThrown);
+            console.log("Response:", jqXHR.responseText);
+        }
+    });
+}
+$("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
+</script>
+
+<script>
+// Preload the image
+var preloadedImage = new Image();
+preloadedImage.src = '/src/image/overview.png';
+preloadedImage.style.display = 'none'; // Hide the image initially
+preloadedImage.style.width = '100%'; // Set width to 100% of the parent container
+preloadedImage.style.height = 'auto';
+$("#description").append(preloadedImage); // Assuming there's a div with id 'imageContainer' to hold the image
+
+$("#info").click(function() {
+    if (image_status == 0) {
+        // Display the preloaded image
+        $(preloadedImage).show();
+        $("#mainsvg").hide();
+        $("#tagcloud").hide();
+        $("#description").show();
+        image_status = 1;
+    }
+    else if (image_status == 1) {
+        reset_graph();
+        $(preloadedImage).hide(); // Hide the image
+        image_status = 2;
+    }
+    else if (image_status == 2) {
+        $(preloadedImage).show(); // Show the image again
+        $("#mainsvg").hide();
+        $("#tagcloud").hide();
+        $("#description").show();
+        image_status = 1;
+    }
+});
+</script>
 </body>
 </html>

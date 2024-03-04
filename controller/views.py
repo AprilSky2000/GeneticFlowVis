@@ -65,17 +65,36 @@ def load_author(field, authorID):
     if os.path.exists(filename):
         return
     edges = []
-    links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv')
+    links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv', dtype={'childrenID': str, 'parentID': str})
+    links_df['extendsProb'] = links_df['extendsProb'].replace('\\N', '0').astype(float)
+    links_df = links_df.where(links_df.notnull(), None)
     for index, row in links_df.iterrows():
         edges.append({
             'source': row['childrenID'],
             'target': row['parentID'],
-            'prob': to_number(row['extendsProb'])
+            'extends_prob': to_number(row['extendsProb']),
+            'citation_context': row['citationContext']
         })
 
-    papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv', dtype={'paperID': str})
+    papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv', dtype={'paperID': str,
+                'year': int, 'referenceCount': int, 'citationCount': int, 'isKeyPaper': float})
     papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
-    papers_df = papers_df[['paperID', 'year', 'survey', 'isKeyPaper', 'topic']]
+    if field in field2topics:
+        paperID2topic = field2topics[field]
+        papers_df['topic'] = papers_df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
+    elif 'topic' not in papers_df.columns:
+        papers_df['topic'] = 0
+    # papers_df.fillna('', inplace=True)
+    papers_df = papers_df.where(papers_df.notnull(), None)
+    # drop unnamed columns
+    papers_df = papers_df.loc[:, ~papers_df.columns.str.contains('^Unnamed')]
+    papers_df = papers_df.rename(columns={
+        'authorsName': 'authors',
+        'paperID': 'id',
+        'title': 'name',
+    })
+    
+    # papers_df = papers_df[['paperID', 'year', 'referenceCount', 'citationCount', 'survey', 'isKeyPaper', 'topic']]
     
     dic = {
         'nodes': papers_df.to_dict(orient='records'),
@@ -147,6 +166,7 @@ def degree(request):
     for index, row in df.iterrows():
         authorID = row['authorID']
         load_author(field, authorID)
+        # 这里防止报错删掉：turing/top_field_authors.csv中两行： 2058634616 3081858028
 
     # keys = list(topAuthors.keys())
     # print('load complete', df, keys, authorID2fellow)
@@ -340,6 +360,8 @@ def index(request):
                 client_ip, fieldType, authorID, author["name"])
     
     fields = get_fields(fieldType)
+    load_author(fieldType, authorID)
+
     mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey, year = 2, 0.5, 0.5, 10, 1, 1
     if fieldType == "acl":
         extendsProb = 0.4
@@ -398,23 +420,23 @@ def create_partial_graph(fieldType, detail):
     if mode == 0:
         create_node(dot, papers, nodeWidth, year)
         create_edge(dot, papers, links)
-        return
-    valid_nodes = set()
-    # 当节点没有边与其相连时，删去
-    for link in links:
-        a = link['childrenID']
-        b = link['parentID']
-        if a in papers and b in papers:
-            valid_nodes.add(a)
-            valid_nodes.add(b)
-    if mode == 2:
-        for k, v in papers.items():
-            if v['citationCount'] >= 50:
-                valid_nodes.add(k)
+    else:
+        valid_nodes = set()
+        # 当节点没有边与其相连时，删去
+        for link in links:
+            a = link['childrenID']
+            b = link['parentID']
+            if a in papers and b in papers:
+                valid_nodes.add(a)
+                valid_nodes.add(b)
+        if mode == 2:
+            for k, v in papers.items():
+                if v['citationCount'] >= 50:
+                    valid_nodes.add(k)
 
-    papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
-    create_node(dot, papers_backup, nodeWidth, year)
-    create_edge(dot, papers_backup, links)
+        papers_backup = {k: v for k, v in papers.items() if k in valid_nodes}
+        create_node(dot, papers_backup, nodeWidth, year)
+        create_edge(dot, papers_backup, links)
 
     # 保存为svg, json文件
     dot.render(directory=f"static/image/svg/{fieldType}", view=False)
@@ -451,6 +473,8 @@ def update(request):
     filename = f'static/json/{fieldType}/{detail}.json'
     if os.path.exists(filename) == False:
         create_partial_graph(fieldType, detail)
+
+    print('detail', detail)
 
     param = {'detail': detail, 'fieldType': fieldType}
     return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
