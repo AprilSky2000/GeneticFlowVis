@@ -21,6 +21,7 @@
     <script src="/src/js/d3-tip.js"></script>
     <script src="/src/js/d3-hsv.min.js"></script>
     <script src="/src/js/dagre.js"></script>
+    <script src="/src/js/viz-standalone.js"></script>
     <script src="/src/js/layui.js" charset="utf-8"></script>
     <script src="/src/js/d3-ForceEdgeBundling.js"></script>
     <!-- <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script> -->
@@ -593,20 +594,55 @@ $(function () {
             const minYear = Math.min(...filteredNodes.map(node => node.year));
             const maxYear = Math.max(...filteredNodes.map(node => node.year));
 
+            let dot = 'digraph G {\n';
+            let years = {};
+
+            for (let year = minYear; year <= maxYear; year++) {
+                dot += `${year} [label="${year}"];\n`;
+            }
+            filteredNodes.forEach(node => {
+                // const label = node.name.replace(/"/g, '\\"'); // 转义名称中的双引号
+                let label = node.topic;
+                dot += `${node.id} [label="${label}"];\n`;
+                
+                // 对于每个年份，收集节点ID
+                if (!years[node.year]) years[node.year] = [node.year];
+                years[node.year].push(node.id);
+            });
+            // 对每个年份的节点使用rank=same来强制它们在同一层
+            for (let year of Object.keys(years)) {
+                dot += `{ rank=same; ${years[year].join('; ')}; }\n`;
+            }
+            for (let year = minYear; year < maxYear; year++) {
+                dot += `${year} -> ${year+1};\n`;
+            }
+            filteredEdges.forEach(edge => {
+                dot += `${edge.source} -> ${edge.target};\n`;
+            });
+
+            dot += '}';
+            console.log('dot', dot);
+
+            // 使用viz.js计算布局
+            // 注意：你需要在你的项目中引入viz.js库
+            Viz.instance().then(function(viz) {
+                let result = viz.renderString(dot)
+                console.log('viz result', result);
+            });
+
+            //////////////////////////////////////////////////////////////////
             var g = new dagre.graphlib.Graph();
             g.setGraph({});
             g.setDefaultEdgeLabel(function() { return {}; });
 
             for (let year = minYear; year <= maxYear+1; year++) {
-                g.setNode(`year${year}`, {width: 0, height: 0, style: "opacity: 0;" }); // 虚拟节点样式调整
+                g.setNode(`year${year}`, {width: 0, height: 0, style: "opacity: 0;", rank: year - minYear + 1 }); // 虚拟节点样式调整
             }
             for (let year = minYear; year <= maxYear; year++) {
                 g.setEdge(`year${year}`, `year${year + 1}`);
             }
             filteredNodes.forEach(node => {
-                g.setNode(node.id, {width: 20, height: 20, y: node.year - minYear + 1});
-                g.setEdge(`year${node.year}`, node.id); // 连接到对应年份的虚拟节点
-                g.setEdge(node.id, `year${node.year + 1}`); // 连接到对应年份的虚拟节点
+                g.setNode(node.id, {width: 20, height: 20, rank: node.year - minYear + 1});
             });
             filteredEdges.forEach(edge => {
                 g.setEdge(edge.source, edge.target);
