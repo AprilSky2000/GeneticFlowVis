@@ -20,7 +20,7 @@
     <script src="/src/js/fisheye.js"></script>
     <script src="/src/js/d3-tip.js"></script>
     <script src="/src/js/d3-hsv.min.js"></script>
-    <script src="/src/js/dagre.js"></script>
+    <!-- <script src="/src/js/dagre.js"></script> -->
     <script src="/src/js/viz-standalone.js"></script>
     <script src="/src/js/layui.js" charset="utf-8"></script>
     <script src="/src/js/d3-ForceEdgeBundling.js"></script>
@@ -49,139 +49,171 @@
         <div class="navigation" style="background-color: #f7f7f7; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; z-index: 0;">
             <form id="update-info">
                 {% csrf_token %}
-                <ul class="address" style="padding-top: 0px;">
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 2%; float: left; height: 14px; font-size: 13px !important;"></li>
-                            <li style="width: 11%; color: #777; float: left; height: 14px; font-size: 13px !important;">remove survey papers</li>
-                            <li style="width: 11%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: -1.5%;">remove isolated papers</li>
-                            <li style="width: 13%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">only show core papers</li>
-                            <li style="width: 13%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">only show extend citations</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: -0.5%;">node outline color</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node outline thickness</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node fill color</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 0.5%;">visualization type</li>
-                            <li style="width: 9%; color: #777; float: left; height: 14px; font-size: 13px !important; margin-left: 1%;">node max width</li>
-                            <li style="width: 1%; float: right; height: 14px; font-size: 13px !important;"></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 3%; float: left;"></li>
-                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 1%;">
-                                <select id="remove-survey" class="form-select" name="removeSurvey" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </li>
-                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
-                                <select id="mode" class="form-select" name="mode" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="2">Partial</option>
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </li>
-                            <li style="width: 14%; float: left; color: #777;">
-                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
-                                <div id="range-node" style="display: inline-block; width: 60%;"></div>
-                                <!-- <input style="display: inline-block; width: 60%;" id="range-node" class="graph-slider" type="range" name="isKeyPaper" value="0.5" min="0" max="1" step="0.1"> -->
-                                <span id="node-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.5 prob.</span>
-                            </li>
-                            <li style="width: 14%; float: left; color: #777;">
-                                <span style="display: inline-block; width: 15%; font-size:8px;">no filter</span>
-                                <div id="range-edge" style="display: inline-block; width: 60%;"></div>
-                                <!-- <input style="display: inline-block; width: 60%;" id="range-edge" class="graph-slider" type="range" name="extendsProb" value="0.4" min="0" max="1" step="0.1"> -->
-                                <span id="edge-value" style="display: inline-block; width: 15%; color: #333; font-size:8px">≥0.5 prob.</span>
-                            </li>
-                            <li style="width: 10%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.7%;">
-                                <select id="outline-color" class="form-select" name="outlineColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="2">paper citation</option>
-                                    <option value="1">core paper prob</option>
-                                    <option value="0">none</option>
-                                </select>
-                                <script type="text/javascript">
-                                    $("#outline-color").change(function() {
-                                        d3.selectAll('.paper').data(nodes)
-                                            .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount));
-                                    });
-                                </script>
-                            </li>
-                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 0.5%;">
-                                <select id="outline-thickness" class="form-select" name="outlineThickness" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="2">paper citation</option>
-                                    <option value="1">core paper prob</option>
-                                    <option value="0">none</option>
-                                </select>
-                                <script type="text/javascript">
-                                    $("#outline-thickness").change(function() {
-                                        d3.selectAll('.paper').data(nodes)
-                                            .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
-                                    });
-                                </script>
-                            </li>
-                            <li style="width: 9%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%;">
-                                <select id="fill-color" class="form-select" name="fillColor" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0">paper topic</option>
-                                    <option value="1">blue</option>
-                                    <option value="2">isKeyPaper</option>
-                                    <option value="3">citationCount</option>
-                                </select>
-                                <script type="text/javascript">
-                                    $("#fill-color").change(updateFillColor);
-                                </script>
-                            </li>
-                            <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
-                                <select id="vis-type" class="form-select" name="VisType" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0" selected>sugiyama</option>
-                                    <option value="1">force layout</option>
-                                    <option value="2">evolution force layout</option>
-                                    <option value="3">sugiyama without year</option>
-                                    <option value="4">sugiyama(OH)</option>
-                                    <option value="5">Temporal-Thematic Flow</option>
-                                    <option value="6">Temporal-Thematic Flow(OH)</option>
-                                </select>
-                                <script>
-                                    $("#vis-type").change(updateVisType);
-                                </script>
-                            </li>
-                            <li style="width: 8%; float: left; color: #777; margin-top: 0.5%; margin-bottom: 0.5%; margin-left: 1.5%;">
-                                <select id="node-width" class="form-select" name="nodeWidth" style="display: inline-block; color:#333; width: 60%; padding-top: 0.2em; padding-bottom: 0.2em;">
-                                    <option value="0">None</option>
-                                    <option value="5">5</option>
-                                    <option value="10" selected>10</option>
-                                    <option value="15">15</option>
-                                    <option value="20">20</option>
-                                </select>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                <table class="address" style="width: 100%; padding-top: 0px; color: #777;">
+                    <tr>
+                        <td style="width: 2%;"></td>
+                        <td style="font-size: 13px !important;">remove survey papers</td>
+                        <td style=" font-size: 13px !important;">remove isolated papers</td>
+                        <td style="width: 13%; font-size: 13px !important;">only show core papers</td>
+                        <td style="width: 13%; font-size: 13px !important;">only show extend citations</td>
+                        <td style="width: 13%; font-size: 13px !important;">topic similarity threshold</td>
+                        <!-- <td style="width: 13%; font-size: 13px !important;">year grid</td> -->
+                        <td style=" font-size: 13px !important;">node outline color</td>
+                        <td style=" font-size: 13px !important;">node outline thickness</td>
+                        <td style=" font-size: 13px !important;">node fill color</td>
+                        <td style=" font-size: 13px !important;">visualization type</td>
+                        <td style=" font-size: 13px !important;">node max width</td>
+                        <td style="width: 2%;"></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <select id="remove-survey" class="form-select" name="removeSurvey">
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="mode" class="form-select" name="mode">
+                                <option value="2">Partial</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span style="font-size:10px;">no filter</span>
+                            <div id="range-node" style="width: 60%; display: inline-block;"></div>
+                            <span id="node-value" style="color: #333; font-size:10px">≥0.5 prob.</span>
+                        </td>
+                        <td>
+                            <span style="font-size:10px;">no filter</span>
+                            <div id="range-edge" style="width: 60%; display: inline-block;"></div>
+                            <span id="edge-value" style="color: #333; font-size:10px">≥0.5 prob.</span>
+                        </td>
+                        <td>
+                            <span style="font-size:10px;">no filter</span>
+                            <div id="range-topic" style="width: 60%; display: inline-block;"></div>
+                            <span id="topic-value" style="color: #333; font-size:10px">≥0.5 prob.</span>
+                        </td>
+                        <td>
+                            <select id="outline-color" class="form-select" name="outlineColor">
+                                <option value="2">paper citation</option>
+                                <option value="1">core paper prob</option>
+                                <option value="0">none</option>
+                            </select>
+                            <script type="text/javascript">
+                                $("#outline-color").change(function() {
+                                    d3.selectAll('.paper').data(nodes)
+                                        .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount));
+                                });
+                            </script>
+                        </td>
+                        <td>
+                            <select id="outline-thickness" class="form-select" name="outlineThickness">
+                                <option value="2">paper citation</option>
+                                <option value="1">core paper prob</option>
+                                <option value="0">none</option>
+                            </select>
+                            <script type="text/javascript">
+                                $("#outline-thickness").change(function() {
+                                    d3.selectAll('.paper').data(nodes)
+                                        .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
+                                });
+                            </script>
+                        </td>
+                        <td>
+                            <select id="fill-color" class="form-select" name="fillColor">
+                                <option value="0">paper topic</option>
+                                <option value="1">blue</option>
+                                <option value="2">isKeyPaper</option>
+                                <option value="3">citationCount</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="vis-type" class="form-select" name="VisType">
+                                <option value="0" selected>sugiyama</option>
+                                <option value="1">force layout</option>
+                                <option value="2">evolution force layout</option>
+                                <option value="3">sugiyama without year</option>
+                                <option value="4">sugiyama(OH)</option>
+                                <option value="5">Temporal-Thematic Flow</option>
+                                <option value="6">Temporal-Thematic Flow(OH)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="node-width" class="form-select" name="nodeWidth">
+                                <option value="0">None</option>
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                            </select>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table>
+                
             </form>
             <div class="clearfix"></div>
         </div>
         <div class="main-panel">
             <div class="left-column">
-                <ul id="graph-info" class="address" style="padding-bottom: 5%;">
-                    <li>
-                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
-                            <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Graph Info</p>
-                            </li>
-                        </ul>
-                    </li>
-                    <div id="radialgraph">
-                        <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="500px"></iframe>
+                <div id="basic-info" class="address" style="padding-bottom: 5%; ">
+                    <div style="width: 100%; padding-top: 4%; padding-bottom: 3%;background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                        <p style="margin-left: 40px; color: white; font-size: 16px; font-weight: bold;">Scholar Info</p>
                     </div>
-                </ul>
-                <br />
+
+                    <table style="background-color: white; width: 100%;">
+                        <tr>
+                            <th style="width: 25%;">author</th>
+                            <td style="color: #333;">{{ name }}</td>
+                        </tr>
+                        <tr>
+                            <th>h-index</th>
+                            <td style="color: #333;">{{ hIndex }}</td>
+                        </tr>
+                        <tr>
+                            <th>#citations</th>
+                            <td style="color: #333;">{{ citationCount }}</td>
+                        </tr>
+                        <tr>
+                            <th>#papers</th>
+                            <td style="color: #333;">{{ paperCount }}</td>
+                        </tr>
+                        <tr>
+                            <th>#nodes</th>
+                            <td id="node-num" style="color: #333;"></td>
+                        </tr>
+                        <tr>
+                            <th>#edges</th>
+                            <td id="edge-num" style="color: #333;"></td>
+                        </tr>
+                    </table>
+                    
+                </div>
+
                 <ul id="topic-info" class="address">
                     <li>
-                        <ul id="topic-map-banner" class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
-                            <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Topic Map</p>
+                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <li style="width: 40%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
+                                <button id="topic-button">Topic Map</button>
+                            </li>
+                            <li style="width: 40%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
+                                <button id="hypertree-button">Hypertree</button>
                             </li>
                         </ul>
                     </li>
+                    <script>
+                        $("#topic-button").click(function () {
+                            $("#radialgraph").hide();
+                            $("#topic-map-graph").show();
+                        })
+                        $("#hypertree-button").click(function () {
+                            $("#radialgraph").show();
+                            $("#topic-map-graph").hide();
+                        })
+                    </script>
+
                     <li>
                         <div id="topic-map-graph" style="padding-bottom:4%">
                             <div id="topic-distribution"></div>
@@ -201,6 +233,12 @@
                             </div>
                         </div>
                     </li>
+                    <li>
+                        <div id="radialgraph">
+                            <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="400px"></iframe>
+                        </div>
+                    </li>
+                    
                 </ul>
             </div>
             <div class="middle-column" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
@@ -248,47 +286,7 @@
                 <canvas width="850" height="560" style="display:none"></canvas-->
             </div>
 
-            <div class="right-column" style="margin-left: -0.6%;">
-                <ul id="basic-info" class="address" style="padding-bottom: 5%;">
-                    <li>
-                        <ul class="address-text" style="background-color: #054863; border-top-left-radius: 7px; border-top-right-radius: 7px;">
-                            <li style="width: 100%; font-size: 16px; margin-top: 4%; margin-bottom: 3%;">
-                                <p>Scholar Info</p>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 50%; padding-left: 1%;"><b>author</b></li>
-                            <li style="color: #333;">{{ name }}</li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 60%;"><b>h-index / citations</b></li>
-                            <li style="color: #333;">{{ hIndex }} / {{ citationCount }}</li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 60%;"><b>paper count</b></li>
-                            <li style="color: #333;">{{ paperCount }}</li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 55%;"><b># of nodes</b></li>
-                            <li id="node-num" style="color: #333;"></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <ul class="address-text">
-                            <li style="width: 55%;"><b># of edges</b></li>
-                            <li id="edge-num" style="color: #333;"></li>
-                        </ul>
-                    </li>
-                </ul>
-
+            <div class="right-column">
                 <div id="paper-list" style="background-color: white; border-top-right-radius: 10px;border-bottom-right-radius: 10px;">
                     <div style="width: 100%; padding-top: 4%; padding-bottom: 3%;background-color: #054863; border-top-right-radius: 10px;">
                         <p style="margin-left: 40px; color: white; font-size: 16px; font-weight: bold;">Paper List</p>
@@ -327,11 +325,12 @@
                     </li>
                 </ul>
                 
-                <div id="node-info" style="padding: 10px; padding-left: 25px; background-color: white; overflow-y: auto; border-bottom-right-radius: 10px;"> <!-- 添加左侧内边距 -->
+                <div id="node-info" style="overflow-y: auto; border-bottom-right-radius: 10px;">
                     <!-- 表格部分 -->
-                    <table style="background-color: white; border-top-left-radius: 0%; border-top-right-radius: 0%; width: 100%;">
+                    <table  style="background-color: white; border-top-left-radius: 0%; border-top-right-radius: 0%; width: 100%;
+                        ">
                         <tr>
-                            <th style="width: 30%;">paperID</th>
+                            <th style="width: 25%;">paperID</th>
                             <td id="paper-id" style="color: #333;"></td>
                         </tr>
                         <tr>
@@ -362,16 +361,20 @@
                             <th>topic</th>
                             <td id="paper-field" style="color: #333;"></td>
                         </tr>
+                        <tr>
+                            <th>Abstract</th>
+                            <!-- 这个单元格别居中 -->
+                            <td id="abstract" style="color: #333;text-align: left;"></td>
+                        </tr>
                     </table>
+                </div>
                 
-                    <!-- abstract 部分 -->
-                    <div id="abstract-container" style="background-color: white;"> <!-- 设置最大高度和滚动 -->
+                    <!-- <div id="abstract-container" style="background-color: white;">
                         <h3 style="text-align: left; margin: 3%;">Abstract</h3>
                         <p id="abstract" style="color: #333; margin: 3%">
-                            <!-- Abstract 文本 -->
                         </p>
                     </div>
-                </div>
+                </div> -->
 
                 <div id="edge-info" class="address" >
                     <div id="edge-title" style="width: 100%; padding-top: 4%; padding-bottom: 3%;background-color: #054863; border-top-right-radius: 10px;">
@@ -434,9 +437,6 @@
     
 <script type="text/javascript">
     // text1 paperLabel; text2 paperCount; text3 year; text4 field
-let graph, originalGraph, params, years, nodes, edges, 
-    polygon, config, g, visType, authorData;
-let selectedTopic = null;
 
 function buildPathDFromPoints(points) {
     // 检查points数组是否有效
@@ -472,6 +472,7 @@ $(function () {
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
     image_status = 0;
     image_data = "";
+    $("#radialgraph").hide();
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
@@ -483,16 +484,9 @@ $(function () {
     field_roots.forEach(element => {
         element[2] = String(element[2]);
     });
-    $("#field-level option[value='1']").remove();
-    $("#field-level option[value='2']").text(1);
+    // $("#field-level option[value='1']").remove();
+    // $("#field-level option[value='2']").text(1);
     
-    var filename = `/src/json/${fieldType}/${authorID}`;
-    if (fieldType == "acl") {
-        $("#edge-value").text("≥0.4 prob.");
-        filename += '_2_0.5_0.4_10_1_1.json';
-    }
-    else filename += '_2_0.5_0.5_10_1_1.json';
-
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
         if (fieldType in data) {
@@ -504,61 +498,59 @@ $(function () {
         $("#field").css("line-height", imgHeight);
         $("#field h1").append(`<span>- ${fieldlabel}</span>`);
         
+        rangeLabel = document.getElementById('range-label');
         rangeSlider = document.getElementById("range-slider");
-        rangeLabel = document.getElementById("range-label");
-        noUiSlider.create(rangeSlider, {
-            start: [0, 100], // 初始值
-            connect: true,   // 连接两个滑块
-            range: {
-                'min': 0,
-                'max': 100
-            },
-            step: 1
-        });
         nodeSlider = document.getElementById('range-node');
         edgeSlider = document.getElementById('range-edge');
+        topicSlider = document.getElementById('range-topic');
+        noUiSlider.create(rangeSlider, {
+            start: [1, 100], // 初始值
+            connect: true,   // 连接两个滑块
+            range: {'min': 1,'max': 100},
+            step: 1
+        });
         noUiSlider.create(nodeSlider, {
             start: config["node_prob"],
             behaviour: 'tap',
             connect: [false, true],
-            step: 0.05,
-            range: {
-                'min': 0,
-                'max': 1.0
-            }
+            step: 0.01,
+            range: {'min': 0,'max': 1.0}
         });
-        
+        $("#node-value").text("≥" + config["node_prob"] + " prob.");
         noUiSlider.create(edgeSlider, {
             start: config["edge_prob"],
             behaviour: 'tap',
             connect: [false, true],
-            step: 0.05,
-            range: {
-                'min': 0,
-                'max': 1.0
-            }
+            step: 0.01,
+            range: {'min': 0,'max': 1.0}
         });
+        $("#edge-value").text("≥" + config["edge_prob"] + " prob.");
+        noUiSlider.create(topicSlider, {
+            start: config["topic_prob"],
+            behaviour: 'tap',
+            connect: [false, true],
+            step: 0.01,
+            range: {'min': 0,'max': 1.0}
+        });
+        $("#topic-value").text("≥" + config["topic_prob"] + " prob.");
         $('#remove-survey').value = config['remove_survey'];
         $('#mode').value = config['remove_isolated'];
 
-        d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
-            authorData = data;
-            // $("#node-num").text(data['nodes'].length);
-            // $("#edge-num").text(data['edges'].length);
-            loadAndRender();
-        });
+        Viz.instance().then(function(v) {
+            viz = v;
+            d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
+                authorData = data;
+                // console.log('authorData', JSON.parse(JSON.stringify(authorData)));
+                // $("#node-num").text(data['nodes'].length);
+                // $("#edge-num").text(data['edges'].length);
+                loadAndRender();
 
-        // d3.json(filename).then( data => {
-        //     originalGraph = data;
-        //     graph = data;
-        //     [params, years, nodes, edges, polygon] = graph;
-        //     onFullscreenChange();
-
-        //     $("#overall-topic-map").hide();
-        //     $("#paper-topic-map").show();
-        //     // sugiyama(years, nodes, edges);
-        //     addAllListeners();
-        // });
+                $("#overall-topic-map").hide();
+                $("#paper-topic-map").show();
+                // sugiyama(years, nodes, edges);
+                addAllListeners();
+            });
+        })
     })
 });
 

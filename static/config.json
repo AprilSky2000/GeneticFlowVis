@@ -4,6 +4,7 @@
         "remove_isolated": "2",
         "node_prob": 0.5,
         "edge_prob": 0.5,
+        "topic_prob": 0.2,
         "node_width": 10
     },
     "acl": {
