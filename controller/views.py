@@ -15,7 +15,10 @@ from collections import defaultdict
 from django.utils.safestring import mark_safe
 from django.core import serializers
 import logging
+import shutil
 from django.views.decorators.clickjacking import xframe_options_exempt
+import networkx as nx
+from tqdm import tqdm
 
 logger = logging.getLogger('log')
 
@@ -31,7 +34,6 @@ for index, row in fellow_df.iterrows():
 # print('authorID2fellow', authorID2fellow)
 
 field2top_authors = {}
-field2topics = {}
 field2topicDist = {}
 
 def reference(request):
@@ -65,31 +67,25 @@ def load_author(field, authorID):
     if os.path.exists(filename):
         return
     edges = []
-    links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv', dtype={'childrenID': str, 'parentID': str})
-    links_df['extendsProb'] = links_df['extendsProb'].replace('\\N', '0').astype(float)
-    links_df = links_df.where(links_df.notnull(), None)
-    for index, row in links_df.iterrows():
-        edges.append({
-            'source': row['childrenID'],
-            'target': row['parentID'],
-            'extends_prob': to_number(row['extendsProb']),
-            'citation_context': row['citationContext']
-        })
+    if os.path.exists(f'csv/{field}/links/{authorID}.csv'):
+        links_df = pd.read_csv(f'csv/{field}/links/{authorID}.csv', dtype={'childrenID': str, 'parentID': str})
+        links_df['extendsProb'] = links_df['extendsProb'].replace('\\N', '0').astype(float)
+        links_df = links_df.where(links_df.notnull(), None)
+        for index, row in links_df.iterrows():
+            edges.append({
+                'source': row['childrenID'],
+                'target': row['parentID'],
+                'extends_prob': to_number(row['extendsProb']),
+                'citation_context': row['citationContext']
+            })
 
     papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv', dtype={'paperID': str,
                 'year': int, 'referenceCount': int, 'citationCount': int, 'isKeyPaper': float})
     papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
     
-    if field in field2topicDist:
-        paperID2topicDist = field2topicDist[field]
-        papers_df['topicDist'] = papers_df['paperID'].apply(lambda x: paperID2topicDist.get(x, {}))
-        papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0)
-    elif field in field2topics:
-        paperID2topic = field2topics[field]
-        papers_df['topic'] = papers_df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
-    elif 'topic' not in papers_df.columns:
-        papers_df['topic'] = 0
-    
+    paperID2topicDist = getTopicDistribution(field)
+    papers_df['topicDist'] = papers_df['paperID'].apply(lambda x: paperID2topicDist.get(x, {}))
+    papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0) 
     papers_df['topic'] = papers_df['topic'].astype(int)
     # papers_df.fillna('', inplace=True)
     papers_df = papers_df.where(papers_df.notnull(), None)
@@ -100,7 +96,6 @@ def load_author(field, authorID):
         'paperID': 'id',
         'title': 'name',
     })
-    
     # papers_df = papers_df[['paperID', 'year', 'referenceCount', 'citationCount', 'survey', 'isKeyPaper', 'topic']]
     
     dic = {
@@ -111,6 +106,42 @@ def load_author(field, authorID):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w') as f:
         json.dump(dic, f, indent=4, sort_keys=True, ensure_ascii=False)
+
+
+def create_graphs(field, authorID):
+    # 假设已经加载了作者的数据
+    filename = f'static/json/{field}/authors/{authorID}.json'
+    with open(filename, 'r') as f:
+        dic = json.load(f)
+
+    path = f'static/json/{field}/graphs/{authorID}'
+    # try:
+    #     shutil.rmtree(path)
+    # except:
+    #     pass
+    if os.path.exists(path):
+        return
+    os.makedirs(path, exist_ok=True)
+
+    # 为每个话题创建一个图，包含当前话题的所有论文
+    topics = set([paper['topic'] for paper in dic['nodes']])
+    for topic in topics:
+        G = nx.DiGraph()
+        for paper in dic['nodes']:
+            if str(topic) in paper['topicDist'].keys():
+                node = paper.copy()
+                del node['topicDist']
+                del node['topic']
+                G.add_node(paper['id'], **node)
+        for edge in dic['edges']:
+            if G.has_node(edge['source']) and G.has_node(edge['target']):
+                G.add_edge(edge['source'], edge['target'], extends_prob=edge['extends_prob'], citation_context=edge['citation_context'])
+
+        graph = nx.readwrite.json_graph.node_link_data(G)
+        df = pd.json_normalize(graph)
+        df.to_csv(f'{path}/{topic}.csv', index=False)
+
+    # print(f"Successfully create graphs of author({authorID}) at {path}")
 
 
 def read_top_authors(field):
@@ -185,6 +216,34 @@ def degree(request):
         'topN': topN
     })
 
+def graph(request):
+    field = request.GET.get("field")
+    authorID = request.GET.get("id", None)
+    base_url = 'http://192.168.0.140:8000/sy/GFVis'
+
+    print(authorID)
+
+    if authorID:
+        load_author(field, authorID)
+        create_graphs(field, authorID)
+    else:
+        df = read_top_authors(field)
+        df = df[['authorID', 'name', 'paperCount', 'hIndex', 'fellow']]
+        df = df.sort_values(by='hIndex', ascending=False)
+        for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+            authorID = row['authorID']
+            load_author(field, authorID)
+            create_graphs(field, authorID)
+    
+    site = f'{base_url}/static/json/{field}'
+    if not os.path.exists(f'static/json/{field}/topic.csv'):
+        shutil.copy(f'csv/{field}/field_leaves.csv', f'static/json/{field}/topic.csv')
+    if not os.path.exists(f'static/json/{field}/authors.csv'):
+        shutil.copy(f'csv/{field}/top_field_authors.csv', f'static/json/{field}/authors.csv')
+
+    return HttpResponse(f"Successfully create graphs of top authors at<br> <a href='{site}'>{site}</a>")
+
+
 @xframe_options_exempt
 def hypertree_view(request):
     return render(request, 'hypertree.html')
@@ -213,7 +272,7 @@ def topicflow(request):
         'fields': get_fields(field),
     })
 
-def simplify(field):
+def simplifyTopicDistribution(field):
     df = pd.read_csv(f'csv/{field}/paperIDDistribution.csv', dtype={'paperID': str})
     df.set_index('paperID', inplace=True)
     df.columns = df.columns.str.replace('topic_', '')
@@ -230,8 +289,8 @@ def simplify(field):
         # 过滤非空值
         filtered_row = {key: value for key, value in row.items() if pd.notna(value)}
         # 如果非空值超过10个，只保留最高的10个值
-        if len(filtered_row) > 10:  # 包括paperID
-            # 根据值排序并取最高的10个，+1因为还包括paperID
+        if len(filtered_row) > 10:
+            # 根据值排序并取最高的10个
             top_10_keys = sorted(filtered_row, key=filtered_row.get, reverse=True)[:10]
             return {key: filtered_row[key] for key in top_10_keys if key != 'paperID'}
         else:
@@ -240,9 +299,30 @@ def simplify(field):
     # 应用转换
     df_dict = df.apply(row_to_filtered_dict, axis=1).to_dict()
     # 如果需要将JSON结果写入文件，可以使用以下代码：
-    with open(f'csv/{field}/paperIDDistribution.json', 'w') as f:
+    with open(f'static/json/{field}/paperIDDistribution.json', 'w') as f:
         # f.write(json_result)
         json.dump(df_dict, f, indent=4)
+
+
+def getTopicDistribution(field):
+    if field in field2topicDist:
+        return field2topicDist[field]
+    if os.path.exists(f'static/json/{field}/paperIDDistribution.json'):
+        with open(f'static/json/{field}/paperIDDistribution.json', 'r') as f:
+            field2topicDist[field] = json.load(f)
+            return field2topicDist[field]
+    if os.path.exists(f'csv/{field}/paperIDDistribution.csv'):
+        simplifyTopicDistribution(field)
+        with open(f'static/json/{field}/paperIDDistribution.json', 'r') as f:
+            field2topicDist[field] = json.load(f)
+            return field2topicDist[field]
+        
+    if os.path.exists(f'csv/{field}/paperID2topic.json'):
+        with open(f'csv/{field}/paperID2topic.json', 'r') as f:
+            paperID2topic = json.load(f)
+            field2topicDist[field] = {paperID: {topic: 1} for paperID, topic in paperID2topic.items()}
+            return field2topicDist[field]
+    return {}
 
 
 def index(request):
@@ -257,27 +337,12 @@ def index(request):
     
     fields = get_fields(fieldType)
     load_author(fieldType, authorID)
-
-    if os.path.exists(f'csv/{fieldType}/paperID2topic.json') and fieldType not in field2topics:
-        with open(f'csv/{fieldType}/paperID2topic.json', 'r') as f:
-            field2topics[fieldType] = json.load(f)
-    
-    if os.path.exists(f'csv/{fieldType}/paperIDDistribution.json') and fieldType not in field2topicDist:
-        with open(f'csv/{fieldType}/paperIDDistribution.json', 'r') as f:
-            field2topicDist[fieldType] = json.load(f)
-
-    if os.path.exists(f'csv/{fieldType}/paperIDDistribution.csv') and fieldType not in field2topicDist:
-        simplify(fieldType)
-        with open(f'csv/{fieldType}/paperIDDistribution.json', 'r') as f:
-            field2topicDist[fieldType] = json.load(f)
-    
     return render(request, "index.html",
                   {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"], 
                    'citationCount': author["citationCount"], 'hIndex': author["hIndex"], 'fields': fields, 'fieldType': fieldType})
 
 
 def clean(request):
-    import shutil
     fieldType = request.GET.get("field")
     path = f"static/json/{fieldType}"
     try:
@@ -285,6 +350,7 @@ def clean(request):
         return HttpResponse("Successfully deleted " + path)
     except Exception as e:
         return HttpResponse("Failed to delete " + path + " because: " + e.__str__())
+
 
 def showlist(request):
     fieldType = request.GET.get("field")

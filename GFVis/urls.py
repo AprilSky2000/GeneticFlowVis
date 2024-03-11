@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import re_path as url
 from controller.views import front, search, showlist, index, reference, changelog, \
-    degree, clean, topicflow, hypertree_view
+    degree, clean, topicflow, hypertree_view, graph
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,6 +25,7 @@ urlpatterns = [
     path('list/', showlist),
     path('index/', index),
     path('search/', search),
+    path('graph/', graph),
     path('reference/', reference),
     path('changelog/', changelog),
     path('degree/', degree),

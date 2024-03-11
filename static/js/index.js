@@ -26,6 +26,9 @@ let lastMouseX, lastMouseY; // 上一个鼠标X坐标
 let y_focus = 0.5;
 let enable_y_focus = false;
 let highlighted = [];
+let topicTransitionMatrix = {};
+let arrangement = [];
+let originalCost, bestCost;
 
 
 function guidence() {
@@ -477,7 +480,7 @@ function draw_tag_cloud(min=0, max=Infinity) {
         .attr("width", "100%")
         .attr("height", "100%");
 
-    let paper_field_filter = paper_field.filter(item => item.num >= min && item.num <= max);
+    let paper_field_filter = global_paper_field.filter(item => item.num >= min && item.num <= max);
     const sortedData = paper_field_filter.sort((a, b) => b.num - a.num);
 
     const wordCloud = svg.append("g");
@@ -520,6 +523,9 @@ function draw_tag_cloud(min=0, max=Infinity) {
         .on('mouseout', reset_field)
         .on('click', d => {
             selectedTopic = selectedTopic == d.id? null: d.id;
+            reset_tag();
+            tip.hide(d);
+            highlight_tag(d.id);
             loadAndRender();
         })
 
@@ -533,6 +539,7 @@ function draw_tag_cloud(min=0, max=Infinity) {
         .attr("dy", "0.35em")
         .attr("text-anchor", "middle")        // Center the text horizontally
         // .attr("dominant-baseline", "middle")  // Center the text vertically
+        .attr("class", "tag-text")
         .attr("id", d => `text_${d.id}`)
         .attr("font-size", d => d.size + "px")
         .attr("fill", d => `rgb(0,0,0)`)
@@ -575,7 +582,7 @@ function init_graph(curGraph=graph) {
     //         g.attr("transform", d3.event.transform + transform);
 
     //         // 仅更新Y坐标，X坐标保持不变
-    //         circle.attr("cy", transform.y + 100 * transform.k); // 假设初始Y坐标为100，根据缩放比例更新Y坐标
+    //         circle.attr("y", transform.y + 100 * transform.k); // 假设初始Y坐标为100，根据缩放比例更新Y坐标
     //         // 注意：这里的100是圆形初始的Y坐标值，根据您的需要调整
 
     //         g.attr("transform", d3.event.transform + transform)
@@ -611,16 +618,13 @@ function init_graph(curGraph=graph) {
     tip = d3.tip()
         .attr("class", "d3-tip")
         .html(d => d.name);
-    tip1 = d3.tip()
-        .attr("class", "d3-tip")
-        .html(d => d.name);
     svg.call(tip);
 
     
 
     g.selectAll('circle').data(nodes).enter().append('ellipse')
-        .attr('cx', d => d.cx)
-        .attr('cy', d => d.cy)
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
         .attr('rx', d => d.rx)
         .attr('ry', d => d.ry)
         .attr('fill', d => hsvToColor(d.color))
@@ -649,15 +653,15 @@ function init_graph(curGraph=graph) {
     }
 
     gf.selectAll('.rect3').data(years).enter().append('rect')
-        .attr('x', d => d.cx - 80)
-        .attr('y', d => d.cy - 40)
+        .attr('x', d => d.x - 80)
+        .attr('y', d => d.y - 40)
         .attr('width', 300)
         .attr('height', 80)
         .attr('fill', '#eee')
 
     gf.selectAll('.text3').data(years).enter().append('text')
-        .attr('x', d => d.cx - 20)
-        .attr('y', d => d.cy + 20)
+        .attr('x', d => d.x - 20)
+        .attr('y', d => d.y + 20)
         .text(d => d.label)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
@@ -665,8 +669,8 @@ function init_graph(curGraph=graph) {
         .attr('class', 'text3');
     
     g.selectAll('.text1').data(nodes).enter().append('text')
-        .attr('x', d => d.cx)
-        .attr('y', d => d.cy)
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Times New Roman,serif')
         .attr('font-size', 28)
@@ -679,7 +683,7 @@ function init_graph(curGraph=graph) {
             var lines = text.split('\n');
             for (var i = 0; i < lines.length; i++) {
                 d3.select(this).append('tspan')
-                    .attr('x', d.cx)
+                    .attr('x', d.x)
                     .attr('dy', 10)  // Adjust dy for subsequent lines
                     .text(lines[i]);
             }
@@ -718,7 +722,236 @@ function init_graph(curGraph=graph) {
                 .attr("stroke-width", d => probToWidth(d.extends_prob))
                 
         });
+
+    if (selectedTopic != null) {
+        draw_background();
+    }
 }
+
+
+function draw_background() {
+    
+    // 在当前有选择单个topic时，绘制背景，包括：
+    // 1. 当前 g 元素的外框
+    // 2. 在当前g元素按照 arrangement 的顺序绘制其他话题的节点
+    // 3. 连接当前话题与其他话题的边
+    
+    let { processedNodes, processedEdges } = processData(global_nodes, global_edges);
+    console.log('processedNodes', processedNodes, 'processedEdges', processedEdges);
+
+    // 绘制g元素的外框
+    let bbox = g.node().getBBox();
+    let padding = 20;
+    let rect = g.insert('rect', ':first-child')
+        .attr('x', bbox.x - padding)
+        .attr('y', bbox.y - padding)
+        .attr('width', bbox.width + 2 * padding)
+        .attr('height', bbox.height + 2 * padding)
+        .attr('fill', 'none')
+        .attr('stroke', 'red')
+        .attr('stroke-width', 2)
+        .attr('id', 'background');
+
+    let DISTANCE = 100;
+    // 根据arrangement顺序，计算processedNodes中每个节点的坐标：
+    // 横坐标是 bbox.x - padding - DISTANCE * arrangement差值（在选择话题左边），bbox.x + bbox.width + padding + DISTANCE * arrangement差值（在选择话题右边）
+    // 纵坐标与内部节点的 y 一致
+    let selectedIndex = arrangement.indexOf(String(selectedTopic));
+    // 遍历processedNodes对象的 k, v
+    var pie = d3.pie().value(1);
+    let topicString={};
+
+
+    for (let [k, v] of Object.entries(processedNodes)) {
+        let [year, topic] = k.split('_');
+        if (topic == selectedTopic) continue;
+
+        let currentIndex = arrangement.indexOf(topic);
+        v.y = v[0].y;
+        if (currentIndex < selectedIndex) {
+            v.x = bbox.x - padding - DISTANCE * (selectedIndex - currentIndex);
+        }
+        else if (currentIndex > selectedIndex) {
+            v.x = bbox.x + bbox.width + padding + DISTANCE * (currentIndex - selectedIndex);
+        }
+
+        if (topicString[topic] == undefined) {
+            topicString[topic] = {
+                x: v.x,
+                minY: v.y,
+                maxY: v.y
+            };
+        } else {
+            topicString[topic] = {
+                x: v.x,
+                minY: Math.min(topicString[topic].minY, v.y),
+                maxY: Math.max(topicString[topic].maxY, v.y),
+                name: field_leaves[topic][2]
+            };
+        }
+    }
+
+    console.log('topicString', topicString);
+    // 根据topicString，绘制一条线连接话题头尾
+
+    for (let [k, v] of Object.entries(topicString)) {
+        // console.log('k', k, 'v', v, topic2color[parseInt(k)]);
+        g.append('path')
+            .attr('d', `M ${v.x} ${v.minY} L ${v.x} ${v.maxY}`)
+            .attr('stroke-width', 4)
+            .attr('stroke', hsvToColor(topic2color[parseInt(k)], sat=1))
+            .attr('class', "topic-string topic-string_" + k)
+            .on("mouseover", function() {
+                d3.select(this).attr('cursor', 'pointer')
+                .attr('stroke', 'red');
+                tip.show(v);
+            })
+            .on("mouseout", function() {
+                d3.select(this).attr('cursor', 'default')
+                .attr('stroke', hsvToColor(topic2color[parseInt(k)], sat=1));
+                tip.hide(v);
+            })
+    }
+    
+    for (let [k, v] of Object.entries(processedNodes)) {
+        var arc = d3.arc()
+            .innerRadius(0) // for a pie chart, inner radius is 0
+            .outerRadius(Math.sqrt(v.length)*20);
+        // 根据pieData绘制饼状图
+        let pieData = pie(v);
+        // console.log('pieData', pieData, x, y);
+        
+        // 在 x,y 处添加文字： year + topic
+        // g.append('text')
+        //     .attr('x', x)
+        //     .attr('y', y)
+        //     .attr('text-anchor', 'middle')
+        //     .selectAll("tspan")
+        //     .data([year, topic])
+        //     .enter()
+        //     .append("tspan")
+        //     .attr("x", x)
+        //     .attr("dy", (d, i) => i ? "1.2em" : 0) // 为除第一行外的每行设置偏移
+        //     .text(d => d);
+
+        // 确保为每个独立的饼状图创建一个唯一的容器（如 g 元素）。如果不这样做，后续的数据绑定可能会影响到前面已经创建的饼图元素
+        g.append("g") // 为每个饼状图创建一个新的 g 元素
+            .attr("class", "arc-container") // 给这个 g 元素添加类，便于识别
+            .attr('transform', `translate(${v.x}, ${v.y})`) // 设置位置
+            .selectAll("path.arc")
+            .data(pieData)
+            .enter()
+            .append('path')
+            .attr("class", d => "arc arc_" + d.data.topic)
+            .attr("d", arc)
+            .attr("fill", d => {
+                let c = hsvToColor(topic2color[d.data.topic], sat=d.data.citationCount < 50? 0.4: 
+                    (d.data.citationCount < 100? 0.7: 1));
+                // console.log('d', d, c);
+                return c 
+            })
+            .on("mouseover", function(d) {
+                d3.select(this).attr('cursor', 'pointer')
+                .attr('stroke', 'black');
+                tip.show(d.data);
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).attr('cursor', 'default')
+                .attr('stroke', 'none');
+                tip.hide(d.data);
+            })
+            .on("click", function(d) {
+                console.log(d.data.id);
+                highlight_node(d.data.id, true, true);
+            });
+    }
+
+    
+    // 绘制边
+    let node_data = {}
+    for (let [k, v] of Object.entries(processedNodes)) {
+        node_data[k] = {
+            x: v.x,
+            y: v.y
+        };
+    }
+    nodes.forEach(d => {
+        node_data[d.id] = {
+            x: d.x,
+            y: d.y
+        }; 
+    });
+
+    let edge_data = [];
+    console.log('processedEdges', processedEdges, Object.entries(processedEdges))
+    for (let [k, v] of Object.entries(processedEdges)) {
+        console.log('k', k, 'v', v);
+        if (k[0] == '_') {
+            let target = k.substring(1);
+            v.forEach(d => {
+                edge_data.push({
+                    source: d.source,
+                    target: target,
+                    topic: paperID2topic[d.source],
+                    edge: d,
+                    name: d.source + '->' +  d.target
+                });
+            })
+        } else {
+            // k 去掉最后一个字母
+            let source = k.substring(0, k.length - 1);
+            v.forEach(d => {
+                edge_data.push({
+                    source: source,
+                    target: d.target,
+                    topic: source.split('_')[1],
+                    edge: d,
+                    name: d.source + '->' + d.target
+                });
+            })
+        }
+    }
+    console.log('fbundling: node_data', node_data, 'edge_data', edge_data);
+    var fbundling = d3.ForceEdgeBundling()
+				.nodes(node_data)
+				.edges(edge_data);
+	var results   = fbundling();
+    console.log('fbundling results', results)
+
+    var d3line = d3.line().x(d=>d.x).y(d=>d.y).curve(d3.curveLinear);
+                    
+    results.forEach((data, ix) => {	
+    // for each of the arrays in the results 
+    // draw a line between the subdivions points for that edge
+        // let opacity = edge.prob / edge.count / 2;
+        let edge = edge_data[ix];
+        let c = topic2color[String(edge.topic)]
+
+        let opacity = 1;
+        g.append("path")
+            .attr("d", d3line(data))
+            .style("stroke",  c !== undefined? hsvToHex(c[0], 0.7, c[2]): "#999")
+            .attr("class", "link link_" + edge.topic)
+            .style("fill", "none")
+            .style('stroke-opacity',opacity) //use opacity as blending
+            .style("stroke-width", 2)
+            .on("mouseover", function(d) {
+                d3.select(this).attr('cursor', 'pointer')
+                .style('stroke-opacity',1)
+                tip.show(edge);
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).attr('cursor', 'default')
+                .style('stroke-opacity',opacity)
+                tip.hide(edge);
+            })
+            .on("click", function(d) {
+                // console.log(edge);
+                highlight_edge(edge.name);
+            });
+    });
+}
+
 
 function update_nodes() {
     let fieldLevelVal = $("#field-level").val();
@@ -770,8 +1003,8 @@ function update_fields() {
             dic.num = 1;
             dic.name = fields[topic][2];
             dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
-            dic.cx = parseFloat(fields[topic][3]);
-            dic.cy = parseFloat(fields[topic][4]);
+            dic.x = parseFloat(fields[topic][3]);
+            dic.y = parseFloat(fields[topic][4]);
             dic.label = parseInt(fields[topic][8]);
             paper_field.push(dic);
         }
@@ -807,8 +1040,8 @@ function update_fields() {
                 }
             }
         }
-        var x = years[i].cx;
-        var y = years[i].cy;
+        var x = years[i].x;
+        var y = years[i].y;
         for (let j = 0; j < year_field.length; j++) {
             year_field[j].name += ': ' + year_field[j].num;
             year_field[j].x = x;
@@ -923,7 +1156,7 @@ function renderDot(viz, dot, filteredNodes, filteredEdges) {
                 y = -y;
                 const width = parseFloat(line.match(/width=([^,]+)/)[1]);
                 const height = parseFloat(line.match(/height=([^,]+)/)[1]);
-                id2attr[id] = { cx: x, cy: y, rx: width, ry: height, label:label };
+                id2attr[id] = { x: x, y: y, rx: width, ry: height, label:label };
                 
                 // console.log(id,id2attr[id] )
                 // 更新边界值
@@ -948,8 +1181,8 @@ function renderDot(viz, dot, filteredNodes, filteredEdges) {
     }
 
     filteredNodes.forEach(node => {
-        node.cx = id2attr[node.id].cx;
-        node.cy = id2attr[node.id].cy;
+        node.x = id2attr[node.id].x;
+        node.y = id2attr[node.id].y;
         node.rx = id2attr[node.id].rx * 40;
         node.ry = id2attr[node.id].ry * 40;
         node.label = id2attr[node.id].label;
@@ -1011,12 +1244,17 @@ function loadAndRender() {
             connectedEdges.push(edge);
         }
     });
-    if (modeValue == '1') {
-        // remove isolated
-        filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0);
-    } else if (modeValue == '2') {
-        // partially remove, high citationCount papers are not removed
-        filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0 || node.citationCount >= 50);
+    if (selectedTopic !== null) {
+        // 如果有选择话题，那么只需要节点在 global_nodes 即可，不需要判断 modeValue
+        filteredNodes = filteredNodes.filter(node => global_nodes.map(d => d.id).includes(node.id));
+    } else {
+        if (modeValue == '1') {
+            // remove isolated
+            filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0);
+        } else if (modeValue == '2') {
+            // partially remove, high citationCount papers are not removed
+            filteredNodes = filteredNodes.filter(node => alldegree[node.id] > 0 || node.citationCount >= 50);
+        }
     }
     filteredEdges = connectedEdges;
     
@@ -1066,6 +1304,17 @@ function loadAndRender() {
     renderDot(viz, dot, filteredNodes, filteredEdges);
 }
 
+function getTopicList(node) {
+    if (node.hasOwnProperty('topicDist')) {
+        let topicList = [];
+        for (let key in node.topicDist) {
+            if (node.topicDist[key] >= topicSlider.noUiSlider.get())  topicList.push(key);
+        }
+        return topicList;
+    }
+    return [node.topic];
+}
+
 function hasTopic(node, topic) {
     let threshold = topicSlider.noUiSlider.get();
     if (parseInt(node.topic) == topic) return true;
@@ -1073,34 +1322,39 @@ function hasTopic(node, topic) {
     return false;
 }
 
-function highlight_field(d, that) {
-    if (image_status == 1)  return;
-    // 选择具有特定ID的元素
-    // d3.select("#circle" + field_id).select(".topic-map-tip")
-    //     .style("display", "block");
-    
-    let duration = 200;
-    let field_id = d.id;
-    tip.show(d);
-    highlight_topic_forceChart(field_id);
-
-    // =========================tagcloud=========================
+function highlight_tag(topic_id) {
     d3.selectAll(".tag-rect")
         .attr("fill-opacity", 0.6)
         .attr("stroke", "none");
-    d3.select(`#rect_${d.id}`)
+    d3.select(`#rect_${topic_id}`)
         .attr("fill-opacity", 1)
         .attr("stroke", "black");
-    // show tooltip
-    // d3.select(`#tag-tooltip`).text(d.name)
-    //     .style("opacity", 1);
-    // d3.select(`.overall-topic-tip`).show(d);
-
-    d3.select(`#text_${d.id}`)
+    d3.select(`#text_${topic_id}`)
         .attr('font-weight', 'bold');
-        // .attr("x", d => d.x + d.width * 0.02);
-    d3.select(that).attr('cursor', 'pointer');
+}
 
+function reset_tag() {
+    // reset rect color
+    highlight_topic_forceChart(-1);
+    // 将所有tag都置为初始状态
+    d3.selectAll(".tag-rect")
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", "none");
+    d3.selectAll(".tag-text")
+        .attr('font-weight', 'normal');
+}
+
+
+function highlight_field(d, that) {
+    if (image_status == 1)  return;
+    let duration = 200;
+    let topic_id = d.id;
+    tip.show(d);
+    highlight_topic_forceChart(topic_id);
+
+    // =========================tagcloud=========================
+    highlight_tag(topic_id);
+    d3.select(that).attr('cursor', 'pointer');
 
     // =========================arc & link=========================
     d3.selectAll(".arc")
@@ -1115,25 +1369,37 @@ function highlight_field(d, that) {
     d3.selectAll(`.link_${d.id}`)
         .attr("opacity", 1);
 
+    // =========================cell=========================
+    d3.selectAll(".cell")
+        .attr("fill", `rgb(0, 0, 255)`)
+    d3.selectAll(`.cell_${d.id}`)
+        .attr("fill", `rgb(255, 0, 0)`);
+
+    d3.selectAll(".topic-string")
+        .attr("opacity", virtualOpacity);
+    d3.selectAll(`.topic-string_${d.id}`)
+        .attr("opacity", 1);
+
+
     // =========================topic map=========================
     // 有了duration之后，如果鼠标滑动较快，则没法恢复
     d3.selectAll(".topic-map")
         .attr("fill-opacity", 0.2)
         .attr("stroke", "none");
-    d3.select("#circle" + field_id)
+    d3.select("#circle" + topic_id)
         // .transition()
         // .duration(duration)
         .attr("fill-opacity", 1)
         .attr("stroke", "black");
 
     gf.selectAll(".year-topic")
-        .attr("fill-opacity", d => {if (field_id != d.id) return virtualOpacity;});
+        .attr("fill-opacity", d => {if (topic_id != d.id) return virtualOpacity;});
 
     var color_papers = [], color_papers_topic = [];  
     // 记录颜色不需要变化的paperID
     
     for (let i = 0; i < nodes.length; i++) {
-        if (hasTopic(nodes[i], field_id)) {
+        if (hasTopic(nodes[i], topic_id)) {
             color_papers.push(nodes[i].id);
             color_papers_topic.push(nodes[i].topic);
         }
@@ -1161,37 +1427,114 @@ function hsvToColor(color, sat=0.4) {
     return d3.hsv(color[0], sat, color[2]) //  color[1]
 }
 
+function generateTTM() {
+    topicTransitionMatrix = {};
+    // 填充矩阵（因为是外部转移矩阵，不计相同话题的转移）
+    edges.forEach(edge => {
+        let sourceNode = nodes.find(node => node.id === edge.source);
+        let targetNode = nodes.find(node => node.id === edge.target);
+        let sourceTopicList = getTopicList(sourceNode);
+        let targetTopicList = getTopicList(targetNode);
+        // 去除相同元素，不能相继filter
+        let sourceTopicListCopy = [...sourceTopicList];
+        sourceTopicList = sourceTopicList.filter(topic => !targetTopicList.includes(topic));
+        targetTopicList = targetTopicList.filter(topic => !sourceTopicListCopy.includes(topic));
+        
+        sourceTopicList.forEach(src => {
+            targetTopicList.forEach(tgt => {
+                if (!topicTransitionMatrix[src]) {
+                    topicTransitionMatrix[src] = {};
+                }
+                if (!topicTransitionMatrix[src][tgt]) {
+                    topicTransitionMatrix[src][tgt] = 0;
+                }
+                topicTransitionMatrix[src][tgt]++;
+            })
+        })
+    });
+}
+
+function simulatedAnnealing(matrix) {
+    let temperature = 100.0; // 初始温度
+    const coolingRate = 0.995; // 冷却率
+    const minTemperature = 1.0; // 最小温度
+    let currentSolution = Object.keys(matrix); // 初始解决方案
+    let bestSolution = [...currentSolution];
+    bestCost = calculateCost(matrix, bestSolution);
+    originalCost = bestCost;
+    // console.log('initial cost', bestCost)
+
+    while (temperature > minTemperature) {
+        let newSolution = [...currentSolution];
+        // 产生新的解决方案：随机交换两个话题
+        const [idx1, idx2] = [Math.floor(Math.random() * newSolution.length), Math.floor(Math.random() * newSolution.length)];
+        [newSolution[idx1], newSolution[idx2]] = [newSolution[idx2], newSolution[idx1]];
+
+        // 计算新解决方案的成本
+        const currentCost = calculateCost(matrix, currentSolution);
+        const newCost = calculateCost(matrix, newSolution);
+
+        // 计算接受概率
+        if (acceptanceProbability(currentCost, newCost, temperature) > Math.random()) {
+            currentSolution = [...newSolution];
+        }
+
+        // 更新最佳解决方案
+        if (newCost < bestCost) {
+            bestSolution = [...currentSolution];
+            bestCost = newCost;
+            // console.log('new best cost', bestCost)
+        }
+
+        // 冷却过程
+        temperature *= coolingRate;
+    }
+
+    return bestSolution;
+}
+
+// 计算解决方案的成本
+function calculateCost(matrix, solution) {
+    let cost = 0;
+    solution.forEach((topic, i) => {
+        solution.forEach((innerTopic, j) => {
+            const distance = Math.abs(i - j);
+            cost += (matrix[topic][innerTopic] || 0) * distance; // 假设成本与距离成正比
+        });
+    });
+    return cost;
+}
+
+// 接受概率
+function acceptanceProbability(currentCost, newCost, temperature) {
+    if (newCost < currentCost) {
+        return 1.0;
+    }
+    return Math.exp((currentCost - newCost) / temperature);
+}
+
 function reset_field(d) {
     if (image_status == 1)  return;
-    // =========================tagcloud=========================
-    // reset rect color
-    highlight_topic_forceChart(-1);
-    d3.select(`#rect_${d.id}`)
-        .attr("fill-opacity", 0.6)
-        .attr("stroke", "none");
-    // remove tooltip
-    // d3.select(`#tag-tooltip`).style("opacity", 0);
-    // d3.select(`.overall-topic-tip`).hide(d);
-    
-    // reset word
-    d3.select(`#text_${d.id}`)
-        .attr('font-weight', 'normal');
+    reset_tag();
 
     // =========================arc=========================
     d3.selectAll(".arc")
         .attr("fill-opacity", 1)
         .attr("stroke", "none");
+    d3.selectAll(`.topic-string`)
+        .attr("opacity", 1);
     
     // =========================topic map=========================
-    // topic_map_tip.hide(d);
     tip.hide(d);
-    // d3.selectAll(".topic-map-tip").style("display", "none");
 
     d3.selectAll(".topic-map")
         // .transition()
         // .duration(200)
         .attr("fill-opacity", 0.6)
         .attr("stroke", `rgba(0,0,0,0.5)`);
+
+    d3.selectAll(".cell")
+        .attr("fill", `rgb(0, 0, 255)`)
 
     // 恢复左侧年份主题柱状图
     gf.selectAll('.rect1, .year-topic')
@@ -1307,6 +1650,7 @@ function buildTreeBFS(id) {
 }
 
 function draw_hyper_tree(id) {
+    return;
     const hypertreeData = buildTreeBFS(id);
     console.log('hypertreeData', hypertreeData);
     const root = d3.hierarchy(hypertreeData);
@@ -1354,6 +1698,100 @@ function get_extend_ids(id) {
     var extend_ids = new_child_ids.concat(new_parent_ids);
     // console.log('extend_ids:', extend_ids)
     return extend_ids;
+}
+
+function draw_TTM() {
+    d3.select("#TTM-graph").html("");
+    // 创建 SVG 画布
+    const svgSize = 400;  // 画布宽度
+    let margin = 30;
+    const svg = d3.select("#TTM-graph")
+                .append("svg")
+                .attr("width", svgSize)
+                .attr("height", svgSize);
+    generateTTM();
+    arrangement = simulatedAnnealing(topicTransitionMatrix);
+    console.log('arrangement:', arrangement);
+
+    const cellSize = (svgSize - margin * 2) / arrangement.length;
+    let maxTransition = 0;
+    // 根据topicTransitionMatrix计算最大转移概率
+    for (let src in topicTransitionMatrix) {
+        for (let tgt in topicTransitionMatrix[src]) {
+            maxTransition = Math.max(maxTransition, topicTransitionMatrix[src][tgt]);
+        }
+    }
+    arrangement.forEach((src, i) => {
+        arrangement.forEach((tgt, j) => {
+            svg.append('rect')
+                .attr('x', i * cellSize + margin)
+                .attr('y', j * cellSize + margin)
+                .attr('width', cellSize - 1) // 留出一点空隙以分隔列
+                .attr('height', cellSize - 1)
+                .attr('class', `cell cell_${src} cell_${tgt}`)
+                .attr('fill', `rgba(0, 0, 255)`)// i === j? `gray`: `rgba(0, 0, 255)`)
+                .attr('opacity', i === j? 1: (topicTransitionMatrix[src][tgt] || 0) / maxTransition)
+                // .attr('stroke', 'black');
+        });
+    });
+
+    // 绘制横坐标轴
+    const xAxisScale = d3.scaleBand()
+        .domain(arrangement.map(d => `${d}`))
+        .range([0, svgSize]);
+
+    const xAxis = d3.axisBottom(xAxisScale);
+
+    const xAxisGroup = svg.append('g')
+        .attr('transform', `translate(${cellSize / 2}, ${svgSize - margin})`)
+        .call(xAxis);
+
+    // append text on the middle up of svg
+    svg.append('text')
+        .attr('x', svgSize / 2)
+        .attr('y', margin)
+        .attr('text-anchor', 'middle')
+        .text('initial cost: ' + originalCost + ',  current cost: ' + bestCost);
+
+    xAxisGroup.selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .attr('transform', 'rotate(-90)');
+    
+    
+    // 添加列的拖拽交互逻辑
+    xAxisGroup.selectAll('text')
+        .call(d3.drag()
+        .on('start', dragStarted)
+        .on('drag', dragged)
+        .on('end', dragEnded));
+    
+    let dragStartIndex;
+    
+    function dragStarted(event, d) {
+        dragStartIndex = arrangement.indexOf(d);
+    }
+    
+    function dragged(event, d) {
+        // 拖拽过程中可以显示一些交互效果，例如高亮当前拖拽的列
+    }
+    
+    function dragEnded(event, d) {
+        const x = event.x;
+        const dragEndIndex = Math.floor(x / columnWidth);
+        if (dragEndIndex >= 0 && dragEndIndex < topicCount) {
+            moveColumn(dragStartIndex, dragEndIndex);
+            draw_TTM(); // 重新绘制整个图表以反映新的排列
+        }
+    }
+    
+    function moveColumn(from, to) {
+        // 移动列，并更新全局变量arrangement
+        const [removed] = arrangement.splice(from, 1);
+        arrangement.splice(to, 0, removed);
+        draw_TTM();
+    }
 }
 
 function draw_radial_graph(centerNodeId, adjacent_ids) {
@@ -1626,11 +2064,11 @@ function visual_topics() {
     $("#topic-slider").val(topic_r);
 
     var xScale = d3.scaleLinear()
-        .domain([d3.min(paper_field, d => d.cx), d3.max(paper_field, d => d.cx)])
+        .domain([d3.min(paper_field, d => d.x), d3.max(paper_field, d => d.x)])
         .range([0, topic_width - 2 * topic_margin1]);
 
     var yScale = d3.scaleLinear()
-        .domain([d3.min(paper_field, d => d.cy), d3.max(paper_field, d => d.cy)])
+        .domain([d3.min(paper_field, d => d.y), d3.max(paper_field, d => d.y)])
         .range([topic_height * 0.85 - 2 * topic_margin2, 0]);
 
     const topic_map_svg = d3.select("#topic-distribution").append("svg")
@@ -1641,9 +2079,9 @@ function visual_topics() {
     const topic_map_g = topic_map_svg.append('g')
         .attr("transform", `translate(${topic_margin1}, ${topic_margin2})`);
     
-    const topics = topic_map_g.selectAll(".topic-map").data(paper_field).enter().append("circle")
-        .attr("cx", d => xScale(d.cx))
-        .attr("cy", d => yScale(d.cy))
+    const topics = topic_map_g.selectAll(".topic-map").data(global_paper_field).enter().append("circle")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
         .attr("r", d => Math.sqrt(d.num) * 10 * topic_r)
         .attr("fill", d => hsvToColor(d.color))
         .attr("stroke", `rgba(0, 0, 0, 0.2)`)
@@ -1652,11 +2090,6 @@ function visual_topics() {
         .attr('fill-opacity', 0.6)
         .attr("id", d => 'circle' + d.id)
         .attr("class", "topic-map");
-
-    topic_map_tip = d3.tip()
-        .attr("class", "topic-map-tip")
-        .html(d => d.name);
-    topic_map_svg.call(topic_map_tip);
 
     topics
     .on('mouseover', function(d) {highlight_field(d, this)})
@@ -1875,7 +2308,7 @@ function force_layout(evolution=false) {
 
             // 设置节点和边的点击事件
             emphasis: {
-                focus: 'adjacency',
+                focus: 'adjaceny',
                 lineStyle: {
                     width: 6
                 }
@@ -2136,41 +2569,50 @@ function updateVisType() {
 
 function processData(nodes, edges) {
     let processedNodes = {};
-    let processedEdges = [];
+    let processedEdges = {};
 
     // Process nodes data
     nodes.forEach(node => {
-        let key = `${node.year}_${node.topic}`;
-        if (!processedNodes[key]) {
-            processedNodes[key] = {
-                year: node.year,
-                topic: node.topic,
-                count: 0,
-                nodes: []
-            };
-        }
-        processedNodes[key].count++;
-        processedNodes[key].nodes.push(node);
+        getTopicList(node).forEach(topic => {
+            let key = `${node.year}_${topic}`;
+            if (!processedNodes[key]) {
+                processedNodes[key] = []
+            }
+            processedNodes[key].push(node);
+        });
     });
-
-    // Convert processedNodes from an object to an array
-    processedNodes = Object.values(processedNodes);
 
     // Process edges data
     edges.forEach(edge => {
         // Assuming source and target in edges are node IDs
         let sourceNode = nodes.find(node => node.id === edge.source);
         let targetNode = nodes.find(node => node.id === edge.target);
+        let sourceTopicList = getTopicList(sourceNode);
+        let targetTopicList = getTopicList(targetNode);
+        // 去除相同元素，不能相继filter
+        let sourceTopicListCopy = [...sourceTopicList];
+        sourceTopicList = sourceTopicList.filter(topic => !targetTopicList.includes(topic));
+        targetTopicList = targetTopicList.filter(topic => !sourceTopicListCopy.includes(topic));
+        
+        sourceTopicList.forEach(srcTopic => {
+            targetTopicList.forEach(tgtTopic => {
+                let key = null;
+                if (srcTopic == selectedTopic) {
+                    key = `_${targetNode.year}_${tgtTopic}`;
+                }
+                else if (tgtTopic == selectedTopic) {
+                    key = `${sourceNode.year}_${srcTopic}_`;
+                }
 
-        if (sourceNode && targetNode) {
-            processedEdges.push({
-                source: { year: sourceNode.year, topic: sourceNode.topic },
-                target: { year: targetNode.year, topic: targetNode.topic },
-                count: edge.count || 1 // Default to 1 if count is not specified
-            });
-        }
+                if (key) {
+                    if (!processedEdges[key]) {
+                        processedEdges[key] = []
+                    }
+                    processedEdges[key].push(edge);
+                }
+            })
+        })
     });
-
     return { processedNodes, processedEdges };
 }
 
@@ -2324,30 +2766,30 @@ function temporalThematicFlow(yearGrid=2, topNRatio=0.6) {
                 .outerRadius(Math.sqrt(group.nodes.length)*5);
 
         g.selectAll(".arc")
-        .data(pieData)
-        .enter()
-        .append("path")
-        .attr("d", arc)
-        .attr("class", d => "arc arc_" + d.data.topic)
-        .attr("fill", d => {
-            let c = hsvToColor(d.data.color, sat=d.data.citationCount < 50? 0.4: 
-                    (d.data.citationCount < 100? 0.7: 1));
-            return c 
-        })
-        .on("mouseover", function(d) {
-            d3.select(this).attr('cursor', 'pointer')
-            .attr('stroke', 'black');
-            tip.show(d.data);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this).attr('cursor', 'default')
-            .attr('stroke', 'none');
-            tip.hide(d.data);
-        })
-        .on("click", function(d) {
-            console.log(d.data.id);
-            highlight_node(d.data.id, true, true);
-        })
+            .data(pieData)
+            .enter()
+            .append("path")
+            .attr("d", arc)
+            .attr("class", d => "arc arc_" + d.data.topic)
+            .attr("fill", d => {
+                let c = hsvToColor(d.data.color, sat=d.data.citationCount < 50? 0.4: 
+                        (d.data.citationCount < 100? 0.7: 1));
+                return c 
+            })
+            .on("mouseover", function(d) {
+                d3.select(this).attr('cursor', 'pointer')
+                .attr('stroke', 'black');
+                tip.show(d.data);
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).attr('cursor', 'default')
+                .attr('stroke', 'none');
+                tip.hide(d.data);
+            })
+            .on("click", function(d) {
+                console.log(d.data.id);
+                highlight_node(d.data.id, true, true);
+            });
     });
 
     // Optional: Add labels or other elements as needed
@@ -2447,7 +2889,7 @@ function sugiyama(years, nodes, edges) {
         let l = new Array;
         nodes.forEach(node => {
             if (node.year == year.id) {
-                l.push({id: node.id, x: node.cx, y: node.cy});
+                l.push({id: node.id, x: node.x, y: node.y});
             }
         });
         layers.push(l);
@@ -2470,8 +2912,8 @@ function sugiyama(years, nodes, edges) {
             }
             if (i % 3 == 2) {
                 for (let j = 0; j < years.length; j++) {
-                    if (years[j].cy - years[j].ry < y_id && y_id < years[j].cy + years[j].ry) {
-                        layers[j].push({id: "VN" + String(cnt), x: x_id, y: years[j].cy});
+                    if (years[j].y - years[j].ry < y_id && y_id < years[j].y + years[j].ry) {
+                        layers[j].push({id: "VN" + String(cnt), x: x_id, y: years[j].y});
                         Gp.push({source: pre, target: "VN" + String(cnt)});
                         pre = "VN" + String(cnt);
                         cnt += 1;
@@ -2526,12 +2968,12 @@ function hyperbolicDistortion(graph, windowWidth=3000, windowHeight=1600) {
 
     function transformCoordinate(x, y) {
         // Apply hyperbolic transformation to x-coordinate
-        let cxNorm = (x - focus * graphWidth) / graphWidth;
-        let transformedX = (tanh(inverse(cxNorm) * coverage) + 1) / 2 * windowWidth;
+        let xNorm = (x - focus * graphWidth) / graphWidth;
+        let transformedX = (tanh(inverse(xNorm) * coverage) + 1) / 2 * windowWidth;
 
         if (enable_y_focus) {
-            let cyNorm = (y - y_focus * graphHeight) / graphHeight;
-            let transformedY = (tanh(inverse(cyNorm) * coverage) + 1) / 2 * windowHeight;
+            let yNorm = (y - y_focus * graphHeight) / graphHeight;
+            let transformedY = (tanh(inverse(yNorm) * coverage) + 1) / 2 * windowHeight;
             return [transformedX, transformedY];
         }
 
@@ -2541,17 +2983,17 @@ function hyperbolicDistortion(graph, windowWidth=3000, windowHeight=1600) {
 
     function transformNode(node) {
         let newNode = Object.assign({}, node);
-        let ret = transformCoordinate(node.cx + translateX, node.cy + translateY);
+        let ret = transformCoordinate(node.x + translateX, node.y + translateY);
         // console.log(ret)
-        newNode.cx = ret[0];
-        newNode.cy = ret[1];
+        newNode.x = ret[0];
+        newNode.y = ret[1];
         // Adjust the node's size - Assuming rx, ry are radii
-        let cxNorm = (node.cx + translateX - focus * graphWidth) / graphWidth;
-        newNode.rx *= 1.5 * sech2(cxNorm * coverage) * windowWidth / graphWidth;
+        let xNorm = (node.x + translateX - focus * graphWidth) / graphWidth;
+        newNode.rx *= 1.5 * sech2(xNorm * coverage) * windowWidth / graphWidth;
 
         if (enable_y_focus) {
-            let cyNorm = (node.cy + translateY - y_focus * graphHeight) / graphHeight;
-            newNode.ry *= 1.5 * sech2(cyNorm * coverage) * windowHeight / graphHeight;
+            let yNorm = (node.y + translateY - y_focus * graphHeight) / graphHeight;
+            newNode.ry *= 1.5 * sech2(yNorm * coverage) * windowHeight / graphHeight;
             return newNode;
         }
 

@@ -195,22 +195,34 @@
                 <ul id="topic-info" class="address">
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
-                            <li style="width: 40%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
+                            <li style="width: 30%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
                                 <button id="topic-button">Topic Map</button>
                             </li>
-                            <li style="width: 40%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
+                            <li style="width: 30%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
                                 <button id="hypertree-button">Hypertree</button>
+                            </li>
+                            <li style="width: 25%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
+                                <button id="TTM-button">TTM</button>
                             </li>
                         </ul>
                     </li>
                     <script>
+                        $("#radialgraph").hide();
+                        $("#TTM-graph").hide();
                         $("#topic-button").click(function () {
-                            $("#radialgraph").hide();
                             $("#topic-map-graph").show();
+                            $("#radialgraph").hide();
+                            $("#TTM-graph").hide();
                         })
                         $("#hypertree-button").click(function () {
                             $("#radialgraph").show();
                             $("#topic-map-graph").hide();
+                            $("#TTM-graph").hide();
+                        })
+                        $("#TTM-button").click(function () {
+                            $("#radialgraph").hide();
+                            $("#topic-map-graph").hide();
+                            $("#TTM-graph").show();
                         })
                     </script>
 
@@ -237,6 +249,9 @@
                         <div id="radialgraph">
                             <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="400px"></iframe>
                         </div>
+                    </li>
+                    <li>
+                        <div id="TTM-graph"></div>
                     </li>
                     
                 </ul>
@@ -308,6 +323,7 @@
                                 <button id="citations">Citations</button>
                             </li>
                             <script>
+                                $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
                                 $("#paper-info").click(function () {
                                     $("#edge-info, #up-line, #down-line").hide();
                                     $("#node-info, #node-info-blank").show();
@@ -472,8 +488,6 @@ $(function () {
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
     image_status = 0;
     image_data = "";
-    $("#radialgraph").hide();
-    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
     const fields = {{ fields|safe }};
@@ -486,6 +500,8 @@ $(function () {
     });
     // $("#field-level option[value='1']").remove();
     // $("#field-level option[value='2']").text(1);
+    $("#radialgraph").hide();
+    $("#TTM-graph").hide();
     
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
@@ -544,6 +560,7 @@ $(function () {
                 // $("#node-num").text(data['nodes'].length);
                 // $("#edge-num").text(data['edges'].length);
                 loadAndRender();
+                draw_TTM();
 
                 $("#overall-topic-map").hide();
                 $("#paper-topic-map").show();
