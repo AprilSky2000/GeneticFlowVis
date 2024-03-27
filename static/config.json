@@ -64,11 +64,20 @@
     "fellow": {
         "name": "Fellows",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
+        "description": "Fellows of the ACM and their competitors from CG (similar #paper and #citation)",
         "year": "fellowYear",
         "type": "Top Scholar",
         "papers": 1087725,
         "authors": 4014
+    },
+    "fellowVSNon": {
+        "name": "Fellows VS Non-Fellows",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors from all fields (similar #paper and #citation)",
+        "year": "fellowYear",
+        "type": "Top Scholar",
+        "papers": 980931,
+        "authors": 4420
     },
     "fellowTuring": {
         "name": "Turing Award (old version)",

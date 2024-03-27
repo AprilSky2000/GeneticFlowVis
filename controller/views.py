@@ -73,8 +73,8 @@ def load_author(field, authorID):
         links_df = links_df.where(links_df.notnull(), None)
         for index, row in links_df.iterrows():
             edges.append({
-                'source': row['childrenID'],
-                'target': row['parentID'],
+                'source': row['parentID'],
+                'target': row['childrenID'],
                 'extends_prob': to_number(row['extendsProb']),
                 'citation_context': row['citationContext']
             })
@@ -83,11 +83,16 @@ def load_author(field, authorID):
                 'year': int, 'referenceCount': int, 'citationCount': int, 'isKeyPaper': float})
     papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
     
-    paperID2topicDist = getTopicDistribution(field)
-    papers_df['topicDist'] = papers_df['paperID'].apply(lambda x: paperID2topicDist.get(x, {}))
-    papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0) 
-    papers_df['topic'] = papers_df['topic'].astype(int)
+    
+    if 'topic' in papers_df.columns:
+        papers_df['topicDist'] = papers_df['topic'].apply(lambda x: {x: 1} if x else {})
+    else:
+        paperID2topicDist = getTopicDistribution(field)
+        papers_df['topicDist'] = papers_df['paperID'].apply(lambda x: paperID2topicDist.get(x, {}))
+        papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0) 
+    
     # papers_df.fillna('', inplace=True)
+    papers_df['topic'] = papers_df['topic'].astype(int)
     papers_df = papers_df.where(papers_df.notnull(), None)
     # drop unnamed columns
     papers_df = papers_df.loc[:, ~papers_df.columns.str.contains('^Unnamed')]
@@ -114,7 +119,7 @@ def create_graphs(field, authorID):
     with open(filename, 'r') as f:
         dic = json.load(f)
 
-    path = f'static/json/{field}/graphs/{authorID}'
+    path = f'static/json/{field}/graphs/{authorID[-1]}/{authorID}'
     # try:
     #     shutil.rmtree(path)
     # except:
@@ -130,6 +135,7 @@ def create_graphs(field, authorID):
         for paper in dic['nodes']:
             if str(topic) in paper['topicDist'].keys():
                 node = paper.copy()
+                node['topicSimilarity'] = node['topicDist'][str(topic)]
                 del node['topicDist']
                 del node['topic']
                 G.add_node(paper['id'], **node)
@@ -138,9 +144,8 @@ def create_graphs(field, authorID):
                 G.add_edge(edge['source'], edge['target'], extends_prob=edge['extends_prob'], citation_context=edge['citation_context'])
 
         graph = nx.readwrite.json_graph.node_link_data(G)
-        df = pd.json_normalize(graph)
-        df.to_csv(f'{path}/{topic}.csv', index=False)
-
+        json.dump(graph, open(f'{path}/{topic}.json', 'w'), indent=4, ensure_ascii=False)
+        
     # print(f"Successfully create graphs of author({authorID}) at {path}")
 
 
@@ -159,7 +164,7 @@ def read_top_authors(field):
             group = re.search(pattern, s)
             return int(group.group(1)) if group else 0
         df['fellow'].fillna('', inplace=True)
-    if 'original' in df.columns:
+    if 'original' in df.columns and field not in ['fellowVSNon']:
         df['name'] = df['original']
 
     if 'PaperCount' in df.columns and 'PaperCount_field' in df.columns:
@@ -221,7 +226,7 @@ def graph(request):
     authorID = request.GET.get("id", None)
     base_url = 'http://192.168.0.140:8000/sy/GFVis'
 
-    print(authorID)
+    print('graph', authorID)
 
     if authorID:
         load_author(field, authorID)
@@ -281,8 +286,9 @@ def simplifyTopicDistribution(field):
     df[df < 0.01] = 0
     df.replace(0.0, np.nan, inplace=True)
 
-    # 保留小数点后5位
+    # 保留小数点后3位
     df.iloc[:, 1:] = df.iloc[:, 1:].applymap(lambda x: round(x, 3) if not pd.isnull(x) else np.nan)
+    df.to_csv(f'csv/{field}/paperIDDistribution.csv', index=True)
 
     # 转换为字典，并过滤非空值，如果非空值超过10个，则只保留最高的10个
     def row_to_filtered_dict(row):
@@ -307,10 +313,12 @@ def simplifyTopicDistribution(field):
 def getTopicDistribution(field):
     if field in field2topicDist:
         return field2topicDist[field]
+    os.makedirs(f'static/json/{field}', exist_ok=True)
     if os.path.exists(f'static/json/{field}/paperIDDistribution.json'):
         with open(f'static/json/{field}/paperIDDistribution.json', 'r') as f:
             field2topicDist[field] = json.load(f)
             return field2topicDist[field]
+        
     if os.path.exists(f'csv/{field}/paperIDDistribution.csv'):
         simplifyTopicDistribution(field)
         with open(f'static/json/{field}/paperIDDistribution.json', 'r') as f:

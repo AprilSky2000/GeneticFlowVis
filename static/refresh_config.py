@@ -6,9 +6,11 @@ import os
 config = json.load(open('config.json', 'r'))
 
 # 读取papers信息
+fields = ['fellowVSNon'] # config.keys()
 
-for field, cfg in config.items():
+for field in fields:
     print(field)
+    cfg = config[field]
     if field == 'default':
         continue
     path = f'../csv/{field}/'
