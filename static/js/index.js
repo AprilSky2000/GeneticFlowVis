@@ -53,8 +53,8 @@ function addAllListeners() {
             if (d.num >= min && d.num <= max) return "all";
             return "none";
         });
-        
-        paper_field = update_fields();
+
+        paper_field = updateField();
         // filter paper filed with num between min and max
         paper_field = paper_field.filter(item => item.num >= min && item.num <= max);
         d3.select("#tagcloud").remove();
@@ -74,7 +74,7 @@ function addAllListeners() {
     $("#save").click(function () {
         var mainsvg = getZoomSvg('#mainsvg', '#maingroup');
         var tagcloud = getZoomSvg('#tagcloud', null);
-        var fileName = name + " GF profile.jpg";
+        var fileName = `${name} (${fieldType}) GF profile.jpg`;
         downloadSvg([mainsvg, tagcloud], fileName);
     });
     // $("#fullscreen").click($("#fullscreen").click(toggleFullscreen));
@@ -107,35 +107,57 @@ function addAllListeners() {
 }
 
 function toggleFullscreen() {
-    const container = document.getElementsByClassName("middle-column")[0];
+    let svgHeight = mainPanalHeight * (1 - tagCloudRatio);
+    let svgWidth = $(".middle-column").width();
+    let ratio = svgHeight / svgWidth;
 
-    // 检查是否已经处于全屏状态
-    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    var paramData = {};
+    var formData = $("#update-info").serialize();
+    formData = formData.split("&");
+    for (let i = 1; i < formData.length; i++) {
+        const temp = formData[i].split('=');
+        paramData[temp[0]] = temp[1];
+    }
+    paramData.authorID = authorID;
+    paramData.field = fieldType;
+    paramData.isKeyPaper = nodeSlider.noUiSlider.get();
+    paramData.extendsProb = edgeSlider.noUiSlider.get();
+    paramData.ratio = ratio;
 
-    if (!isFullscreen) {
-        // 进入全屏
-        if (container.requestFullscreen) {
-            container.requestFullscreen().then(() => {
-                document.addEventListener("fullscreenchange", onFullscreenChange);
-                document.addEventListener("keydown", onEscKeyPressed);
-            }).catch(error => {
-                console.error('Error entering fullscreen:', error);
-            });
-        } else if (container.webkitRequestFullscreen) {
-            container.webkitRequestFullscreen().then(() => {
-                document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-                document.addEventListener("keydown", onEscKeyPressed);
-            }).catch(error => {
-                console.error('Error entering fullscreen:', error);
-            });
-        }
-    } else {
-        // 退出全屏
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
+    if (full_screen == 0) {
+        $.ajax({
+            headers: {"X-CSRFToken": getCookie("csrftoken")},
+            type: "POST",
+            dataType: "json",
+            url: "/update/",
+            data: paramData,
+            success: function (data) {
+                $("#mainsvg, #tagcloud").remove();
+                $("#abstract, #citation-context, #timeline").empty();
+                $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+                d3.tip().destroy();
+                years = data["year"];
+                nodes = data["node"];
+                edges = data["edge"];
+                polygon = data["polygon"];
+                const params = data["graph"];
+                viewBox = params[0];
+                transform = params[1];
+                for (let i = 0; i < nodes.length; i++) {
+                    nodes[i]['status'] = 0;
+                }
+                onFullscreenChange();
+                reset_graph();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error("AJAX request failed:", textStatus, errorThrown);
+                console.log("Response:", jqXHR.responseText);
+            }
+        });
+        full_screen = 1;
+    }
+    else {
+        ajaxRequest();
     }
 }
 
@@ -147,7 +169,7 @@ function onFullscreenChange() {
     d3.select("#tagcloud").remove();
     d3.select("#topic-map-svg").remove();
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-    
+
     const windowHeight = $(window).height();
     const navigationHeight = $('.navigation').toArray().reduce(function(sum, element) {
         return sum + $(element).outerHeight();
@@ -159,17 +181,17 @@ function onFullscreenChange() {
     $('.main-panel').css('max-height', mainPanalHeight);
     $('.right-column').css('max-height', mainPanalHeight);
     mainPanalHeight *= 0.95
-    
+
     init_graph(viewBox, transform);
     update_nodes();
-    paper_field = update_fields();
+    paper_field = updateField();
 
     if (nodes.length > 0) {
         draw_tag_cloud();
         visual_topics();
     }
-    visual_graph(polygon);
-    
+    visual_graph(polygon, viewBox, transform);
+
     // let maxHeight = $("#mainsvg").height() + $("#tagcloud").height();
     // $(".middle-column").css('height', maxHeight);
     updateSider(name);
@@ -218,7 +240,7 @@ function updateSider (name) {
     var left_height = $("#basic-info").height() + $("#graph-info").height() + $("#topic-info").height();
     // var left_height = ($("#paper-list").height() - $("#paper-list-title").height()) *0.96;
     // var left_height = mainPanalHeight * 0.88 - $("#paper-list-title").height();
-    
+
     $("#timeline").css("height", left_height);
     $("#cited-papers").css("height", left_height * 1.03);
     $("#citing-papers").css("height", left_height * 1.03);
@@ -254,9 +276,9 @@ function updateSider (name) {
         var authorList = authors.split(", ");
         var paperAuthors = "";
         for (let i = 0; i < authorList.length; i++) {
-            if (authorList[i] == name) 
+            if (authorList[i] == name)
                 paperAuthors += "<span style=\"color: #00A78E\">" + authorList[i] + "</span>, ";
-            else 
+            else
                 paperAuthors += authorList[i] + ", ";
         }
         var color = hsvToHex(nodes[i].color[0], 0.7, nodes[i].color[2]);
@@ -281,7 +303,7 @@ function updateSider (name) {
             <span style="color: #808080;">${paperVenu} ${paperYear}</span>
         </div>
         `;
-        
+
         $("#timeline").append(content);
     }
     $("#paper-list").show();
@@ -339,7 +361,7 @@ function textSize(text, size) {
       .style("font-size", size + "px")      // todo: these need to be passed to the function or a css style
       .style("font-family", "sans-serif")
       .text(text);
-  
+
     let sel = container.selectAll('text').node();
     let width = sel.getComputedTextLength();
     let height = sel.getExtentOfChar(0).height;
@@ -413,7 +435,7 @@ function draw_tag_cloud() {
         .attr("height", svgHeight)
         .attr("id", "tagcloud");
 
-    let topicThreshold = parseInt(paperCount / 20) > 5 ? 5 : parseInt(paperCount / 20);
+    let topicThreshold = parseInt(nodes.length / 20) > 5 ? 5 : parseInt(nodes.length / 20);
     var paper_field_filter = [];
     for (let i = 0; i < paper_field.length; i++) {
         if (paper_field[i].num >= topicThreshold) paper_field_filter.push(paper_field[i]);
@@ -424,7 +446,7 @@ function draw_tag_cloud() {
         // .attr("transform", "translate(10, 10)");
 
     let maxFontSize = 60;
-    
+
     while ((wordPosition=calculateWordPosition(sortedData, maxFontSize)) === null) {
         maxFontSize *= 0.95;
     }
@@ -435,7 +457,7 @@ function draw_tag_cloud() {
     if (Array.isArray(wordPosition) && wordPosition.length == 1 && Array.isArray(wordPosition[0]) && wordPosition[0].length == 0) {
         return;
     }
-    
+
     const words = wordCloud.selectAll("g")
         .data(wordPosition)
         .enter()
@@ -486,19 +508,11 @@ function init_graph (viewBox, transform) {
         .attr("height", mainPanalHeight * (1-tagCloudRatio))
         .attr("viewBox", viewBox)
         .attr("id", "mainsvg");
-    
-    zoom = d3.zoom()
-        .scaleExtent([0.05, 10])
-        .on("zoom", _ => g.attr("transform", d3.event.transform + transform));
 
     tip = d3.tip()
         .attr("class", "d3-tip")
         .html(d => d.name);
-    tip1 = d3.tip()
-        .attr("class", "d3-tip")
-        .html(d => d.name);
 
-    svg.call(zoom);
     svg.call(tip);
 
     g = svg.append('g')
@@ -518,14 +532,13 @@ function update_nodes() {
             fields = field_roots;
         }
 
-        console.log('topic', fields[topic], fields.length, topic, nodes[i])
         if (fields[topic] == undefined) {
             console.log('topic > fields.length !!!')
         }
 
         // 根据当前为1层/2层给节点赋上不同的颜色
         nodes[i].color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
-        
+
         // 如果当前节点被点击，需要修改paper信息中的展示的topic-word
         if (nodes[i].status == 1) {
             $("#paper-field").text(fields[topic][2].split('_').join(', '));
@@ -535,88 +548,72 @@ function update_nodes() {
     nodes.sort((a, b) =>  b.citationCount - a.citationCount);
 }
 
-function update_fields() {
-    var self_field = [];    //该学者个人的field信息
-    let field_level_val = $("#field-level").val();
-    let fields = field_level_val == 1 ? field_roots : field_leaves; //该领域所有的field信息
+function updateField() {
+    let fieldDepthVal = $("#field-level").val();
+    let fields = fieldDepthVal == 1 ? field_roots : field_leaves; //该领域所有的field信息
+
+    var mapField = [];    // 学者个人的field信息
     for (let i = 0; i < nodes.length; i++) {
         // 判断该论文节点的topic是叶子层还是顶层
         let topic = parseInt(nodes[i].topic);
-        topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
-        // 统计该学者的topic信息，如果已经统计(纳入了self_field)，num++
-        for (var j = 0; j < self_field.length; j++) {
-            if (topic == self_field[j].id) {
-                self_field[j].num += 1;
+        topic = fieldDepthVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
+        // 统计该学者的topic信息，如果已经统计(纳入了mapField)，
+        var j;
+        for (j = 0; j < mapField.length; j++) {
+            if (topic == mapField[j].id) {
+                mapField[j].num += 1;
                 break;
             }
         }
-        // 如果没有统计，在self_field中新建k-v
-        if (j == self_field.length) {
-            let dic = {};
-            dic.id = topic;
-            dic.num = 1;
-            dic.name = fields[topic][2];
-            dic.color = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])];
-            dic.cx = parseFloat(fields[topic][3]);
-            dic.cy = parseFloat(fields[topic][4]);
-            self_field.push(dic);
+        // 如果没有统计，在mapField中新建k-v
+        if (j == mapField.length) {
+            let dic = {
+                "id": topic,
+                "num": 1,
+                "name": fields[topic][2],
+                "color": [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])],
+                "cx": parseFloat(fields[topic][3]),
+                "cy": parseFloat(fields[topic][4]),
+            };
+            mapField.push(dic);
         }
     }
-    self_field.sort(op('num'));
+    mapField.sort(op('num'));
 
-    // 处理左侧柱状图
-    g.selectAll('.year-topic').remove();
-    // 因为需要统计各个年份的各个field的分布，是一个二维向量，要绘制柱状图只能在每年的时候将field柱状分布图画出来，所以没有放到visual_topic函数里
+    barField = [];
     for (let i = 0; i < years.length; i++) {
-        var year_field = [];    //该学者每一年的field信息
-        //初始化每一年的field信息：将self_field中的所有field移到当前年份，并置num=0
-        for (let j = 0; j < self_field.length; j++) {
-            let dic = {};
-            dic.id = self_field[j].id;
-            dic.name = self_field[j].name.split(':')[0];
-            dic.num = 0;
-            dic.color = self_field[j].color;
-            year_field.push(dic);
-        }
-        //如果是该年发表的论文，将它的topic和该年的field匹配，匹配上的field数量++
-        for (let j = 0; j < nodes.length; j++) {
-            if (nodes[j].year == years[i].id) {
-                let topic = parseInt(nodes[j].topic);
-                topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
-                for (let k = 0; k < year_field.length; k++) {
-                    if (topic == year_field[k].id) {
-                        year_field[k].num += 1;
-                        break;
-                    }
-                }
+        for (let j = 0; j < mapField.length; j++) {
+            let dic = {
+                "id": `${years[i].id}${mapField[j].id}`,
+                "name": mapField[j].name,
+                "num"  : 0,
+                "color": mapField[j].color,
             }
+            barField.push(dic);
         }
-        var x = years[i].cx;
-        var y = years[i].cy;
-        for (let j = 0; j < year_field.length; j++) {
-            year_field[j].name += ': ' + year_field[j].num;
-            year_field[j].x = x;
-            year_field[j].y = y;
-            x -= year_field[j].num * 40;
-            year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
+    }
+    for (let i = 0; i < barField.length; i++) {
+        for (let j = 0; j < nodes.length; j++) {
+            let topic = parseInt(nodes[j].topic);
+            topic = fieldDepthVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
+            if (barField[i].id == `${nodes[j].year}${topic}`) barField[i].num += 1;
         }
-
-        g.selectAll('circle').data(year_field).enter().append('rect')
-            .attr('x', d => d.x - d.num * 40 - 29)
-            .attr('y', d => d.y - 25)
-            .attr('width', d => d.num * 40)
-            .attr('height', 50)
-            .attr('fill', d => hsvToColor(d.color))
-            .attr('class', 'year-topic')
-            .attr('id', d => d.id)
-            .attr('yearTopicId', d => d.yearTopicId);
+    }
+    barTranslate = 0;
+    for (let i = 0; i < years.length; i++) {
+        var x = years[i].cx, y = years[i].cy;
+        var barLength = 0;
+        for (let j = 0; j < mapField.length; j++) {
+            let idx = i * mapField.length + j;
+            barField[idx].x = x;
+            barField[idx].y = y;
+            x -= barField[idx].num * 40;
+            barLength += barField[idx].num * 40;
+        }
+        if (barLength > barTranslate) barTranslate = barLength;
     }
 
-    g.selectAll('.year-topic')
-        .on('mouseover', function(d) {highlight_field(d, this)})
-        .on('mouseout', reset_field);
-
-    return self_field;
+    return mapField;
 }
 
 function highlight_field(d, that) {
@@ -624,7 +621,7 @@ function highlight_field(d, that) {
     // 选择具有特定ID的元素
     // d3.select("#circle" + field_id).select(".topic-map-tip")
     //     .style("display", "block");
-    
+
     let duration = 200;
     let field_id = d.id;
     // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
@@ -673,7 +670,7 @@ function highlight_field(d, that) {
         .attr("fill-opacity", 1)
         .attr("stroke", "black");
 
-    g.selectAll(".year-topic")
+    g.selectAll(".topic-bar")
         .attr("fill-opacity", d => {if (field_id != d.id) return virtualOpacity;});
 
     var color_papers = [];  // 记录颜色不需要变化的paperID
@@ -725,11 +722,11 @@ function reset_field(d) {
     // remove tooltip
     // d3.select(`#tag-tooltip`).style("opacity", 0);
     // d3.select(`.overall-topic-tip`).hide(d);
-    
+
     // reset word
     d3.select(`#text_${d.id}`)
         .attr('font-weight', 'normal');
-    
+
     // =========================topic map=========================
     // topic_map_tip.hide(d);
     tip.hide(d);
@@ -742,7 +739,7 @@ function reset_field(d) {
         .attr("stroke", `rgba(0,0,0,0.5)`);
 
     // 恢复左侧年份主题柱状图
-    d3.selectAll('.rect1, .year-topic')
+    d3.selectAll('.rect1, .topic-bar')
         .attr('fill-opacity', 1);
     //恢复节点填充色和边缘色
     g.selectAll(".paper").data(nodes)
@@ -757,7 +754,7 @@ function reset_field(d) {
         .attr("fill-opacity", virtualOpacity)
         .attr("stroke", "black");
     $("#mainsvg").attr("style", "background-color: white;");
-    d3.selectAll('.year-topic').attr('fill-opacity', 1);
+    d3.selectAll('.topic-bar').attr('fill-opacity', 1);
 }
 
 function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
@@ -781,11 +778,11 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
             }
         }
     }
-    
+
     // 改变当前节点颜色和相邻节点
     g.selectAll(".paper").data(nodes)
         .attr("fill-opacity", d => {
-            if (d.id != id && adjacent_ids.indexOf(d.id) == -1) 
+            if (d.id != id && adjacent_ids.indexOf(d.id) == -1)
                 return virtualOpacity;
         })
         .attr('stroke', d => {
@@ -819,7 +816,7 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
             year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
         }
     }
-    g.selectAll(".year-topic")
+    g.selectAll(".topic-bar")
         .attr("fill-opacity", d => {
             if (year_topics.indexOf(d.yearTopicId) == -1) return virtualOpacity;
             return 1;
@@ -829,7 +826,7 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
 function reset_node() {
     if (image_status == 1)  return;
 
-    d3.selectAll('.year-topic').attr('fill-opacity', 1);
+    d3.selectAll('.topic-bar').attr('fill-opacity', 1);
     g.selectAll('.paper').data(nodes)
         .attr('fill-opacity', 1)
         .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount))
@@ -837,7 +834,7 @@ function reset_node() {
     d3.selectAll('.reference')
         .attr('stroke', d => probToColor(d.extends_prob))
         .attr('stroke-width', d => probToWidth(d.extends_prob));
-    
+
     for (let i = 0; i < nodes.length; i++) {
         nodes[i].status = 0;
     }
@@ -861,7 +858,7 @@ function visual_topics() {
     // set the ranges of rangeSlider
     var minNum = d3.min(paper_field, d => d.num);
     var maxNum = d3.max(paper_field, d => d.num);
-    
+
     rangeSlider.noUiSlider.updateOptions({
         range: {
             'min': minNum - 1,
@@ -890,10 +887,10 @@ function visual_topics() {
         .attr("width", topic_width)
         .attr("height", topic_height * 0.85)
         .attr("id", "topic-map-svg");
-        
+
     const topic_map_g = topic_map_svg.append('g')
         .attr("transform", `translate(${topic_margin1}, ${topic_margin2})`);
-    
+
     const topics = topic_map_g.selectAll(".topic-map").data(paper_field).enter().append("circle")
         .attr("cx", d => xScale(d.cx))
         .attr("cy", d => yScale(d.cy))
@@ -914,7 +911,7 @@ function visual_topics() {
     topics
     .on('mouseover', function(d) {highlight_field(d, this)})
     .on('mouseout', reset_field);
-    
+
     if (paper_field.length == 0) {
         $("#topic-slider").hide();
     }
@@ -926,7 +923,7 @@ function probToColor(prob, a=0.1, b=1) {
     const opacity = Math.min(Math.max((prob - 0.3) / (0.8 - 0.3), 0), 1);
     const mappedOpacity = a + (b - a) * opacity;
     const color = `rgba(32, 32, 32, ${mappedOpacity})`;
-    
+
     return color;
 }
 
@@ -935,7 +932,16 @@ function probToWidth(prob, a=0.6, b=6) {
     return a + opacity * (b - a);
 }
 
-function visual_graph(polygon) {
+function visual_graph(polygon, viewBox, transform) {
+    const scaleRegex = /scale\(([^)]+)\)/;
+    const translateRegex = /translate\(([^)]+)\)/;
+
+    const scaleMatches = transform.match(scaleRegex);
+    const translateMatches = transform.match(translateRegex);
+
+    const scaleParams = scaleMatches[1].split(' ').map(Number);
+    const translateParams = translateMatches[1].split(' ').map(Number);
+
     const ellipse = g.selectAll('circle').data(nodes).enter().append('ellipse')
         .attr('cx', d => d.cx)
         .attr('cy', d => d.cy)
@@ -946,7 +952,7 @@ function visual_graph(polygon) {
         .attr('stroke-width', 1)
         .attr('id', d => d.id)
         .attr('class', 'paper');
-    
+
     // function dragged(d) {
     //     d3.select(this)
     //     .attr("cx", (d.x = d3.event.x))
@@ -988,7 +994,7 @@ function visual_graph(polygon) {
         .attr("pointer-events", "none")
         .each(function(d) {
             let text = d.text === undefined? d.text1 + '\n' + d.text2 : d.text + '\n' + String(d.citationCount)
-            
+
             var lines = text.split('\n');
             for (var i = 0; i < lines.length; i++) {
                 d3.select(this).append('tspan')
@@ -1005,6 +1011,30 @@ function visual_graph(polygon) {
         .attr('font-family', 'Times New Roman,serif')
         .attr('font-size', 28)
         .attr('class', 'text3');
+
+    const gWidth = g.node().getBBox().width;
+    g.selectAll('.topic-bar').remove();
+
+    g.selectAll('.topic-bar').data(barField).enter().append('rect')
+        .attr('x', d => d.x - d.num * 40 - 29)
+        .attr('y', d => d.y - 25)
+        .attr('width', d => d.num * 40)
+        .attr('height', 50)
+        .attr('fill', d => hsvToColor(d.color))
+        .attr('class', 'topic-bar')
+        .attr('id', d => d.id);
+
+    g.selectAll('.topic-bar')
+        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseout', reset_field);
+
+    let newScale = scaleParams[0] * ((gWidth - barTranslate) / gWidth);
+    let newTransform = `rotate(0) translate(${translateParams[0]+barTranslate} ${translateParams[1]}) scale(${newScale} ${scaleParams[1]})`;
+    g.attr("transform", newTransform);
+    zoom = d3.zoom()
+        .scaleExtent([0.05, 10])
+        .on("zoom", _ => g.attr("transform", d3.event.transform + newTransform));
+    d3.select("#mainsvg").call(zoom);
 
     ellipse
     .on('mouseover', function (d) {
@@ -1178,14 +1208,14 @@ function visual_graph(polygon) {
                 year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
             }
         }
-        g.selectAll(".year-topic")
+        g.selectAll(".topic-bar")
             .attr("fill-opacity", d => {
                 if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
             });
-        
+
         $("#paper-list, #selector, #node-info, #node-info-blank, #up-line, #down-line").hide();
         $("#edge-info").show();
-        
+
         //更新edge-info中的内容
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].id == source) {
@@ -1218,7 +1248,7 @@ function visual_graph(polygon) {
             })
             // .attr("stroke-width", d => d.extends_prob <= 0.1 ? 0.4 : d.extends_prob * 5)
             .attr("stroke-width", d => probToWidth(d.extends_prob))
-            
+
     });
 
     $(document).click(function(event) {
@@ -1321,7 +1351,7 @@ function getFillColorFunc() {
 function updateFillColor() {
     let fillColorVal = $("#fill-color").val();
     if (fillColorVal == 0) {
-        paper_field = update_fields();
+        paper_field = updateField();
         update_nodes();
         g.selectAll('.paper').data(nodes)
             .attr('fill', d => hsvToColor(d.color));
@@ -1332,7 +1362,7 @@ function updateFillColor() {
     else {
         let fillColor = getFillColorFunc();
         d3.selectAll(".paper").attr('fill', fillColor);
-        d3.selectAll('.year-topic').attr('fill', fillColor);
+        d3.selectAll('.topic-bar').attr('fill', fillColor);
         d3.selectAll('.topic-map').attr('fill', fillColor);
         d3.selectAll('.tag-rect').attr('fill', fillColor);
     }
@@ -1353,7 +1383,7 @@ function sugiyama(years, nodes, edges) {
         });
         layers.push(l);
     });
-    
+
     var Gp = new Array;
     let cnt = 0;
     edges.forEach(edge => {

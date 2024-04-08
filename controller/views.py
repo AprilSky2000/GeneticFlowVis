@@ -75,7 +75,7 @@ def load_author(field, authorID):
     papers_df = pd.read_csv(f'csv/{field}/papers/{authorID}.csv', dtype={'paperID': str})
     papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
     papers_df = papers_df[['paperID', 'year', 'survey', 'isKeyPaper', 'topic']]
-    
+
     dic = {
         'nodes': papers_df.to_dict(orient='records'),
         'edges': edges
@@ -89,7 +89,7 @@ def load_author(field, authorID):
 def read_top_authors(field):
     if field in field2top_authors:
         return field2top_authors[field]
-    
+
     df = pd.read_csv(f'csv/{field}/top_field_authors.csv', sep=',', dtype={'authorID': str})
     if field not in ['acl']:
         df['fellow'] = df['authorID'].apply(lambda x: authorID2fellow.get(x, ''))
@@ -129,7 +129,7 @@ def read_top_authors(field):
 
     for col in ['paperCount','citationCount','hIndex','corePaperCount','coreCitationCount','corehIndex']:
         df[col] = df[col].astype(int)
-    
+
     field2top_authors[field] = df
     return df
 
@@ -141,7 +141,7 @@ def degree(request):
     df = read_top_authors(field)
     df = df[['authorID', 'name', 'paperCount', 'hIndex', 'fellow']]
     df = df.sort_values(by='hIndex', ascending=False)
-    
+
     df = df.head(topN)
     for index, row in df.iterrows():
         authorID = row['authorID']
@@ -324,7 +324,7 @@ def index(request):
     author = author.to_dict(orient='records')[0]
     logger.info("Request Parameters: [clientIP:%s] [field:%s] [authorID:%s] [scholar:%s]",
                 client_ip, fieldType, authorID, author["name"])
-    
+
     fields = get_fields(fieldType)
     mode, isKeyPaper, extendsProb, nodeWidth, removeSurvey = 2, 0.5, 0.5, 10, 1
     if fieldType == "acl":
@@ -352,7 +352,7 @@ def index(request):
         write_d3_data(fieldType, detail, papers, links)
 
     return render(request, "index.html",
-                  {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"], 
+                  {'authorID': authorID, 'name': author["name"], 'paperCount': author["paperCount"],
                    'citationCount': author["citationCount"], 'hIndex': author["hIndex"], 'fields': fields, 'fieldType': fieldType})
 
 
@@ -367,35 +367,67 @@ def clean(request):
         return HttpResponse("Failed to delete " + path + " because: " + e.__str__())
 
 def update(request):
-    fieldType = request.POST.get("field")
-    authorID = request.POST.get("authorID")
-    mode = request.POST.get("mode")
-    isKeyPaper = request.POST.get("isKeyPaper")
-    extendsProb = request.POST.get("extendsProb")
-    nodeWidth = request.POST.get("nodeWidth")
+    logger.info("ajax request successfully received")
+    fieldType    = request.POST.get("field")
+    authorID     = request.POST.get("authorID")
+    mode         = request.POST.get("mode")
+    isKeyPaper   = request.POST.get("isKeyPaper")
+    extendsProb  = request.POST.get("extendsProb")
+    nodeWidth    = request.POST.get("nodeWidth")
     removeSurvey = request.POST.get("removeSurvey")
-    detail = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}'
-    mode = int(mode)
-    isKeyPaper = float(isKeyPaper)
-    extendsProb = float(extendsProb)
-    nodeWidth = int(nodeWidth)
+    ratio        = request.POST.get("ratio")
+    detail       = f'{authorID}_{mode}_{str(float(isKeyPaper))}_{str(float(extendsProb))}_{nodeWidth}_{removeSurvey}'
+    mode         = int(mode)
+    isKeyPaper   = float(isKeyPaper)
+    extendsProb  = float(extendsProb)
+    nodeWidth    = int(nodeWidth)
     removeSurvey = int(removeSurvey)
+    ratio        = float(ratio)
+    print(mode, fieldType, authorID, isKeyPaper, removeSurvey, ratio)
 
-    filename = f'static/json/{fieldType}/{detail}.json'
-    if os.path.exists(filename) == False or os.environ.get('TEST', False):
+    if ratio == 0:
+        filename = f'static/json/{fieldType}/{detail}.json'
+        if os.path.exists(filename) == False or os.environ.get('TEST', False):
+            dot = graphviz.Digraph(filename=detail, format='svg')
+
+            papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
+            links = read_links(fieldType, authorID, extendsProb)
+
+            create_partial_graph(dot, papers, links, nodeWidth, mode)
+            dot.render(directory=f"static/image/svg/{fieldType}", view=False)
+            # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
+
+            write_d3_data(fieldType, detail, papers, links)
+
+        param = {'detail': detail, 'fieldType': fieldType}
+        return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
+    else:
+        detail += str(ratio)
         dot = graphviz.Digraph(filename=detail, format='svg')
+        dot.attr(ratio=str(ratio))
 
         papers = read_papers(fieldType, authorID, isKeyPaper, removeSurvey)
         links = read_links(fieldType, authorID, extendsProb)
 
-        create_partial_graph(dot, papers, links, nodeWidth, mode)            
+        create_partial_graph(dot, papers, links, nodeWidth, mode)
         dot.render(directory=f"static/image/svg/{fieldType}", view=False)
-        # data = base64.b64encode(dot.pipe(format='png')).decode("utf-8")
 
-        write_d3_data(fieldType, detail, papers, links)
+        filename = f'static/image/svg/{fieldType}/{detail}.svg'
+        soup = BeautifulSoup(open(filename))
+        nodes = soup.select('.node')
+        edges = soup.select('.edge')
+        nodeData, yearData = get_node(nodes, papers)    # 节点怎么画
+        edgeData = get_edge(edges, links)     # 边怎么画
+        polygon = get_polygon(edges)    # 边的箭头
 
-    param = {'detail': detail, 'fieldType': fieldType}
-    return JsonResponse(param, json_dumps_params={'ensure_ascii': False})
+        svg = soup.find('svg')
+        viewBox = svg['viewbox']
+        g = soup.find('g')
+        transform = g['transform']
+        # viewBox属性, g的transform
+        graph = [viewBox, transform]
+        return JsonResponse({"graph": graph, "year": yearData, "node": nodeData, "edge": edgeData, "polygon": polygon},
+                            json_dumps_params={'ensure_ascii': False})
 
 def showlist(request):
     fieldType = request.GET.get("field")
@@ -426,7 +458,7 @@ def read_papers(fieldType, authorID, isKeyPaper, removeSurvey):
         df['topic'] = df['paperID'].apply(lambda x: paperID2topic.get(x, 0))
     elif 'topic' not in df.columns:
         df['topic'] = 0
-    
+
     for col in ['year', 'referenceCount', 'citationCount', 'topic']:
         df[col] = df[col].astype(int)
     df["isKeyPaper"] = df["isKeyPaper"].astype(float)
@@ -451,7 +483,7 @@ def read_links(fieldType, authorID, extendsProb):
     # df = df[~df["parentID"].isin(surveys)]
     return df.to_dict(orient='records')
 
-    
+
 def get_fields(fieldType):
     path = f'csv/{fieldType}/'
     leaves_path = os.path.join(path, "field_leaves.csv")
@@ -469,3 +501,22 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+def dataset(request):
+    fieldType = request.GET.get("field")
+    if fieldType == None:
+        return render(request, 'dataset.html')
+    else:
+        import tarfile
+        from tempfile import TemporaryFile
+        dataset_path = f'csv/{fieldType}'
+        with TemporaryFile() as tmp:
+            with tarfile.open(fileobj=tmp, mode='w:gz') as tar:
+                tar.add(dataset_path, arcname=os.path.basename(dataset_path))
+
+            # 将文件指针移动到文件的开始
+            tmp.seek(0)
+
+            response = HttpResponse(tmp.read(), content_type='application/gzip')
+            response['Content-Disposition'] = f'attachment; filename="{fieldType}.tar.gz"'
+            return response

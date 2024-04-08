@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/src/js/jquery.min.js"></script>
+    <title>数据集下载</title>
+</head>
+<body>
+    <h1>GeneticFlow Dataset Download</h1>
+    <div id="datasetList"></div>
+</body>
+<script>
+    function isTestEnv() {
+        return fetch('/src/.test')
+        .then(response => {
+            return response.ok;
+        })
+        .catch(error => {
+            return true
+        });
+    }
+    $(function() {
+        fetch('/src/config.json')
+        .then(response => response.json())
+        .then(data => {
+            delete data['default'];
+            isTestEnv().then(isTest => {
+                if(!isTest) {
+                    delete data['fellow'];
+                    delete data['ACMfellowTuring'];
+                }
+            });
+            generateDownloadLinks(data);
+        })
+    });
+
+    function generateDownloadLinks(config) {
+        const container = document.getElementById('datasetList');
+        for (const key in config) {
+            const datasetName = config[key].name;
+            const element = document.createElement('div');
+            element.innerHTML = `<strong>${datasetName}</strong>: <a href="/dataset?field=${key}">download</a>`;
+            container.appendChild(element);
+        }
+    }
+
+    // 页面加载时执行
+</script>
+</html>

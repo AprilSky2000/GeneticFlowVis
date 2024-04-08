@@ -12,7 +12,7 @@
     <link rel="stylesheet" type='text/css' href="/src/css/layui.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
-		
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.js"></script>
     <script src="/src/js/jquery.min.js"></script>
     <script src="/src/js/bootstrap.js"></script>
@@ -23,14 +23,14 @@
 
     <script src="/src/js/index.js"></script>
     <script src="/src/js/download-svg.js"></script>
-    
+
 </head>
 
 <body>
     <div id="screen-size-warning">
         Please use a larger screen for a better visualization experience (iPad or desktop with width > 800px).
     </div>
-    
+
     <div class="container-fluid">
         <div class="navigation" style="background-color: #054863; padding-top: 1%; padding-bottom: 1%; display:flex; align-items: center; justify-content:center;">
             <div class="logo">
@@ -211,13 +211,13 @@
                     <li>
                         <div id="topic-map-graph" style="padding-bottom:4%">
                             <div id="topic-distribution"></div>
-                            
+
                             <div class="slider-container">
                                 <label for="topic-slider" style="margin-right: 3%;">Size:</label>
                                 <input id="topic-slider" class="topic-slider"  type="range" value="1" min="0" max="2" step="0.01">
                                 <span id="topic-label" style="margin-left: 3%;">0.5</span>
                             </div>
-                            
+
                             <div class="slider-container">
                                 <label for="range-slider" style="margin-right: 3%;">Range:</label>
                                 <!-- <input type="range" id="range-slider" min="0" max="100" value="0" multiple>
@@ -231,7 +231,7 @@
             </div>
             <div class="middle-column" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
                 <div id="tag-tooltip" class="tooltip"></div>
-                
+
                 <div id="toolbox">
                     <button id="restore" class="icon-button"><i class="fa-solid fa-rotate-right icon"></i></button>
                     <button id="zoom-in" class="icon-button"><i class="fa-solid fa-plus icon"></i></button>
@@ -240,7 +240,7 @@
                     <button id="save" class="icon-button"><i class="fa-solid fa-download icon"></i></button>
                     <button id="info" class="icon-button"><i class="fa-solid fa-info icon"></i></button>
 
-                    
+
                     <span id="info-text">Visualization Guide</span>
                 </div>
                 <div id="overlay"></div>
@@ -263,7 +263,7 @@
                     <div id="timeline" style="overflow: auto; background-color: white; color: #333; margin-top: 3%; margin-bottom: 3%; margin-left: 6%; "></div>
 
                 </div>
-                
+
                 <ul id="selector" class="address">
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
@@ -293,7 +293,7 @@
                         </ul>
                     </li>
                 </ul>
-                
+
                 <div id="node-info" style="padding: 10px; padding-left: 25px; background-color: white; overflow-y: auto; border-bottom-right-radius: 10px;"> <!-- 添加左侧内边距 -->
                     <!-- 表格部分 -->
                     <table style="background-color: white; border-top-left-radius: 0%; border-top-right-radius: 0%; width: 100%;">
@@ -330,7 +330,7 @@
                             <td id="paper-field" style="color: #333;"></td>
                         </tr>
                     </table>
-                
+
                     <!-- abstract 部分 -->
                     <div id="abstract-container" style="background-color: white;"> <!-- 设置最大高度和滚动 -->
                         <h3 style="text-align: left; margin: 3%;">Abstract</h3>
@@ -390,27 +390,28 @@
                             </p>
                         </div>
                     </div>
-                    
+
                 </div>
-                
+
             </div>
             <div class="clearfix"></div>
         </div>
     </div>
-    
-    
+
+
 <script type="text/javascript">
     // text1 paperLabel; text2 paperCount; text3 year; text4 field
 
 $(function () {
+    full_screen = 0;
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
     image_status = 0;
     image_data = "";
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-    const authorID = "{{ authorID }}";
+    authorID = "{{ authorID }}";
     name = "{{ name }}";
     const fields = {{ fields|safe }};
-    const fieldType = "{{ fieldType }}";
+    fieldType = "{{ fieldType }}";
     paperCount = "{{ paperCount }}";
     field_roots = fields[0];
     field_leaves = fields[1];
@@ -419,7 +420,7 @@ $(function () {
     });
     $("#field-level option[value='1']").remove();
     $("#field-level option[value='2']").text(1);
-    
+
     var filename = `/src/json/${fieldType}/${authorID}`;
     if (fieldType == "acl") {
         $("#edge-value").text("≥0.4 prob.");
@@ -492,7 +493,7 @@ $(function () {
             });
             $('remove-survey').value = config['remove_survey'];
             $('mode').value = config['remove_isolated'];
-            
+
             onFullscreenChange();
 
             $("#overall-topic-map").hide();
@@ -518,6 +519,7 @@ $(function () {
             paramData.field = "{{ fieldType }}";
             paramData.isKeyPaper = nodeSlider.noUiSlider.get();
             paramData.extendsProb = edgeSlider.noUiSlider.get();
+            paramData.ratio = 0;
 
             $.ajax({
                 headers: {"X-CSRFToken": getCookie("csrftoken")},
@@ -554,6 +556,7 @@ $(function () {
                     console.log("Response:", jqXHR.responseText);
                 }
             });
+            full_screen = 0;
         }
         $("#mode, #node-width, #remove-survey").on('change', ajaxRequest);
     </script>

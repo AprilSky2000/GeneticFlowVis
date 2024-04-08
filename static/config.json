@@ -90,6 +90,16 @@
         "name": "Artificial Intelligence at Large",
         "icon": "fa-solid fa-robot icon",
         "type": "CS Subfield"
+    },
+    "CA": {
+        "name": "Computer Architecture",
+        "icon": "fa-solid fa-database icon",
+        "type": "CS Subfield"
+    },
+    "Security": {
+        "name": "Computer Security",
+        "icon": "fa-brands fa-microsoft icon",
+        "type": "CS Subfield"
     }
 }
 

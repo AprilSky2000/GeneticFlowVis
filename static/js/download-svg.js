@@ -9,7 +9,9 @@ function downloadSvg(svgList, fileName) {
     var imagesLoaded = 0;
     var canvasList = [];
 
-    svgList.forEach(svg => {
+    var ratio = 1;
+    svgList.forEach((svg, index) => {
+        const localCnt = index; // 为每个索引创建一个局部变量
         const svgString = new XMLSerializer().serializeToString(svg);
         var source = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
 
@@ -23,6 +25,8 @@ function downloadSvg(svgList, fileName) {
 
             var scale = maxWidth / svg.width.baseVal.value;
             canvas.height = svg.height.baseVal.value * scale;
+            if (localCnt >= 1) ratio = ratio * 0.5;
+            console.log(ratio);
 
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -74,8 +78,8 @@ function downloadFile(fileName, blob) {
     a.click();
     setTimeout(function() {
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);  
-    }, 0); 
+        window.URL.revokeObjectURL(url);
+    }, 0);
 }
 
 function dataURLtoBlob(dataurl) {
@@ -103,12 +107,13 @@ function getZoomSvg(svgIdName, groupIdName) {
             alert('svg中group不存在');
             return false;
         }
-        /*------这里是处理svg缩放的--------*/
+        /* 这里是处理svg缩放的 */
         var transformObj = group.getAttribute('transform');
         if(transformObj) {
-            var translateObj = transformObj.match(/translate\(([^,]*),([^,)]*)\)/),
-                scaleObj = transformObj.match(/scale\(([\d.]+)\)/);
-            if(translateObj && scaleObj) { //匹配到缩放
+            /* 下面捕获由d3.event自动引起的svg移动 */
+            var translateObj = transformObj.match(/translate\((\d+\.?\d*) (\d+\.?\d*)\)/),
+                scaleObj = transformObj.match(/scale\((\d+(\.\d+)?)(?:\s+|\s*,\s*)(\d+(\.\d+)?)\)/);
+            if(translateObj && scaleObj) {               // 匹配到平移和缩放
                 var translateX = translateObj[1],
                     translateY = translateObj[2],
                     scale = scaleObj[1];
@@ -117,10 +122,11 @@ function getZoomSvg(svgIdName, groupIdName) {
                 width = box.width / scale;
                 height = box.height / scale;
             }
-            var translateManual = transformObj.match(/translate\(([^,]*) ([^,)]*)\)/);
-            if (translateManual) {//如果svg的移动不单靠d3.event捕获的，初始时也有一个手动translate，需要将它捕获并减掉
-                x = x - translateManual[1];
-                y = y - translateManual[2];
+            /* 下面捕获初始时手动设置的translate */
+            var translateManual = transformObj.match(/translate\(([^,]+),\s*([^\)]+)\)/);
+            if (translateManual) {                      // 如果svg的移动不单靠d3.event捕获的，初始时也有一个手动translate，需要将它捕获并减掉
+                x = x - parseFloat(translateManual[1]);
+                y = y - parseFloat(translateManual[2]);
             }
         }
     }
