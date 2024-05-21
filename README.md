@@ -2,7 +2,7 @@
 
 *注意*：为保证项目运行的稳定性，分离测试和正式环境，开发一律使用测试环境，在正式环境文件夹下不要修改代码，只能pull！
 
-## 正式环境（actcloud:/home/xfl/pyCode/GFVisTest，端口9002）
+## 测试环境（actcloud:/home/xfl/pyCode/GFVisTest，端口9002）
 http://test.genetic-flow.com
 
 1. 数据准备：将现有csv同步到本文件夹中，如
@@ -30,6 +30,12 @@ cd /home/xfl/pyCode/GFVis
 git pull
 pkill -f "runserver 0.0.0.0:9001"
 nohup python manage.py runserver 0.0.0.0:9001 2>&1 &
+```
+
+## 个人环境
+
+```
+nohup python manage.py runserver 0.0.0.0:9050 2>&1 &
 ```
 
 ## 增加新领域

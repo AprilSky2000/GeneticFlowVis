@@ -25,6 +25,10 @@
     <script src="/src/js/d3-hsv.min.js"></script>
     <!-- <script src="/src/js/dagre.js"></script> -->
     <script src="/src/js/viz-standalone.js"></script>
+    <script src="/src/js/viz-context.js"></script>
+    <script src="/src/js/mygraph.js"></script>
+    <!-- <script src="/src/js/graphology.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script> -->
     <script src="/src/js/layui.js" charset="utf-8"></script>
     <script src="/src/js/d3-ForceEdgeBundling.js"></script>
     <!-- <script src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script> -->
@@ -143,7 +147,8 @@
                                 <option value="4">sugiyama(OH)</option>
                                 <option value="5">Temporal-Thematic Flow</option>
                                 <option value="6">subgraph + bar</option>
-                                <option value="7" selected>subgraph + side</option>
+                                <option value="7">subgraph + side</option>
+                                <option value="8" selected>subgraph + context</option>
                             </select>
                         </td>
                         <td>
@@ -265,20 +270,23 @@
             <div class="middle-column" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
                 <div id="tag-tooltip" class="tooltip"></div>
                 
-                <div id="control">
+                <div id="control" style="z-index: 9;">
                     Year Grid:
-                    <input type="range" id="yearGridSlider" min="1" max="5" value="1" step="1" onchange="updateYearGrid(this.value)" 
-                        style="max-width: 160px;display: inline-block;margin-right: 10px;margin-left: -10px;">    
-                    Use hyperbolic:
-                    <label class="switch" style="margin-right: 10px;margin-left: -10px;">
-                        <input type="checkbox" id="toggle-switch">
-                        <span class="slider round"></span>
-                    </label>
-                    Show years:
-                    <label class="switch" style="margin-right: 10px;margin-left: -10px;">
-                        <input type="checkbox" id="toggle-years" checked>
-                        <span class="slider round"></span>
-                    </label>
+                    <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="updateYearGrid(this.value)" 
+                        style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -10px;">    
+                    Focus Edge Weight:
+                    <input type="range" id="alphaSlider" min="1" max="20" value="10" step="1" onchange="updateAlpha(this.value)" 
+                        style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -20px;">    
+                    Edge Bundling:
+                    <select id="edge-bundling" class="form-select" name="edge-bundling" style="margin-left: -10px;">
+                        <option value="6">None</option>
+                        <option value="0">All edges</option>
+                        <option value="1">Context edges</option>
+                        <option value="2">Focus edges</option>
+                        <option value="3">Respectively</option>
+                        <option value="4">Context edges(from focus)</option>
+                        <option value="5">Context edges(from context)</option>
+                    </select>
                     Edge filter:
                     <select id="edge-filter" class="form-select" name="edge-filter" style="margin-left: -10px;">
                         <option value="0">In + Out</option>
@@ -286,9 +294,10 @@
                         <option value="2">Out</option>
                         <option value="3">None</option>
                     </select>
-                    
                 </div>
-                <div id="toolbox">
+                <div id="toolbox" style="z-index: 9;">
+                    <button id="show-years" class="icon-button"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <button id="show-originsvg" class="icon-button"><i class="fa-solid fa-diagram-project"></i></button>
                     <button id="restore" class="icon-button"><i class="fa-solid fa-rotate-right icon"></i></button>
                     <button id="zoom-in" class="icon-button"><i class="fa-solid fa-plus icon"></i></button>
                     <button id="zoom-out" class="icon-button"><i class="fa-solid fa-minus icon"></i></button>
@@ -301,9 +310,8 @@
                 </div>
                 <div id="overlay"></div>
 
-                <div id="description" style="display:none; margin-top: 10%; margin-bottom: 10%;">
-                </div>
-
+                <div id="description" style="display:none; margin-top: 10%; margin-bottom: 10%;"></div>
+                
                 <!-- <div id="draw-area" style="display: flex; flex-direction: column; height:100%">
                     <div id="mainsvg" style="flex: 70%;"></div>
                     <div id="chord-tagcloud" style="flex: 30%; display: flex;">
@@ -312,10 +320,22 @@
                     </div>
                 </div> -->
 
-                <div id="draw-area" style="display: flex; flex-direction: column; height:100%">
-                    <div id="mainsvg" style="flex: 75%;"></div>
-                    <div id="tagcloud" style="flex: 25%;"></div>
+                <!-- <div id="draw-area" style="display: grid; height: 85vh; grid-template-columns: 85% 15%; grid-template-rows: 80% 20%;">
+                    <div id="mainsvg" style="background-color: #fbfbfb; grid-column: 1; grid-row: 1;">Main SVG</div>
+                    <div id="tagcloud" style="background-color: #dee9f4; grid-column: 1; grid-row: 2;">Tag Cloud</div>
+                    <div id="years" style="background-color: #f4edfb; grid-column: 2; grid-row: 1 / 3;">Years
+                        <div id="yearSlider" class="noUi-target vertical-slider" style="margin-left:80%;"></div>
+                    </div>
+                </div> -->
+
+                <div id="draw-area" style="display: grid; height: 85vh; grid-template-rows: 80% 20%; position: relative;">
+                    <div id="mainsvg" style="background-color: #fbfbfb; grid-row: 1;"></div>
+                    <div id="originsvg" style="display:none; grid-row: 1;"></div>
+                    <div id="tagcloud" style="background-color: #dee9f4; grid-row: 2;"></div>
+                    <div id="yearSlider" class="noUi-target vertical-slider" style="display: none; margin-left:80%; position: absolute; right: 0; top: 0; height: 100%; width: 15%;"></div>
                 </div>
+                
+                
                 <!--img src="data:image/png;base64,">
                 <svg id="mainsvg" style="background-color: white; border-width: 0px;" width="900" height="560" viewBox="0 0 0 0"></svg>
                 <div id="svg">
@@ -502,8 +522,9 @@ function buildCurvedPath(points) {
 }
 
 $(function () {
-    /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片，2为前端有但没有展示图片 */
-    image_status = 0;
+    /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片 */
+    image_status = false;
+    origin_svg_status = false;
     image_data = "";
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
@@ -552,7 +573,7 @@ $(function () {
             step: 0.01,
             range: {'min': 0,'max': 1.0}
         });
-        $("#node-value").text("≥" + config["node_prob"] + " prob.");
+        $("#node-value").text("≥" + config["node_prob"]); //  + " prob."
         noUiSlider.create(edgeSlider, {
             start: config["edge_prob"],
             behaviour: 'tap',
@@ -560,7 +581,7 @@ $(function () {
             step: 0.01,
             range: {'min': 0,'max': 1.0}
         });
-        $("#edge-value").text("≥" + config["edge_prob"] + " prob.");
+        $("#edge-value").text("≥" + config["edge_prob"]);
         noUiSlider.create(topicSlider, {
             start: config["topic_prob"],
             behaviour: 'tap',
@@ -568,32 +589,36 @@ $(function () {
             step: 0.01,
             range: {'min': 0,'max': 1.0}
         });
-        $("#topic-value").text("≥" + config["topic_prob"] + " prob.");
+        $("#topic-value").text("≥" + config["topic_prob"]);
         $('#remove-survey').value = config['remove_survey'];
         $('#mode').value = config['remove_isolated'];
 
         Viz.instance().then(function(v) {
-            viz = v;
-            d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
-                authorData = data;
-                // console.log('authorData', JSON.parse(JSON.stringify(authorData)));
-                // $("#node-num").text(data['nodes'].length);
-                // $("#edge-num").text(data['edges'].length);
-                visType = $("#vis-type").val();
-                
-                checkScreenSize();
-                $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-                
-                loadAndRender();
-                drawTTM();
-                draw_tagcloud();
-                visual_topics();
-                updateSider();
+            VizContext.instance().then(function(vc) {
+                viz = v;
+                vizContext = vc;
+                d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
+                    authorData = data;
+                    // console.log('authorData', JSON.parse(JSON.stringify(authorData)));
+                    // $("#node-num").text(data['nodes'].length);
+                    // $("#edge-num").text(data['edges'].length);
+                    visType = $("#vis-type").val();
+                    
+                    checkScreenSize();
+                    $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
+                    
+                    drawYears();
+                    loadAndRender();
+                    drawTTM();
+                    draw_tagcloud();
+                    visual_topics();
+                    updateSider();
 
-                $("#overall-topic-map").hide();
-                $("#paper-topic-map").show();
-                // sugiyama(years, nodes, edges);
-                addAllListeners();
+                    $("#overall-topic-map").hide();
+                    $("#paper-topic-map").show();
+                    // sugiyama(years, nodes, edges);
+                    addAllListeners();
+                });
             });
         })
     })
@@ -614,41 +639,37 @@ $("#edge-filter").on('change', function() {
         d3.selectAll('.link').style('display', 'none');
     }
 });
-
-</script>
-
-<script>
 // Preload the image
 var preloadedImage = new Image();
 preloadedImage.src = '/src/image/overview.png';
-preloadedImage.style.display = 'none'; // Hide the image initially
 preloadedImage.style.width = '100%'; // Set width to 100% of the parent container
 preloadedImage.style.height = 'auto';
 $("#description").append(preloadedImage); // Assuming there's a div with id 'imageContainer' to hold the image
 
 $("#info").click(function() {
-    if (image_status == 0) {
+    if (!image_status) {
         // Display the preloaded image
-        $(preloadedImage).show();
-        $("#mainsvg").hide();
-        $("#tagcloud").hide();
-        $("#chord").hide();
+        // $(preloadedImage).show();
+        $("#draw-area").hide();
         $("#description").show();
-        image_status = 1;
+    } else {
+        $("#draw-area").show();
+        $("#description").hide(); // Hide the image
     }
-    else if (image_status == 1) {
-        reset_graph();
-        $(preloadedImage).hide(); // Hide the image
-        image_status = 2;
-    }
-    else if (image_status == 2) {
-        $(preloadedImage).show(); // Show the image again
+    image_status = !image_status;
+});
+
+$("#show-originsvg").click(function() {
+    if (!origin_svg_status) {
         $("#mainsvg").hide();
-        $("#tagcloud").hide();
-        $("#chord").hide();
-        $("#description").show();
-        image_status = 1;
+        $("#originsvg").show();
     }
+    else {
+        $("#mainsvg").show();
+        $("#originsvg").hide();
+    }
+    renderDot();
+    origin_svg_status = !origin_svg_status;
 });
 </script>
 </body>

@@ -19,6 +19,8 @@ import shutil
 from django.views.decorators.clickjacking import xframe_options_exempt
 import networkx as nx
 from tqdm import tqdm
+import re
+import multiprocessing
 
 logger = logging.getLogger('log')
 
@@ -116,8 +118,12 @@ def load_author(field, authorID):
 def create_graphs(field, authorID):
     # 假设已经加载了作者的数据
     filename = f'static/json/{field}/authors/{authorID}.json'
-    with open(filename, 'r') as f:
-        dic = json.load(f)
+    try:
+        with open(filename, 'r') as f:
+            dic = json.load(f)
+    except:
+        print(f"create_graphs: Failed to load author({authorID}) data")
+        return
 
     path = f'static/json/{field}/graphs/{authorID[-1]}/{authorID}'
     # try:
@@ -147,6 +153,346 @@ def create_graphs(field, authorID):
         json.dump(graph, open(f'{path}/{topic}.json', 'w'), indent=4, ensure_ascii=False)
         
     # print(f"Successfully create graphs of author({authorID}) at {path}")
+
+
+def create_dot(nodes, edges, minYear, maxYear):
+    """
+    Generates a DOT graph representation.
+
+    Inputs:
+        nodes: A list of node objects, each with 'id', 'citationCount', 'year' attributes.
+        edges: A list of edge objects, each with 'source' and 'target' attributes.
+        minYear: The minimum year among the nodes.
+        maxYear: The maximum year among the nodes.
+    """
+    dot = 'digraph G {\n'
+    year_dic = {}
+
+    # Create subgraph clusters for each year
+    for year in range(minYear, maxYear + 1):
+        dot += f'year{year} [label="{year}"]\n'
+        year_dic[year] = [f'year{year}']
+
+    # Define nodes with citation counts as labels
+    for node in nodes:
+        dot += f'{node["id"]} [label="{node["citationCount"]}"]\n'
+        year_dic[node['year']].append(node['id'])
+
+    # Ensure nodes from the same year are on the same rank
+    for year, items in year_dic.items():
+        dot += f'{{ rank=same {" ".join(items)} }}\n'
+
+    # Connect consecutive years
+    for year in range(minYear, maxYear):
+        dot += f'year{year}->year{year+1}\n'
+
+    # Define edges between nodes
+    for edge in edges:
+        dot += f'{edge["source"]}->{edge["target"]}\n'
+
+    dot += '}'
+    return dot
+
+def has_topic(node, topic):
+    if 'topicDist' in node:
+        return str(topic) in node['topicDist'].keys()
+    return topic == node['topic']
+    
+
+def create_dot_graphs(field, authorID, node_thresh=0.5, edge_thresh=0.2, mode_value='2', survey_value='0', year_grid=2):
+    """
+    Filters and processes global data based on various criteria such as year, relevance, and importance metrics.
+
+    Inputs:
+        author_data: Dictionary containing 'nodes' and 'edges' from author data.
+        node_thresh: Threshold value from a slider for filtering nodes based on 'isKeyPaper' attribute.
+        edge_thresh: Threshold value from a slider for filtering edges based on 'extends_prob' attribute.
+        mode_value: Mode for filtering nodes (1 for removing isolated, 2 for partially removing).
+        survey_value: Value to determine if survey papers should be removed.
+        year_grid: Integer value to adjust year calculations in grouping.
+    
+    Functionality:
+        - Filters nodes and edges based on given threshold.
+        - Adjusts node data based on the mode and survey options.
+        - Calculates degree information for filtered nodes and updates global data structures.
+        - Processes and adjusts field information based on filtered nodes.
+    
+    Outputs:
+        Generate DOT graphs for each topic:
+        - <topicID>.dot: with context
+        - _<topicID>.dot: without context
+    """
+    filename = f'static/json/{field}/authors/{authorID}.json'
+    try:
+        with open(filename, 'r') as f:
+            author_data = json.load(f)
+    except:
+        print(f"create_dot_graphs: Failed to load author({authorID}) data")
+        return
+
+    path = f'static/json/{field}/dot/{authorID[-1]}/{authorID}'
+    exmple_path = f'static/json/{field}/dot/exmample'
+    os.makedirs(exmple_path, exist_ok=True)
+    # try:
+    #     shutil.rmtree(path)
+    # except:
+    #     pass
+    if os.path.exists(path):
+        return
+    os.makedirs(path, exist_ok=True)
+
+    # Filter nodes and edges based on threshold
+    filtered_nodes = [node for node in author_data['nodes'] if node['isKeyPaper'] >= node_thresh and node['year'] > 1900]
+    filtered_edges = [edge for edge in author_data['edges'] if edge['extends_prob'] >= edge_thresh]
+    topics = set([node['topic'] for node in author_data['nodes']])
+    if len(topics) == 0:
+        print(f"create_dot_graphs: No topics for author({authorID})")
+        return
+    if len(filtered_nodes) == 0:
+        print(f"create_dot_graphs: No nodes for author({authorID})")
+        return
+
+    # Update year range based on filtered nodes
+    min_year = min(node['year'] for node in filtered_nodes)
+    max_year = max(node['year'] for node in filtered_nodes)
+    # print('minYear', min_year, 'maxYear', max_year)
+
+    # Remove surveys from nodes if required
+    if survey_value == '1':
+        filtered_nodes = [node for node in filtered_nodes if not node['survey']]
+
+    # Compute degree information
+    indegree = {node['id']: 0 for node in filtered_nodes}
+    outdegree = {node['id']: 0 for node in filtered_nodes}
+    alldegree = {node['id']: 0 for node in filtered_nodes}
+    node_set = set(node['id'] for node in filtered_nodes)
+
+    # Connect only relevant edges
+    connected_edges = []
+    for edge in filtered_edges:
+        if node_set.issuperset({edge['source'], edge['target']}):
+            outdegree[edge['source']] += 1
+            indegree[edge['target']] += 1
+            alldegree[edge['source']] += 1
+            alldegree[edge['target']] += 1
+            connected_edges.append(edge)
+
+    # Apply mode-specific filtering
+    if mode_value == '1':  # Remove isolated nodes
+        filtered_nodes = [node for node in filtered_nodes if alldegree[node['id']] > 0]
+    elif mode_value == '2':  # Partially remove nodes
+        filtered_nodes = [node for node in filtered_nodes if alldegree[node['id']] > 0 or node['citationCount'] >= 50]
+
+    filtered_edges = connected_edges
+
+    # Update global variables with processed data
+    for topic in topics:
+        nodes = [node for node in filtered_nodes if has_topic(node, topic)]
+        if len(nodes) == 0:
+            continue
+        # print('topic', topic, 'nodes', len(nodes))
+        node_set = set(node['id'] for node in nodes)
+        edges = [edge for edge in filtered_edges if edge['source'] in node_set and edge['target'] in node_set]
+        edges_str = [f'{edge["source"]}->{edge["target"]}' for edge in edges]
+        G = nx.DiGraph()
+        for node in nodes:
+            G.add_node(node['id'], **node)
+        for edge in edges:
+            G.add_edge(edge['source'], edge['target'])
+        for year in range(min_year, max_year + 1):
+            G.add_node(f'l{year}', year=year)
+            G.add_node(f'r{year}', year=year)
+        for year in range(min_year, max_year):
+            G.add_edge(f'l{year}', f'l{year+1}')
+            G.add_edge(f'r{year}', f'r{year+1}')
+
+        original_dot = create_dot(nodes, edges, min_year, max_year)
+        with open(f'{path}/_{topic}.dot', 'w') as f:
+            f.write(original_dot)
+        # print(original_dot)
+
+        context_edges = defaultdict(int)
+        for edge in filtered_edges:
+            if f'{edge["source"]}->{edge["target"]}' in edges_str:
+                continue
+
+            source_node = [node for node in filtered_nodes if node['id'] == edge['source']][0]
+            target_node = [node for node in filtered_nodes if node['id'] == edge['target']][0]
+            if has_topic(source_node, topic):
+                # 出边，只记年份的数量，不记topic的数量
+                context_edges[f'{source_node["id"]}->r{target_node["year"]}'] += 1
+                G.add_edge(source_node['id'], f'r{target_node["year"]}')
+            if has_topic(target_node, topic):
+                context_edges[f'l{source_node["year"]}->{target_node["id"]}'] += 1
+                G.add_edge(f'l{source_node["year"]}', target_node['id'])
+            
+        virtual_edges = []
+        # 遍历每个连通块，找到具有最大year属性的节点（该节点最后添加），如果该连通块有l,r则略过
+        for component in list(nx.weakly_connected_components(G)):
+            node = find_last_node_in_component(G, component)
+            if node:
+                node_year = G.nodes[node]['year']
+                virtual_edges.append(f'{node}->{f"r{node_year}"}')
+
+        dot = process_dot_context(original_dot, context_edges, year_grid, virtual_edges)
+        with open(f'{path}/{topic}.dot', 'w') as f:
+            f.write(dot)
+
+        if len(nodes) >= 20:
+            with open(f'{exmple_path}/{authorID}_{topic}.dot', 'w') as f:
+                f.write(dot)
+
+def find_last_node_in_component(G, component):
+    max_year_value = max(G.nodes[node]['year'] for node in component)
+    last_node = None
+    for node in component:
+        if G.nodes[node]['year'] == max_year_value:
+            if node[0] in ['l', 'r']:
+                return None
+            last_node = node
+    return last_node
+
+def process_dot_context(dot, context_edges, grid=2, virtual_edges=None):
+    """
+    Processes a dot graph to adjust and filter nodes and edges based on context edges and a grid system.
+
+    Inputs:
+        dot: A string containing the dot graph.
+        context_edges: Dictionary where keys are 'lxxxx->rxxxx' edge strings and values are attributes like weight.
+        grid: Integer value representing the grid size for adjusting years in node labels.
+
+    Returns:
+        output: A string containing the processed dot graph with nodes and edges adjusted based on the context.
+    """
+    l = float('inf')
+    r = float('-inf')
+    labels = ''
+    focus_edges_str = ''
+    ranks = ''
+
+    # Parse the dot input to categorize lines and update years
+    for line in dot.split('\n'):
+        if 'year' in line:
+            if 'rank' in line:
+                ranks += line + '\n'
+        elif 'label' in line:
+            labels += '\t' + line + '\n'
+        elif '->' in line:
+            focus_edges_str += '\t' + line + '\n'
+
+    # Extract minimum and maximum year from context_edges
+    for edge in context_edges.keys():
+        match = re.match(r'l(\d+)->(\d+)', edge)
+        if match:
+            value = int(match.group(1))
+        else:
+            match = re.match(r'(\d+)->r(\d+)', edge)
+            if match:
+                value = int(match.group(2))
+            else:
+                continue
+        l = min(l, value)
+        r = max(r, value)
+
+    # Filter ranks and update valid year ranges
+    valid_years = []
+    for line in ranks.split('\n'):
+        match = re.search(r'year(\d+) (\d+)', line)
+        if match:
+            valid_years.append(int(match.group(1)))
+
+    if valid_years:
+        l = min(l, valid_years[0])
+        r = max(r, valid_years[-1])
+
+    # print('valid year range:', l, r)
+
+    # Filter ranks to include only relevant years
+    ranks = '\n'.join([line for line in ranks.split('\n') if re.search(r'year(\d+)', line) and l <= int(re.search(r'year(\d+)', line).group(1)) <= r])
+
+    # Generate chains of left and right nodes for each year
+    left_nodes = [f'l{year}' for year in range(l, r + 1)]
+    right_nodes = [f'r{year}' for year in range(l, r + 1)]
+    left_chain = '->'.join(left_nodes)
+    right_chain = '->'.join(right_nodes)
+
+    # Replace year labels with l and r notation in text
+    def replace_year_with_lr(text):
+        return re.sub(r'year(\d+)', lambda match: f"l{match.group(1)} r{match.group(1)}", text)
+
+    # Transform node names based on the grid
+    # 注意从l节点的east 和 r节点的west端口
+    def transform_node_name(name, grid):
+        match = re.match(r'^([lr])(\d+)$', name)
+        if match:
+            prefix, number = match.groups()
+            number = int(number)
+            if prefix == 'l':
+                ret = (number // grid) * grid
+                # return f'l{max(ret, l)}:e'
+                return f'l{max(ret, l)}'
+            elif prefix == 'r':
+                ret = (number // grid + 1) * grid - 1
+                # return f'r{min(ret, r)}:w'
+                return f'r{min(ret, r)}'
+        return name
+
+    # Process and merge context edges
+    new_context_edges = {}
+    for edge, weight in context_edges.items():
+        src, dst = edge.split('->')
+        new_src = transform_node_name(src, grid)
+        new_dst = transform_node_name(dst, grid)
+        new_edge = f'{new_src}->{new_dst}'
+        if new_edge in new_context_edges:
+            new_context_edges[new_edge]['weight'] += weight
+            new_context_edges[new_edge]['penwidth'] += weight  # Assume penwidth is cumulative
+        else:
+            new_context_edges[new_edge] = {'weight': weight, 'penwidth': weight, 
+                                           'port': 'tailport=e' if new_src[0] == 'l' else 'headport=w'}
+
+    # Generate context edges string
+    context_edges_str = '\n'.join([f'{edge} [color="lightgray", {data["port"]}, weight={data["weight"]}, penwidth={data["penwidth"]}]' for edge, data in new_context_edges.items()])
+    virtual_edges_str = '\n'.join([f'{edge} [style="invis"]' for edge in virtual_edges]) if virtual_edges else ''
+
+    # Generate final output dot string
+    output = f"""
+digraph G {{
+
+crossing_type=0
+    
+subgraph left {{
+    style=filled
+    color=lightgrey
+    node [style=filled,color=lightblue]
+    {left_chain} [weight=10000]
+    label = "left"
+}}
+
+subgraph focus{{
+    edge [weight=10]
+{labels}
+{focus_edges_str}
+}}
+
+subgraph right {{
+    style=filled
+    color=lightgrey
+    node [style=filled,color=lightgrey]
+    {right_chain} [weight=10000]
+    label = "right"
+}}
+
+{replace_year_with_lr(ranks)}
+{context_edges_str}
+l{l}->r{l} [style="invis"]
+{virtual_edges_str}
+}}    
+"""
+    
+    # print(output)
+    return output
+
 
 
 def read_top_authors(field):
@@ -221,24 +567,42 @@ def degree(request):
         'topN': topN
     })
 
+
+def process_batch(pairs):
+    field, authorID_list, order = pairs
+    print(order, len(authorID_list))
+
+    for authorID in tqdm(authorID_list):
+        load_author(field, authorID)
+        create_graphs(field, authorID)
+        create_dot_graphs(field, authorID)
+
+
 def graph(request):
     field = request.GET.get("field")
     authorID = request.GET.get("id", None)
-    base_url = 'http://192.168.0.140:8000/sy/GFVis'
+    base_url = 'http://ye-sun.com:1401/sy/GFVis'
 
     print('graph', authorID)
 
     if authorID:
         load_author(field, authorID)
         create_graphs(field, authorID)
+        create_dot_graphs(field, authorID)
     else:
         df = read_top_authors(field)
         df = df[['authorID', 'name', 'paperCount', 'hIndex', 'fellow']]
         df = df.sort_values(by='hIndex', ascending=False)
-        for index, row in tqdm(df.iterrows(), total=df.shape[0]):
-            authorID = row['authorID']
-            load_author(field, authorID)
-            create_graphs(field, authorID)
+        # for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+        #     authorID = row['authorID']
+        #     load_author(field, authorID)
+        #     create_graphs(field, authorID)
+        #     create_dot_graphs(field, authorID)
+        authorID_list = df['authorID'].tolist()
+        multiprocess_num = multiprocessing.cpu_count()
+        with multiprocessing.Pool(processes=multiprocess_num) as pool:
+            pool.map(process_batch, [(field, authorID_list[i::multiprocess_num], f'{i}/{multiprocess_num}') for i in range(multiprocess_num)])
+
     
     site = f'{base_url}/static/json/{field}'
     if not os.path.exists(f'static/json/{field}/topic.csv'):
@@ -278,29 +642,43 @@ def topicflow(request):
     })
 
 def simplifyTopicDistribution(field):
+    print(f"Loading data for field: {field}")
     df = pd.read_csv(f'csv/{field}/paperIDDistribution.csv', dtype={'paperID': str})
     df.set_index('paperID', inplace=True)
     df.columns = df.columns.str.replace('topic_', '')
 
     # 将0.0替换为NaN
-    df[df < 0.01] = 0
-    df.replace(0.0, np.nan, inplace=True)
+    # df[df < 0.01] = 0
+    # df.replace(0.0, np.nan, inplace=True)
 
-    # 保留小数点后3位
-    df.iloc[:, 1:] = df.iloc[:, 1:].applymap(lambda x: round(x, 3) if not pd.isnull(x) else np.nan)
-    df.to_csv(f'csv/{field}/paperIDDistribution.csv', index=True)
+    # # 保留小数点后3位
+    # print("Rounding values to three decimals...")
+    # df.iloc[:, 1:] = df.iloc[:, 1:].applymap(lambda x: round(x, 3) if not pd.isnull(x) else np.nan)
+    # df.to_csv(f'csv/{field}/paperIDDistribution.csv', index=True)
 
-    # 转换为字典，并过滤非空值，如果非空值超过10个，则只保留最高的10个
+    # 转换为字典，并过滤非空值，如果非空值超过10个，则只保留最高的topN个
+    print("Converting to dict...")
+    simThreshold = 0.55
+    topN = 3
     def row_to_filtered_dict(row):
         # 过滤非空值
-        filtered_row = {key: value for key, value in row.items() if pd.notna(value)}
-        # 如果非空值超过10个，只保留最高的10个值
-        if len(filtered_row) > 10:
+        filtered_row = {key: float(value) for key, value in row.items() if pd.notna(value)}
+        if 'paperID' in filtered_row:
+            filtered_row.pop('paperID')
+        # 记录value最大的key
+        max_key = max(filtered_row.items(), key=operator.itemgetter(1))[0]
+
+        if len(filtered_row) > topN:
             # 根据值排序并取最高的10个
-            top_10_keys = sorted(filtered_row, key=filtered_row.get, reverse=True)[:10]
-            return {key: filtered_row[key] for key in top_10_keys if key != 'paperID'}
+            topN_keys = sorted(filtered_row, key=filtered_row.get, reverse=True)[:topN]
+            ret = {key: filtered_row[key] for key in topN_keys}
         else:
-            return {key: value for key, value in filtered_row.items() if key != 'paperID'}
+            ret = filtered_row.items()
+        ret = {key: value for key, value in ret.items() if value >= simThreshold}
+        if max_key not in ret:
+            ret[max_key] = filtered_row[max_key]
+
+        return ret
 
     # 应用转换
     df_dict = df.apply(row_to_filtered_dict, axis=1).to_dict()

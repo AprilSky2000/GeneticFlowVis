@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Topic Prism</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+    .prism-container {
+      position: relative;
+      width: 1000px;
+      height: 1000px;
+      perspective: 2000px;
+      overflow: hidden;
+      border: 1px solid #000;
+    }
+    .prism {
+      position: absolute;
+      width: 100%;
+      height: 60%;
+      margin-top: 20%;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+    }
+    .svg-wrapper {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      transform-origin: center;
+    }
+    @keyframes rotate {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
+    }
+    .center-marker, .origin-marker {
+      position: absolute;
+      width: 2px;
+      height: 600px;
+      background-color: red;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .origin-marker {
+      background-color: blue;
+      transform: translateX(-50%) translateY(300px);
+    }
+    .slider-container {
+      position: absolute;
+      top: 50%;
+      right: -50px;
+      transform: translateY(-50%);
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggle-rotation">切换旋转</button>
+  <div class="prism-container" id="container">
+    <div id="prism" class="prism">
+      <div class="center-marker"></div>
+      <div class="origin-marker"></div>
+    </div>
+    <div class="slider-container">
+      <input type="range" id="view-angle" min="0" max="90" value="90" style="writing-mode: bt-lr; transform: rotate(-90deg);">
+      <label for="view-angle">视角调整</label>
+    </div>
+  </div>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script>
+    const prism = document.getElementById('prism');
+    const container = document.getElementById('container');
+    let isRotating = true;
+    let lastMouseX;
+    let rotationAngleY = 0;
+    let rotationAngleX = 90;
+    let perspectiveDistance = 2000;
+
+    const topics = [
+      { name: "Topic 1", size: 120 },
+      { name: "Topic 2", size: 96 },
+      { name: "Topic 3", size: 72 },
+      { name: "Topic 4", size: 48 },
+      { name: "Topic 5", size: 24 }
+    ];
+
+    const prismWidth = container.offsetWidth;
+    const totalSize = d3.sum(topics, d => d.size);
+    const radius = 500;
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    let currentAngle = 0;
+    topics.forEach((topic, i) => {
+      const topicAngle = (topic.size / totalSize) * 360;
+      currentAngle += topicAngle / 2;
+      const theta = (topic.size / totalSize) * 2 * Math.PI;
+      
+      const width = 2 * radius * Math.sin(theta / 2);
+      const distance = radius * Math.cos(theta / 2);
+
+      svgWrapper = d3.select("#prism").append("div")
+        .attr("class", "svg-wrapper")
+        .style("transform", `rotateY(${currentAngle}deg) translateZ(${distance}px) translateX(${prismWidth/2}px)`);
+
+      // height 与 svg-wrapper 的高度一致
+      const height = svgWrapper._groups[0][0].offsetHeight;
+
+      const svg = svgWrapper.append("svg")
+        .style("overflow", "visible");
+
+      svg.append("rect")
+        .attr("x", -width / 2)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", color(i))
+        .attr("stroke", "#000")
+        .attr("stroke-width", 1);
+
+      svg.append("text")
+        .attr("x", 0)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .attr("fill", "#000")
+        .text(topic.name);
+
+      currentAngle += topicAngle / 2;
+    });
+
+    document.getElementById('toggle-rotation').addEventListener('click', function() {
+      isRotating = !isRotating;
+      this.textContent = isRotating ? '停止旋转' : '开始旋转';
+      prism.style.animation = isRotating ? 'rotate 20s infinite linear' : 'none';
+    });
+
+    container.addEventListener('mousedown', function(event) {
+      lastMouseX = event.clientX;
+      document.addEventListener('mousemove', mouseMoveHandler);
+      document.addEventListener('mouseup', function() {
+        document.removeEventListener('mousemove', mouseMoveHandler);
+      });
+    });
+
+    function mouseMoveHandler(event) {
+      const deltaX = event.clientX - lastMouseX;
+      lastMouseX = event.clientX;
+      rotationAngleY += deltaX / 5;
+      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+    }
+
+    container.addEventListener('wheel', function(event) {
+      perspectiveDistance += event.deltaY * 2;
+      container.style.perspective = `${perspectiveDistance}px`;
+    });
+
+    const viewAngleSlider = document.getElementById('view-angle');
+    viewAngleSlider.addEventListener('input', function() {
+      rotationAngleX = this.value;
+      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+    });
+
+    if (isRotating) {
+      prism.style.animation = 'rotate 20s infinite linear';
+    }
+  </script>
+</body>
+</html>

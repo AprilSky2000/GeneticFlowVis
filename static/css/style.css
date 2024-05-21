@@ -1,3 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
+
+
+.pt-sans-narrow-regular {
+	font-family: "PT Sans Narrow", sans-serif;
+	font-weight: 400;
+	font-style: normal;
+}
+
+.pt-sans-narrow-bold {
+	font-family: "PT Sans Narrow", sans-serif;
+	font-weight: 700;
+	font-style: normal;
+}
+  
+.archivo-narrow-regular {
+	font-family: "Archivo Narrow", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 400;
+	font-style: normal;
+}
+
 .container-fluid {
 	display: flex;
 	flex-direction: column;
@@ -122,7 +145,7 @@ ul.address-text p {
 	align-items: center;
 	position: absolute;
 	margin-top: 10px;
-	right: 40%;
+	right: 37%;
 	max-width: 1000px;
 }
 
@@ -137,7 +160,7 @@ ul.address-text p {
 	/* overflow: hidden; */
 	/* margin-left: 40%; */
 	margin-top: 10px;
-	right: 25%;
+	right: 22%;
 }
 
 .icon-button {
@@ -270,6 +293,29 @@ tr:hover {
 	border-radius: 3.3px;
 	border: 0.2px solid rgba(1, 1, 1, 0);
 } */
+
+/* 专门为垂直滑块定义的样式，覆盖默认样式。注意先写垂直，后写水平 */
+.vertical-slider .noUi-connect {
+    width: 6px !important; /* 对于垂直滑块，调整连接部分的宽度 */
+    height: 80vh!important;
+}
+
+.vertical-slider .noUi-target,
+.vertical-slider .noUi-base,
+.vertical-slider input[type=range] {
+    width: 6px !important; /* 调整轨道宽度为垂直滑块适用的宽度 */
+	height: 80vh!important;
+}
+
+.noUi-vertical {
+	width: 6px !important;
+}
+
+.noUi-vertical .noUi-handle {
+	right: -5px !important;
+	top: -8px !important;
+}
+
 .noUi-target {
 	background: none !important;
 	height: auto !important;
@@ -316,6 +362,9 @@ input[type=range]::-webkit-slider-thumb {
 .noUi-handle::after {
 	content: none !important;
 }
+
+
+
 
 /*自定义滑动条获得焦点时的背景颜色*/
 /* input[type=range]:focus::-webkit-slider-runnable-track {
@@ -553,3 +602,4 @@ input:checked + .slider:before {
 	font-weight: 400;
 	src: url(https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wWw.ttf) format('truetype');
   }
+
