@@ -1,0 +1,7 @@
+Performing system checks...
+
+System check identified no issues (0 silenced).
+May 22, 2024 - 14:09:59
+Django version 3.2, using settings 'GFVis.settings'
+Starting development server at http://0.0.0.0:9050/
+Quit the server with CONTROL-C.

@@ -1,0 +1,1 @@
+nohup python manage.py runserver 0.0.0.0:9050 2>&1 > ui.log &

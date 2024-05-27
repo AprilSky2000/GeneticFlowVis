@@ -1,29 +1,23 @@
 window.onload = checkScreenSize;
 
-// global variable (selectedTopic == null)
-let global_graph, global_params, global_years, global_nodes, 
-    global_edges, global_polygon, global_paper_field;
+// global variable (STopic == null)
+let global_nodes, global_edges, global_paper_field, minYear, maxYear;
 
 // subgraph variable (global / subgraph, the graph to render)
-let graph, params, years, nodes, edges, polygon, paper_field;
 
-let processedNodes, processedEdges;
+let topic2graph = {};
+let STopic = null;
 
-// current variable (for hyperbolic transformation)
-let current_graph;
-let contextEdges = {}, combinedContextEdges = {};;
-let virtualEdges = [];
-let id2attr = {};
+
+let svgWidth, svgHeight;
 let paperID2year = {};
 let dot = '';
 let edgeBundling = 6;
 let context_edge_weight = 3;
 
-let edgePathId2Attr = {}
-let viewBoxWidth, viewBoxHeight, svgWidth, svgHeight, moveDistance_r, moveDistance_l;
 let viz, vizContext, config, visType, authorData;
 let g, gr, gl;  // maingroup, fixedgroup_r, fixedgroup_l
-let selectedTopic = null;
+
 let adjacent_ids = [];
 let extend_ids = [];
 let center_node = null;
@@ -40,7 +34,6 @@ let arrangement = [], adjacentMatrix;
 let originalCost, bestCost;
 let bbox, bbox_padding_x=10, bbox_padding_y=100;
 let yearGrid = 2, alpha = 10;
-let minYear, maxYear;
 let virtualOpacity = 0.1;
 let topicOpacity = 0.25;
 let maxOpacity = 0.8;
@@ -87,16 +80,12 @@ function addAllListeners() {
 
     $("#yearGridSlider").change(function () {
         yearGrid = $("#yearGridSlider").val();
-        if (visType == 5) {
-            temporalThematicFlow();
-        } else {
-            init_graph();
-        }
+        loadAndRender()
     })
 
     $("#alphaSlider").change(function () {
         alpha = $("#alphaSlider").val();
-        renderDot();
+        loadAndRender()
     })
 
     $("#vis-type").change(updateVisType);
@@ -153,19 +142,10 @@ function addAllListeners() {
     $("#restore").click(function() {
         reset_graph();
     });
-    $("#show-years").click(function() {
-        showYears = !showYears;
-        console.log('showYears', showYears)
-        if(showYears) {
-            draw_paper_field(gr, paper_field, nodes);
-        } else {
-            gr.selectAll('*').remove();
-        }
-    })
 
     $("#edge-bundling").on('change', function() {
         edgeBundling = parseInt(this.value);
-        renderDot();
+        loadAndRender();
     })
     
 
@@ -259,16 +239,12 @@ function toggleFullscreen() {
 
 function onFullscreenChange() {
     // 在这里执行其他操作
-    console.log('Fullscreen changed!', graph);
     checkScreenSize();
 
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-    init_graph(graph);
-
-    if (nodes.length > 0 && selectedTopic == null) {
-        draw_tagcloud();
-        visual_topics();
-    }
+    loadAndRender();
+    draw_tagcloud();
+    visual_topics();
     
     updateSider(name);
 }
@@ -328,13 +304,14 @@ function updateSider (name) {
             <b style="margin-right: 1%; margin-left: 5%; font-size:16px;">#Citation</b>
         </div>`
     );
-    nodes = nodes.sort(op("citationCount"));
-    for (let i = 0; i < nodes.length; i++) {
-        const paperName = String(nodes[i].name);
-        const paperVenu = String(nodes[i].venu);
-        const paperYear = String(nodes[i].year);
+    
+    global_nodes = global_nodes.sort(op("citationCount"));
+    for (let i = 0; i < global_nodes.length; i++) {
+        const paperName = String(global_nodes[i].name);
+        const paperVenu = String(global_nodes[i].venu);
+        const paperYear = String(global_nodes[i].year);
 
-        var authors = String(nodes[i].authors);
+        var authors = String(global_nodes[i].authors);
         if (authors == "") {
             authors = name;
         }
@@ -346,10 +323,10 @@ function updateSider (name) {
             else 
                 paperAuthors += authorList[i] + ", ";
         }
-        var color = topic2color(nodes[i].topic, 0.7) // hsvToHex(nodes[i].color[0], 0.7, nodes[i].color[2]);
-        var nodeId = nodes[i].id;
-        var citationCount = nodes[i].citationCount;
-        if (nodes[i].citationCount == '-1') {
+        var color = topic2color(global_nodes[i].topic, 0.7) // hsvToHex(graph['nodes'][i].color[0], 0.7, graph['nodes'][i].color[2]);
+        var nodeId = global_nodes[i].id;
+        var citationCount = global_nodes[i].citationCount;
+        if (global_nodes[i].citationCount == '-1') {
             citationCount = "not available";
         }
         var content = `
@@ -566,7 +543,7 @@ function draw_tagcloud(min=0, max=Infinity) {
         })
         .on('mouseout', reset_field)
         .on('click', d => {
-            selectedTopic = selectedTopic == d.id? null: d.id;
+            STopic = STopic == d.id? null: d.id;
             reset_tag();
             tip.hide(d);
             highlight_tag(d.id);
@@ -676,6 +653,8 @@ function create_svg(viewBox=undefined, transform=undefined) {
     if (!viewBox) {
         viewBox = `0 0 ${svgWidth} ${svgHeight}`;
     }
+
+    let viewBoxWidth = parseFloat(viewBox.split(' ')[2]);
     let viewBoxHeight = parseFloat(viewBox.split(' ')[3]);
     if (!transform) {
         transform = `translate(0,${viewBoxHeight})`;
@@ -692,10 +671,8 @@ function create_svg(viewBox=undefined, transform=undefined) {
     svg.call(tip);
 
     //获取viewBox的宽度
-    viewBoxWidth = parseFloat(viewBox.split(' ')[2]);
-    viewBoxHeight = parseFloat(viewBox.split(' ')[3]);
-    moveDistance_r = Math.max(viewBoxWidth, viewBoxWidth / 2 +  svgWidth * viewBoxHeight / svgHeight / 2) * 0.95;
-    moveDistance_l = Math.min(0, viewBoxWidth / 2 -  svgWidth * viewBoxHeight / svgHeight / 2) * 0.95;
+    let moveDistance_r = Math.max(viewBoxWidth, viewBoxWidth / 2 +  svgWidth * viewBoxHeight / svgHeight / 2) * 0.95;
+    let moveDistance_l = Math.min(0, viewBoxWidth / 2 -  svgWidth * viewBoxHeight / svgHeight / 2) * 0.95;
 
     let fixedXTranslation_r = "translate(" + moveDistance_r + ",0)"; // 将fixedX作为X方向的平移，Y方向保持为0
     let fixedXTranslation_l = "translate(" + moveDistance_l + ",0)"; // 将fixedX作为X方向的平移，Y方向保持为0
@@ -787,15 +764,13 @@ function clickEdge(id) {
         .style("opacity", 1);
 }
 
-function init_graph(curGraph=graph) {
-    [params, years, nodes, edges, polygon] = curGraph;
-    [viewBox, transform] = params;
+function init_graph(graph) {
     visType = $("#vis-type").val();
-    create_svg(viewBox, transform);
+    create_svg(graph['viewBox'], graph['transform']);
 
-    if (visType == 8) draw_context_edges();
+    if (visType == 8 && STopic !== null) draw_context_edges(graph);
 
-    g.selectAll('circle').data(nodes).enter().append('ellipse')
+    g.selectAll('circle').data(graph['nodes']).enter().append('ellipse')
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
         .attr('rx', d => d.rx)
@@ -816,8 +791,7 @@ function init_graph(curGraph=graph) {
             tip.hide(d);
         });
 
-    draw_paper_field(gr, paper_field, nodes);
-    g.selectAll('.text1').data(nodes).enter().append('text')
+    g.selectAll('.text1').data(graph['nodes']).enter().append('text')
         .attr('x', d => d.x)
         .attr('y', d => d.y)
         .attr('text-anchor', 'middle')
@@ -840,7 +814,7 @@ function init_graph(curGraph=graph) {
     // 绘制每条边的所有路径
     // 为每条边创建一个独立的group元素
     const edgeGroups = g.selectAll('.edge-group')
-    .data(edges) // 使用edges数组，每个元素代表一条边
+    .data(graph['edges']) // 使用edges数组，每个元素代表一条边
     .enter()
     .append('g')
     .attr('class', 'edge-group');
@@ -850,11 +824,6 @@ function init_graph(curGraph=graph) {
         const edgeGroup = d3.select(this);
 
         // console.log('draw edge', edge, probToOpacity(edge.extends_prob), probToWidth(edge.extends_prob))
-        
-        edgePathId2Attr[edge.name] = {
-            color: 'black',
-            width: probToWidth(edge.extends_prob)
-        }
         edgeGroup.selectAll('.edge-path')
             .data(edge.path) // 绑定每条边的路径数组
             .enter()
@@ -914,23 +883,13 @@ function init_graph(curGraph=graph) {
 
     bbox = g.node().getBBox();
 
-    if (selectedTopic != null) {
+    if (STopic != null) {
         draw_bbox();
-        if (visType == 0) draw_topic_matrix();
-        else if (visType == 6) draw_topic_bar();
-        else if (visType == 7) draw_topic_side();
-        else if (visType == 8) draw_context();
+        if (visType == 8) draw_context(graph);
     }
 }
 
-function get_context_edge_color(name) {
-    let edge = combinedContextEdges[name].edges[0];
-    let node = global_nodes.find(n => n.id == (name[0] == 'l'? edge.source: edge.target));
-    let color = topic2color(node.topic);
-    return color;
-}
-
-function draw_context() {
+function draw_context(graph) {
     // draw context bar
 
     context_l = {};
@@ -939,7 +898,7 @@ function draw_context() {
 
     let all_years_l = [], all_years_r = [];
     let totalWidth = bbox.width;
-    for (let edge of Object.values(combinedContextEdges)) {
+    for (let edge of Object.values(graph['combinedContextEdges'])) {
         let years = edge.name.split('->');
         if (edge.name[0] == "l") {
             all_years_l.push(years[0].substring(1));
@@ -952,7 +911,7 @@ function draw_context() {
     console.log('all_years', all_years_l, all_years_r);
 
 
-    for (let edge of Object.values(combinedContextEdges)) {
+    for (let edge of Object.values(graph['combinedContextEdges'])) {
         if (edge.name[0] == "l") {
             let year = edge.name.split('->')[0].substring(1);
             for (let e of edge.edges) {
@@ -981,12 +940,12 @@ function draw_context() {
     let totalSize_l = Object.values(context_l).reduce((acc, val) => acc + val.total, 0);
     let totalSize_r = Object.values(context_r).reduce((acc, val) => acc + val.total, 0);
 
-    draw_context_bar(context_l, totalSize_l * totalWidth / (totalSize_l + totalSize_r), 'l');
-    draw_context_bar(context_r, totalSize_r * totalWidth / (totalSize_l + totalSize_r), 'r');
+    draw_context_bar(graph, context_l, totalSize_l * totalWidth / (totalSize_l + totalSize_r), 'l');
+    draw_context_bar(graph, context_r, totalSize_r * totalWidth / (totalSize_l + totalSize_r), 'r');
 
 }
 
-function draw_context_bar(context, width, dir='l') {
+function draw_context_bar(graph, context, width, dir='l') {
     let sorted_keys = Object.entries(context).sort((a, b) => b[1].total - a[1].total).map(entry => entry[0]);
     console.log('context for', dir,  context);
     let totalSize = sorted_keys.reduce((acc, key) => acc + context[key].total, 0);
@@ -1015,7 +974,7 @@ function draw_context_bar(context, width, dir='l') {
                         node: global_nodes.find(n => n.id == nodeID),
                         topic: topicID,
                         year: year,
-                        y: id2attr['l' + year].y - squareSize / 2,
+                        y: graph['id2attr']['l' + year].y - squareSize / 2,
                         x: leftX,
                         edge: [edge]
                     });
@@ -1070,12 +1029,12 @@ function draw_context_bar(context, width, dir='l') {
         Object.keys(context[topicID]).forEach(year => {
             if (year === 'total') return true;
             // 先添加右侧点
-            topicPaths[topicID].push([context[topicID][year].M, id2attr['l' + year].y - squareSize /2]); // 右上
-            topicPaths[topicID].push([context[topicID][year].M, id2attr['l' + year].y + squareSize /2]); // 右下
+            topicPaths[topicID].push([context[topicID][year].M, graph['id2attr']['l' + year].y - squareSize /2]); // 右上
+            topicPaths[topicID].push([context[topicID][year].M, graph['id2attr']['l' + year].y + squareSize /2]); // 右下
             
             // 然后添加左侧点
-            topicPaths[topicID].unshift([context[topicID][year].m, id2attr['l' + year].y - squareSize /2]); // 左上
-            topicPaths[topicID].unshift([context[topicID][year].m, id2attr['l' + year].y + squareSize /2]); // 左下
+            topicPaths[topicID].unshift([context[topicID][year].m, graph['id2attr']['l' + year].y - squareSize /2]); // 左上
+            topicPaths[topicID].unshift([context[topicID][year].m, graph['id2attr']['l' + year].y + squareSize /2]); // 左下
             
         })
     });
@@ -1146,12 +1105,12 @@ function draw_context_bar(context, width, dir='l') {
         .attr("y", center[1])
         .attr("width", totalSize  * squareSize / 4)
         .attr("height", squareSize * 2)
-        .attr("fill", topic2color(selectedTopic))
+        .attr("fill", topic2color(STopic))
         .attr("fill-opacity", topicOpacity)
-        .attr("class", "context-polygon context-polygon_" + selectedTopic)
+        .attr("class", "context-polygon context-polygon_" + STopic)
         .on('mouseover', function() {
-            let field = global_paper_field.find(d => d.id == selectedTopic);
-            highlight_field(selectedTopic);
+            let field = global_paper_field.find(d => d.id == STopic);
+            highlight_field(STopic);
             tip.show({name: field.name + '\n' + totalSize});
             d3.select(this).attr('cursor', 'pointer');
         })
@@ -1163,8 +1122,8 @@ function draw_context_bar(context, width, dir='l') {
         .attr("text-anchor", "middle")
         .attr("font-family", "Archivo Narrow")
         .attr("font-size", Math.sqrt(totalSize) * 10)
-        .attr("class", "context-text context-text_" + selectedTopic)
-        .text(selectedTopic + resuffix) // dir=='l'? selectedTopic + '→': '→' + selectedTopic
+        .attr("class", "context-text context-text_" + STopic)
+        .text(STopic + resuffix) // dir=='l'? STopic + '→': '→' + STopic
         .attr("pointer-events", "none");
 
     // 绘制方块
@@ -1200,46 +1159,42 @@ function draw_context_bar(context, width, dir='l') {
 
 }
 
-function draw_context_edges() {
-    console.log('draw context', combinedContextEdges);
+function draw_context_edges(graph) {
+    console.log('draw context', graph['combinedContextEdges']);
 
-    // draw context edges:
-    // - edge id in Object.keys(contextEdges)
-    // - using id2attr[edge]  to get the Path
-    // - using contextEdges[edge].length to get width
-    // - using all edges in contextEdges[edge], find the target and use topic of target to get color
+    // draw context graph['edges']:
+    // - edge id in Object.keys(graph['contextEdges'])
+    // - using graph['id2attr'][edge]  to get the Path
+    // - using graph['contextEdges'][edge].length to get width
+    // - using all graph['edges'] in graph['contextEdges'][edge], find the target and use topic of target to get color
 
     const edgeGroups = g.selectAll('.edge-group-context')
-    .data(Object.keys(combinedContextEdges)) // 使用edges数组，每个元素代表一条边
+    .data(Object.keys(graph['combinedContextEdges'])) // 使用edges数组，每个元素代表一条边
     .enter()
     .append('g')
     .attr('class', 'edge-group-context');
 
     // 在每个group中为每条边添加path元素
     edgeGroups.each(function(edge) {
-        if (!Object.keys(id2attr).includes(edge)) {
-            console.log('context edge not found, maybe flat edges', edge, id2attr[edge])
+        if (!Object.keys(graph['id2attr']).includes(edge)) {
+            console.log('context edge not found, maybe flat-edges', edge, graph['id2attr'][edge])
             return true;    // continue
         }
         const edgeGroup = d3.select(this);
 
-        edgePathId2Attr[edge] = {
-            color: 'lightgray',
-            width: combinedContextEdges[edge].weight * context_edge_weight
-        }
         edgeGroup.selectAll('.edge-path')
-            .data(id2attr[edge].path)
+            .data(graph['id2attr'][edge].path)
             .enter()
             .append('path')
             .attr('d', d=>{
-                d.width = combinedContextEdges[edge].weight * context_edge_weight;
+                d.width = graph['combinedContextEdges'][edge].weight * context_edge_weight;
                 d.color = 'lightgray';
                 return d.d
             })
             .style("fill", 'none')
             .style("stroke", 'lightgray')
             .style('stroke-opacity', 0.5)
-            .style('stroke-width', combinedContextEdges[edge].weight * context_edge_weight)
+            .style('stroke-width', graph['combinedContextEdges'][edge].weight * context_edge_weight)
             .attr('class', 'edge-path')
             .attr('id', selectorById(edge))
             .on('mouseover', function () {
@@ -1247,8 +1202,8 @@ function draw_context_edges() {
                 tip.show(edge);
             })
             .on('click', function () {
-                if (combinedContextEdges[edge].weight == 1) {
-                    let e = combinedContextEdges[edge].edges[0];
+                if (graph['combinedContextEdges'][edge].weight == 1) {
+                    let e = graph['combinedContextEdges'][edge].edges[0];
                     highlight_edge(`${e.source}->${e.target}`);
                 }
                 clickEdge(edge);
@@ -1258,12 +1213,12 @@ function draw_context_edges() {
                 tip.hide(edge);
             });
 
-        if (!id2attr[edge].polygon) {
+        if (!graph['id2attr'][edge].polygon) {
             return true;
         }
-        // console.log('draw polygon', edge, id2attr[edge].polygon.points)
+        // console.log('draw polygon', edge, graph['id2attr'][edge].polygon.points)
         d3.select(this).append('polygon')
-            .attr('points', id2attr[edge].polygon.points)
+            .attr('points', graph['id2attr'][edge].polygon.points)
             .style("stroke", 'none')
             .style("fill", d=>{
                 d.color = 'lightgray';
@@ -1277,8 +1232,8 @@ function draw_context_edges() {
                 tip.show(edge);
             })
             .on('click', function () {
-                if (combinedContextEdges[edge].weight == 1) {
-                    let e = combinedContextEdges[edge].edges[0];
+                if (graph['combinedContextEdges'][edge].weight == 1) {
+                    let e = graph['combinedContextEdges'][edge].edges[0];
                     highlight_edge(`${e.source}->${e.target}`);
                 }
                 clickEdge(edge);
@@ -1336,7 +1291,7 @@ function draw_bbox() {
         .attr('y', bbox.y - bbox_padding_y)
         .attr('width', bbox.width + bbox_padding_x * 2)
         .attr('height', bbox.height + bbox_padding_y * 2)
-        .style("fill", topic2color(selectedTopic, sat=0.04))
+        .style("fill", topic2color(STopic, sat=0.04))
         .style("stroke", 'red')
         .style("stroke-width", 2)
         .attr('filter', 'url(#drop-shadow)')
@@ -1349,17 +1304,17 @@ function draw_bbox() {
         .attr('y', belowY)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Archivo Narrow')
-        .text(getShortName(selectedTopic))
+        .text(getShortName(STopic))
         .attr('font-size', 48)
         .style("fill", 'red')
         .attr('id', 'background-text');
 
     function onClick(shift) {
-        let currentIndex = arrangement.indexOf(selectedTopic);
+        let currentIndex = arrangement.indexOf(STopic);
         let newIndex = currentIndex + shift;
         if (newIndex < 0 || newIndex >= arrangement.length) return;
         let newTopic = arrangement[newIndex];
-        selectedTopic = newTopic;
+        STopic = newTopic;
         loadAndRender();
     }
 
@@ -1416,519 +1371,6 @@ function draw_bbox() {
         .attr('pointer-events', 'none');
 }
 
-function draw_topic_bar() {
-    // let { processedNodes, processedEdges } = processData(global_nodes, global_edges);
-    // console.log('processedNodes', processedNodes, 'processedEdges', processedEdges);
-
-    let paper_field_filter = global_paper_field.filter(item => item.id != selectedTopic);
-    
-    let nodes_in = [], nodes_out = [];
-
-    for (let [k, v] of Object.entries(processedEdges)) {
-        if (k[0] == '-') {
-            let targets = v.map(d => d.target);
-            console.log('targets', targets)
-            global_nodes.forEach(d => {
-                if (targets.includes(d.id)) {
-                    nodes_out.push(d);
-                }
-            })
-        } else {
-            let sources = v.map(d => d.source);
-            console.log('sources', sources)
-            global_nodes.forEach(d => {
-                if (sources.includes(d.id)) {
-                    nodes_in.push(d);
-                }
-            })
-        }
-    }
-
-    // 删除gr元素
-    d3.select("#fixedgroup_r").selectAll("*").remove();
-    
-    let middle_shift = Math.min(viewBoxWidth, svgWidth * viewBoxHeight / svgHeight / 2);
-    console.log('shift', middle_shift, viewBoxWidth / 2 -  middle_shift, viewBoxWidth / 2 +  middle_shift)
-    draw_paper_field(g, paper_field_filter, nodes_in, right=false, 
-        shift=viewBoxWidth / 2 -  middle_shift);
-    draw_paper_field(g, paper_field_filter, nodes_out, right=true, 
-        shift=viewBoxWidth / 2 +  middle_shift);
-
-    let edge_data = [], node_data = {};
-    contextEdges = {};
-    for (let [k, v] of Object.entries(processedEdges)) {
-        if (k[0] == '-') {
-            v.forEach(d => {
-                let srcNode = nodes.find(node => node.id == d.source);
-                let tgtNode = global_nodes.find(node => node.id == d.target);
-                edge_data.push({
-                    source: d.source,
-                    target: d.target + 'out',
-                    name: `${d.source}->${d.target}`,
-                    edge: d,
-                    color: topic2color(paperID2topic[d.target], sat=0.7),
-                    in: false
-                });
-                node_data[d.source] = {x: srcNode.x, y: srcNode.y};
-                node_data[d.target + 'out'] = {x: tgtNode.outx + 25, y: tgtNode.outy};
-
-                let edge_name = `${d.source}->r${paperID2year[d.target]}`;
-                if(contextEdges[edge_name]) contextEdges[edge_name] += 1;
-                else contextEdges[edge_name] = 1;
-            })
-        } else {
-            v.forEach(d => {
-                let srcNode = global_nodes.find(node => node.id == d.source);
-                let tgtNode = nodes.find(node => node.id == d.target);
-                edge_data.push({
-                    source: d.source + 'in',
-                    target: d.target,
-                    name: `${d.source}->${d.target}`,
-                    edge: d,
-                    color: topic2color(paperID2topic[d.source], sat=0.7),
-                    in: true
-                });
-                node_data[d.source + 'in'] = {x: srcNode.inx + 25, y: srcNode.iny};
-                node_data[d.target] = {x: tgtNode.x, y: tgtNode.y};
-
-                let edge_name = `l${paperID2year[d.source]}->${d.target}`;
-                if(contextEdges[edge_name]) contextEdges[edge_name] += 1;
-                else contextEdges[edge_name] = 1;
-            })
-        }
-    }
-    console.log('bar fbundling: node_data', node_data, 'edge_data', edge_data);
-    var fbundling = d3.ForceEdgeBundling()
-            .compatibility_threshold(0.6)
-            .iterations(100)
-            .nodes(node_data)
-            .edges(edge_data);
-    var results   = fbundling();
-    console.log('fbundling results', results)
-    var d3line = d3.line().x(d=>d.x).y(d=>d.y).curve(d3.curveLinear);
-    // 按照processedEdges添加边
-    // g.selectAll('.link')
-    //     .data(edge_data)
-    //     .enter()
-    //     .append('path')
-    //     .attr('d', d => `M ${node_data[d.source].x} ${node_data[d.source].y} L ${node_data[d.target].x} ${node_data[d.target].y}`)
-    //     .style("stroke", d=> d.color)
-    //     .style("fill", 'none')
-    //     .style("stroke-width", d=>probToWidth(d.edge.extends_prob))
-    //     .style("stroke-opacity", d=>probToOpacity(d.edge.extends_prob))
-    //     .attr('class', d => `link link_${paperID2topic[d.edge.source]} link_${paperID2topic[d.edge.target]}`)
-    //     .on('mouseover', function(d) {
-    //         d3.select(this).attr('cursor', 'pointer').style("stroke", 'red');
-    //         tip.show(d.edge);
-    //     })
-    //     .on('mouseout', function(d) {
-    //         d3.select(this).attr('cursor', 'default').style("stroke", d=> d.color);
-    //         tip.hide(d.edge);
-    //     })
-    //     .on('click', d => {
-    //         highlight_edge(d.edge.name);
-    //     });
-    results.forEach((data, ix) => { 
-        // for each of the arrays in the results 
-        // draw a line between the subdivions points for that edge
-        // let opacity = edge.prob / edge.count / 2;
-        let edge = edge_data[ix];
-        g.append("path")
-            .attr("d", d3line(data))
-            .style("stroke", edge.color)
-            .style("fill", 'none')
-            .style("stroke-width", d=>probToWidth(edge.edge.extends_prob))
-            .style("stroke-opacity", d=>probToOpacity(edge.edge.extends_prob))
-            .attr('class', 
-            `link link_${paperID2topic[edge.edge.source]} link_${paperID2topic[edge.edge.target]} link_${edge.in}
-                link_${edge.edge.source} link_${edge.edge.target}`)
-            .on('mouseover', function(d) {
-                d3.select(this).attr('cursor', 'pointer').style("stroke", 'red');
-                tip.show(edge);
-            })
-            .on('mouseout', function(d) {
-                d3.select(this).attr('cursor', 'default').style("stroke", edge.color);
-                tip.hide(edge);
-            })
-            .on('click', function(d) {
-                console.log(edge, node_data[edge.source], node_data[edge.target]);
-                highlight_edge(edge.name);
-            });
-    });
-}
-
-
-
-function draw_topic_matrix() {
-    // 在当前有选择单个topic时，绘制背景，包括：
-    // - 在当前g元素按照 arrangement 的顺序绘制其他话题的节点
-    // - 连接当前话题与其他话题的边
-
-    // let DISTANCE = 100;
-    let DISTANCE = d3.select("#mainsvg").node().getBoundingClientRect().width;
-    // 根据arrangement顺序，计算processedNodes中每个节点的坐标：
-    // 横坐标是 bbox.x - padding - DISTANCE * arrangement差值（在选择话题左边），bbox.x + bbox.width + padding + DISTANCE * arrangement差值（在选择话题右边）
-    // 纵坐标与内部节点的 y 一致
-    let selectedIndex = arrangement.indexOf(parseInt(selectedTopic));
-    // 遍历processedNodes对象的 k, v
-    var pie = d3.pie().value(1);
-    let topicString={};
-
-    let hyperbolicTransform = x => tanh(inverse(x  / arrangement.length) * 5) * 2;
-
-    for (let [k, v] of Object.entries(processedNodes)) {
-        let [year, topic] = k.split('_');
-        let currentIndex = arrangement.indexOf(parseInt(topic));
-        // console.log(year, topic, k, v)
-        v.y = year < minYear? years.find(d => d.id == minYear).y:  years.find(d => d.id == year).y;
-        if (currentIndex < selectedIndex) {
-            v.x = bbox.x - bbox_padding_x - DISTANCE * hyperbolicTransform(selectedIndex - currentIndex);
-        }
-        else if (currentIndex > selectedIndex) {
-            v.x = bbox.x + bbox.width + bbox_padding_x + DISTANCE * hyperbolicTransform(currentIndex - selectedIndex);
-        }
-
-        if (topicString[topic] == undefined) {
-            topicString[topic] = {
-                x: v.x,
-                minY: v.y,
-                maxY: v.y
-            };
-        } else {
-            topicString[topic] = {
-                x: v.x,
-                id: topic,
-                minY: Math.min(topicString[topic].minY, v.y),
-                maxY: Math.max(topicString[topic].maxY, v.y),
-                name: fields[topic][2]
-            };
-        }
-    }
-
-    console.log('topicString', topicString);
-    // 根据topicString，绘制一条线连接话题头尾
-
-    edge_data = [];
-    let connectedNodes = [];
-    console.log('processedEdges', processedEdges, Object.entries(processedEdges))
-    for (let [k, v] of Object.entries(processedEdges)) {
-        // console.log('k', k, 'v', v);
-        if (k[0] == '-') {
-            let target = k.substring(1);
-            v.forEach(d => {
-                edge_data.push({
-                    source: d.source,
-                    target: target,
-                    topic: paperID2topic[d.source],
-                    t1: paperID2topic[d.source],
-                    t2: paperID2topic[d.target],
-                    edge: d,
-                    name: d.source + '->' +  d.target,
-                    in: false
-                });
-                connectedNodes.push(d.target);
-            })
-        } else {
-            // k 去掉最后一个字母
-            let source = k.substring(0, k.length - 1);
-            v.forEach(d => {
-                edge_data.push({
-                    source: source,
-                    target: d.target,
-                    topic: source.split('_')[1],
-                    t1: paperID2topic[d.source],
-                    t2: paperID2topic[d.target],
-                    edge: d,
-                    name: d.source + '->' + d.target,
-                    in: true
-                });
-                connectedNodes.push(d.source);
-            })
-        }
-    }
-
-    function hasConnectedNodes(topic) {
-        for (let k of connectedNodes) {
-            if (paperID2topic[k] == topic) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    for (let [k, v] of Object.entries(topicString)) {
-        // console.log('k', k, 'v', v, topic2color(k));
-        let sat = hasConnectedNodes(k)? 1: 0.1;
-        g.append('path')
-            .attr('d', `M ${v.x} ${v.minY} L ${v.x} ${v.maxY}`)
-            .style("stroke-width", 10)
-            .style("stroke", topic2color(k, sat=sat))
-            .attr('class', "topic-string topic-string_" + k)
-            .on("mouseover", function() {
-                d3.select(this).attr('cursor', 'pointer')
-                .style("stroke", 'red');
-                tip.show(v);
-                highlight_field(v.id);
-            })
-            .on("mouseout", function() {
-                d3.select(this).attr('cursor', 'default')
-                .style("stroke", topic2color(k, sat=1));
-                tip.hide(v);
-                reset_field();
-            })
-        
-        // 在string底下添加文字k
-        g.append('text')
-            .attr('x', v.x)
-            .attr('y', v.maxY + 30)
-            .attr('text-anchor', 'middle')
-            .text(getShortName(k))
-            .attr('font-size', 30)
-            .style("fill", topic2color(k))
-            .attr('class', "topic-string topic-string_" + k)
-            .on("mouseover", function() {
-                d3.select(this).attr('cursor', 'pointer')
-                .style("fill", 'red');
-                highlight_field(v.id);
-                tip.show(v);
-            })
-            .on("mouseout", function() {
-                d3.select(this).attr('cursor', 'default')
-                .style("fill", topic2color(k, sat=1));
-                reset_field();
-            })
-    }
-    
-    for (let [k, v] of Object.entries(processedNodes)) {
-        var arc = d3.arc()
-            .innerRadius(0) // for a pie chart, inner radius is 0
-            .outerRadius(Math.sqrt(v.length)*20);
-        // 根据pieData绘制饼状图
-        let pieData = pie(v);
-        // console.log('pieData', pieData);
-        
-        // 在 x,y 处添加文字： year + topic
-        // g.append('text')
-        //     .attr('x', x)
-        //     .attr('y', y)
-        //     .attr('text-anchor', 'middle')
-        //     .selectAll("tspan")
-        //     .data([year, topic])
-        //     .enter()
-        //     .append("tspan")
-        //     .attr("x", x)
-        //     .attr("dy", (d, i) => i ? "1.2em" : 0) // 为除第一行外的每行设置偏移
-        //     .text(d => d);
-
-        // 确保为每个独立的饼状图创建一个唯一的容器（如 g 元素）。如果不这样做，后续的数据绑定可能会影响到前面已经创建的饼图元素
-        g.append("g") // 为每个饼状图创建一个新的 g 元素
-            .attr("class", "arc-container") // 给这个 g 元素添加类，便于识别
-            .attr('transform', `translate(${v.x}, ${v.y})`) // 设置位置
-            .selectAll("path.arc")
-            .data(pieData)
-            .enter()
-            .append('path')
-            .attr("class", d => "arc arc_" + d.data.topic)
-            .attr("d", arc)
-            .style("fill", d => {
-                // let sat = d.data.citationCount < 50? 0.4: (d.data.citationCount < 100? 0.7: 1);
-                let sat = 0.1;
-                if (connectedNodes.includes(d.data.id)) {
-                    sat=1
-                }
-                return topic2color(d.data.topic, sat=sat);
-            })
-            .on("mouseover", function(d) {
-                d3.select(this).attr('cursor', 'pointer')
-                .style("stroke", 'black');
-                tip.show(d.data);
-            })
-            .on("mouseout", function(d) {
-                d3.select(this).attr('cursor', 'default')
-                .style("stroke", 'none');
-                tip.hide(d.data);
-            })
-            .on("click", function(d) {
-                console.log(d.data.id);
-                highlight_node(d.data.id);
-            });
-    }
-
-    
-    // 绘制边
-    node_data = {}
-    for (let [k, v] of Object.entries(processedNodes)) {
-        node_data[k] = {
-            x: v.x,
-            y: v.y
-        };
-    }
-    nodes.forEach(d => {
-        node_data[d.id] = {
-            x: d.x,
-            y: d.y
-        }; 
-    });
-
-    // 检查是否能找到key
-    // edge_data.filter(d=>node_data[d.source]==undefined)
-    // edge_data.filter(d=>node_data[d.target]==undefined)
-    // 发现d.target = 6，而selectedTopic=6，所以node_data里面没有，edge_data理应没有！
-
-    console.log('fbundling: node_data', node_data, 'edge_data', edge_data);
-    var fbundling = d3.ForceEdgeBundling()
-				.compatibility_threshold(0.6)
-                .iterations(100)
-				.nodes(node_data)
-				.edges(edge_data);
-	var results   = fbundling();
-    console.log('fbundling results', results)
-
-    var d3line = d3.line().x(d=>d.x).y(d=>d.y).curve(d3.curveLinear);
-                    
-    results.forEach((data, ix) => {	
-    // for each of the arrays in the results 
-    // draw a line between the subdivions points for that edge
-        // let opacity = edge.prob / edge.count / 2;
-        let edge = edge_data[ix];
-        let opacity = 1;
-        g.append("path")
-            .attr("d", d3line(data))
-            .style("stroke",  topic2color(edge.topic, sat=0.7))
-            .attr("class", `link link_${edge.t1} link_${edge.t2} link_${edge.in} link_${edge.source} link_${edge.target}`)
-            .style("fill", "none")
-            .style("stroke-width", probToWidth(edge.edge.extends_prob))
-            .style("stroke-opacity", probToOpacity(edge.edge.extends_prob))
-            .on("mouseover", function(d) {
-                d3.select(this).attr('cursor', 'pointer').style("stroke", 'red');
-                tip.show(edge);
-            })
-            .on("mouseout", function(d) {
-                d3.select(this).attr('cursor', 'default').style("stroke",  topic2color(edge.topic, sat=0.7))
-                tip.hide(edge);
-            })
-            .on("click", function(d) {
-                // console.log(edge);
-                highlight_edge(edge.name);
-            });
-    });
-}
-
-
-function draw_paper_field(ele, paper_field, nodes, right=true, shift=0) {
-    console.log('draw_paper_field', ele, paper_field, nodes, right, shift);
-    // 处理柱状图，在ele上绘制话题为paper_field的柱状图，统计所有nodes
-    // ele.selectAll('.year-topic').remove();
-
-    ele.selectAll(`.rect_${right}`).data(years).enter().append('rect')
-        .attr('x', d => d.x - 80 + shift)
-        .attr('y', d => d.y - 40)
-        .attr('width', 150)
-        .attr('height', 80)
-        .style("fill", '#fff')
-        .style("opacity", 0.7)
-        .attr('class', `.rect_${right}`);
-
-    ele.selectAll(`.text_${right}`).data(years).enter().append('text')
-        .attr('x', d => d.x - 20 + shift)
-        .attr('y', d => d.y + 20)
-        .text(d => d.label)
-        .attr('text-anchor', 'middle')
-        .attr('font-family', 'Times New Roman,serif')
-        .attr('font-size', 50)
-        .attr('class', `.text_${right}`);
-    
-    // 因为需要统计各个年份的各个field的分布，是一个二维向量，要绘制柱状图只能在每年的时候将field柱状分布图画出来，所以没有放到visual_topic函数里
-    for (let i = 0; i < years.length; i++) {
-        // var year_field = [];    //该学者每一年的field信息
-        //初始化每一年的field信息：将paper_field中的所有field移到当前年份，并置num=0
-        // for (let j = 0; j < paper_field.length; j++) {
-        //     let dic = {};
-        //     dic.id = paper_field[j].id;
-        //     dic.name = paper_field[j].name.split(':')[0];
-        //     dic.num = 0;
-        //     dic.color = paper_field[j].color;
-        //     year_field.push(dic);
-        // }
-        // //如果是该年发表的论文，将它的topic和该年的field匹配，匹配上的field数量++
-        // for (let j = 0; j < nodes.length; j++) {
-        //     if (nodes[j].year == years[i].id) {
-        //         let topic = parseInt(nodes[j].topic);
-        //         for (let k = 0; k < year_field.length; k++) {
-        //             if (topic == year_field[k].id) {
-        //                 year_field[k].num += 1;
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
-        // var x = years[i].x;
-        // var y = years[i].y;
-        // for (let j = 0; j < year_field.length; j++) {
-        //     year_field[j].name += ': ' + year_field[j].num;
-        //     year_field[j].x = x;
-        //     year_field[j].y = y;
-        //     if (right) x -= year_field[j].num * 40;
-        //     else x += year_field[j].num * 40;
-        //     year_field[j].yearTopicId = String(years[i].id) + String(year_field[j].id);
-        // }
-        // ele.selectAll('circle').data(year_field).enter().append('rect')
-        //     .attr('x', d => (right? d.x - d.num * 40 - 80: d.x + 80) + shift)
-        //     .attr('y', d => d.y - 20)
-        //     .attr('width', d => d.num * 40)
-        //     .attr('height', 50)
-        //     .style("fill", d => hsvToColor(d.color))
-        //     .style("opacity", 0.7)
-        //     .attr('class', 'year-topic')
-        //     .attr('id', d => d.id)
-        //     .attr('yearTopicId', d => d.yearTopicId);
-
-        let nodes_year = nodes.filter(d => d.year == years[i].id);
-        // 如果right=true，对nodes_year按照 TTM 中selectedTopic行的大小排序，否则按selectedTopic列的大小排序
-        let op = right? d3.descending: d3.ascending;
-        nodes_year.sort((a, b) => op(a.topic, b.topic));
-
-        var x = years[i].x + shift + (right? -150: 80);
-        var y = years[i].y;
-        nodes_year.forEach((d, i) => {
-            if (right) {
-                d.outx = x;
-                d.outy = y;
-            } else {
-                d.inx = x;
-                d.iny = y;
-            }
-            d.barx = x;
-            d.bary = y;
-            if (right) x -= 50;
-            else x += 50;
-        });
-
-        // console.log('nodes_year', nodes_year, years[i])
-
-        ele.selectAll('bar').data(nodes_year).enter().append('rect')
-            .attr('x', d => d.barx)
-            .attr('y', d => d.bary - 20)
-            .attr('width', 50)
-            .attr('height', 50)
-            .style("fill", d => topic2color(d.topic))
-            .style("opacity", 0.7)
-            .attr('class', d=> `bar bar_${d.id} bar_${d.topic}`)
-            .attr('id', d => d.id)
-            .on('mouseover', function(d) {
-                tip.show(d);
-                d3.select(this).attr('cursor', 'pointer');
-            })
-            .on('mouseout', function(d) {
-                tip.hide(d);
-                d3.select(this).attr('cursor', 'default');
-            })
-            .on('click', function(d) {
-                highlight_node(d.id);
-            });
-    }
-}
-
 function generateD3Path(points, curve = false) {
     // 使用D3的线条生成器，根据curve参数决定是否使用curveBasis
     const lineGenerator = d3.line();
@@ -1958,49 +1400,15 @@ function convertToPointsArray(pathString) {
 }
 
 
-function removeNewlinesAndAdjust(input) {
-    // 将输入字符串分割成行
-    const lines = input.split('\n');
-    let result = '';
-
-    for (let i = 0; i < lines.length; i++) {
-        let currentLine = lines[i];
-        // 检查当前行是否以';', '{', 或 '}'结尾
-        if (currentLine.trim().match(/[;{}]\s*$/)) {
-            // 如果是，保留换行符
-            result += currentLine + '\n';
-        } else {
-            // 如果当前行的末尾有反斜杠，去除它并去除换行符
-            if (currentLine.trim().endsWith('\\')) {
-                currentLine = currentLine.substring(0, currentLine.lastIndexOf('\\')).trim();
-            }
-
-            // 下一行如果以制表符开头，预处理下一行去掉开头的制表符
-            if (i < lines.length - 1 && lines[i + 1].startsWith('\t')) {
-                lines[i + 1] = lines[i + 1].replace(/^\t+/, '');
-            }
-
-            // 将处理过的当前行添加到结果字符串，不添加换行符
-            result += currentLine;
-
-            // 如果下一行存在且不是以; } { 开始，添加空格作为分隔
-            if (i < lines.length - 1 && !/^[};{]/.test(lines[i + 1].trim())) {
-                result += ' ';
-            }
-        }
-    }
-    return result;
-}
-
-function createDot() {
+function createDot(graph) {
     /*
     Generates a DOT graph representation.
 
     Inputs:
-        nodes: A list of node objects, each with 'id', 'citationCount', 'year' attributes.
-        edges: A list of edge objects, each with 'source' and 'target' attributes.
-        minYear: The minimum year among the nodes.
-        maxYear: The maximum year among the nodes.
+        graph['nodes']: A list of node objects, each with 'id', 'citationCount', 'year' attributes.
+        graph['edges']: A list of edge objects, each with 'source' and 'target' attributes.
+        minYear: The minimum year among the graph['nodes'].
+        maxYear: The maximum year among the graph['nodes'].
     */
     let dot = `digraph G {\n${getEdgeBundlingStr()}\n`; // \nnode [shape=circle]
     let yearDic = {};
@@ -2009,7 +1417,7 @@ function createDot() {
         dot += `year${year} [label="${year}"]\n`;
         yearDic[year] = [`year${year}`]
     }
-    nodes.forEach(node => {
+    graph['nodes'].forEach(node => {
         // const label = node.name.replace(/"/g, '\\"'); // 转义名称中的双引号
         dot += `${node.id} [label="${node.citationCount}"]\n`;
         // 对于每个年份，收集节点ID
@@ -2021,13 +1429,12 @@ function createDot() {
     for (let year = minYear; year < maxYear; year++) 
         dot += `year${year}->year${year+1}\n`;
 
-    edges.forEach(edge => {
+    graph['edges'].forEach(edge => {
         dot += `${edge.source}->${edge.target}\n`;
     });
 
     dot += '}';
-    console.log('createDot', dot);
-    return dot;
+    graph['dot'] = dot
 }
 
 function transformNodeName(name) {
@@ -2057,27 +1464,27 @@ function getEdgeBundlingStr() {
 concentrate_type=${edgeBundling}`;
 }
 
-function processDotContext(dot) {
+function processDotContext(graph) {
     /*
-    Processes a dot graph to adjust and filter nodes and edges based on context edges and a yearGrid system.
+    Processes a dot graph to adjust and filter graph['nodes'] and graph['edges'] based on context graph['edges'] and a yearGrid system.
 
     Inputs:
         dot: A string containing the dot graph.
-        contextEdges: Dictionary where keys are 'lxxxx->rxxxx' edge strings and values are attributes like weight.
+        graph['contextEdges']: Dictionary where keys are 'lxxxx->rxxxx' edge strings and values are attributes like weight.
         yearGrid: Integer value representing the yearGrid size for adjusting years in node labels.
-        virtualEdges: virtual edges connecting the components 
+        graph['virtualEdges']: virtual graph['edges'] connecting the components 
 
     Returns:
-        output: A string containing the processed dot graph with nodes and edges adjusted based on the context.
+        output: A string containing the processed dot graph with graph['nodes'] and graph['edges'] adjusted based on the context.
     */
-    let l = Infinity;
-    let r = -Infinity;
+    let l = minYear;
+    let r = maxYear;
     let labels = '';
     let focusEdgesStr = '';
     ranks = '';
 
     // 解析 .dot 输入以分类行并更新年份
-    dot.split('\n').forEach(line => {
+    graph['dot'].split('\n').forEach(line => {
         if (line.includes('year')) {
             if (line.includes('rank')) {
                 ranks += line + '\n';
@@ -2088,41 +1495,6 @@ function processDotContext(dot) {
             focusEdgesStr += '\t' + line + '\n';
         }
     });
-
-    // 从上下文边提取最小和最大年份
-    Object.keys(contextEdges).forEach(edge => {
-        let match = /l(\d+)->(\d+)/.exec(edge);
-        if (match) {
-            let value = parseInt(match[1], 10);
-            l = Math.min(l, value);
-        }
-        match = /(\d+)->r(\d+)/.exec(edge)
-        if (match) {
-            let value = parseInt(match[2], 10);
-            r = Math.max(r, value);
-        }
-    });
-
-    // 过滤排名并更新有效年份范围
-    ranks.split('\n').forEach(line => {
-        // 仅寻找有其他id的行
-        let match = /year(\d+) (\d+)/.exec(line);
-        if (match) {
-            let year = parseInt(match[1], 10);
-            if (year < 2100){
-                l = Math.min(l, year);
-                r = Math.max(r, year);
-            } else {
-                console.log('year out of range', year);
-            }
-            
-        }
-    });
-    // 更新全局变量，以便在transfromEdgeName函数中使用
-    minYear = l;
-    maxYear = r;
-
-    console.log('minYear', l, 'maxYear', r);
 
     // 替换年份标签
     let newRanks = [];
@@ -2139,30 +1511,29 @@ function processDotContext(dot) {
     let rightNodes = Array.from({ length: r - l + 1 }, (_, i) => `r${l + i}`).join('->');
 
     // 处理并合并contextEdges，可能把多年合并到一年
-    combinedContextEdges = {};
-    Object.entries(contextEdges).forEach(([edge, edgeList]) => {
+    graph['combinedContextEdges'] = {};
+    Object.entries(graph['contextEdges']).forEach(([edge, edgeList]) => {
         let weight = edgeList.length;
         let newEdge = transfromEdgeName(edge);
-        combinedContextEdges[newEdge] = combinedContextEdges[newEdge] || 
+        graph['combinedContextEdges'][newEdge] = graph['combinedContextEdges'][newEdge] || 
             { topics:{}, name: newEdge, edges: [], weight: 0, penwidth: 0, port: newEdge[0] === 'l' ? 'tailport=e' : 'headport=w' };
-        combinedContextEdges[newEdge].weight += weight;
-        combinedContextEdges[newEdge].penwidth += weight;  // 假设 penwidth 是累积的
+        graph['combinedContextEdges'][newEdge].weight += weight;
+        graph['combinedContextEdges'][newEdge].penwidth += weight;  // 假设 penwidth 是累积的
         for (let edge of edgeList) {
-            combinedContextEdges[newEdge].edges.push(edge);
+            graph['combinedContextEdges'][newEdge].edges.push(edge);
             let topic = newEdge[0] == 'l'? paperID2topic[edge.source]: paperID2topic[edge.target];
-            combinedContextEdges[newEdge].topics[topic] = (combinedContextEdges[newEdge].topics[topic] || 0) + 1;
+            graph['combinedContextEdges'][newEdge].topics[topic] = (graph['combinedContextEdges'][newEdge].topics[topic] || 0) + 1;
         }
     });
 
     // 生成上下文边字符串
-    let contextEdgesStr = Object.entries(combinedContextEdges).map(([edge, data]) =>
+    let contextEdgesStr = Object.entries(graph['combinedContextEdges']).map(([edge, data]) =>
         `${edge} [color="lightgray", ${data.port}, weight=${data.weight}, penwidth=${data.penwidth}]`
     ).join('\n');
-    let virtualEdgesStr = virtualEdges ? virtualEdges.map(edge => `${edge} [style="invis"]`).join('\n') : '';
+    let virtualEdgesStr = graph['virtualEdges'] ? graph['virtualEdges'].map(edge => `${edge} [style="invis"]`).join('\n') : '';
     
     // 生成最终输出 DOT 字符串 node [shape=circle]
-    return `
-digraph G {
+    graph['dotContext'] = `digraph G {
 
 crossing_type=1
 ${getEdgeBundlingStr()}
@@ -2233,15 +1604,15 @@ function bindSVGToElement(svgElement, elementId) {
 }
 
 
-function parseSVG(svgElement) {
-    id2attr = {};
+function parseSVG(svgElement, graph) {
+    graph['id2attr'] = {};
     // 解析节点
     svgElement.querySelectorAll('g.node').forEach(node => {
         const title = node.querySelector('title').textContent;
         const shape = node.querySelector('ellipse, polygon'); // 支持椭圆或多边形
         const text = node.querySelector('text');
         
-        id2attr[title] = {
+        graph['id2attr'][title] = {
             id: title,
             fill: shape.getAttribute('fill'),
             stroke: shape.getAttribute('stroke'),
@@ -2272,7 +1643,7 @@ function parseSVG(svgElement) {
             return distanceA - distanceB; // 排序，使得路径首位相连
         });
 
-        id2attr[title] = {
+        graph['id2attr'][title] = {
             id: title,
             name: title,
             path: edgePaths,
@@ -2283,8 +1654,15 @@ function parseSVG(svgElement) {
             } : null
         };
     });
-
-    return id2attr;
+    graph['viewBox'] = svgElement.getAttribute('viewBox');
+    graph['transform'] = svgElement.getAttribute('transform');
+    graph['nodes'].forEach(node => {
+        Object.assign(node, graph['id2attr'][node.id]);
+    });
+    graph['edges'].forEach(edge => {
+        let edgeKey = edge.source + '->' + edge.target;
+        Object.assign(edge, graph['id2attr'][edgeKey]);  // 合并边的属性
+    });
 }
 
 // 获取路径的起点或终点
@@ -2300,57 +1678,20 @@ function getEndPoint(d, type) {
 
 
 
-function renderDot() {
-    if (visType == 7) {
-        renderSide();
-        return;
-    }
-
-    let dot = createDot();
-    let result;
+function renderDot(graph) {
+    createDot(graph);
     let svgElement;
 
-    if (visType == 8 && selectedTopic !== null) {
+    if (visType == 8 && STopic !== null) {
         // subgraph + context
-        dot = processDotContext(dot);
-        console.log('context dot', dot);
-
-        svgElement = vizContext.renderSVGElement(dot);
-        // result = removeNewlinesAndAdjust(vizContext.renderString(dot)).replaceAll(' -> ', '->');
+        processDotContext(graph);
+        svgElement = vizContext.renderSVGElement(graph['dotContext']);
     } else {
-        svgElement = viz.renderSVGElement(dot);
-        // result = removeNewlinesAndAdjust(viz.renderString(dot)).replaceAll(' -> ', '->');
+        svgElement = viz.renderSVGElement(graph['dot']);
     }
     
     bindSVGToElement(svgElement, "#originsvg");
-    parseSVG(svgElement);
-    viewBox = svgElement.getAttribute('viewBox');
-    transform = svgElement.getAttribute('transform');
-
-    // 遍历 id2attr，生成最终的节点和边
-    let years = [];
-    for (let id in id2attr) {
-        if (id.startsWith('year') && !id.includes('->')) {
-            years.push({ id: id2attr[id].label, ...id2attr[id] });
-        }
-    }
-
-    nodes.forEach(node => {
-        Object.assign(node, id2attr[node.id]);
-    });
-    edges.forEach(edge => {
-        let edgeKey = edge.source + '->' + edge.target;
-        Object.assign(edge, id2attr[edgeKey]);  // 合并边的属性
-    });
-
-    params = [viewBox, transform]
-    polygon = null;
-    graph = [params, years, nodes, edges, polygon];
-    
-    // if (selectedTopic === null) {
-    //     global_graph = JSON.parse(JSON.stringify(graph));
-    //     [global_params, global_years, global_nodes, global_edges, global_polygon] = global_graph;
-    // }
+    parseSVG(svgElement, graph);
     init_graph(graph);
 }
 
@@ -2366,14 +1707,13 @@ function loadGlobalData() {
         return;
     }
     if (filteredNodes.length == 0) {
-        console.log('No nodes found in the data');
+        console.log('No node found in the data');
         return;
     }
     
     // 注意year的计算在selectedTopic之前
     minYear = Math.min(...filteredNodes.map(node => node.year));
     maxYear = Math.max(...filteredNodes.map(node => node.year));
-    // console.log('minYear', minYear, 'maxYear', maxYear);
 
     let ln = filteredNodes.length, le = filteredEdges.length;
     let modeValue = document.getElementById('mode').value;
@@ -2383,7 +1723,7 @@ function loadGlobalData() {
     let lnr = filteredNodes.length;
     // Compute indegree, outdegree, and total degree
     let indegree = {}, outdegree = {}, alldegree = {};
-    // set other nodes in filteredNodes outdegree/indegree =0
+    // set other graph['nodes'] in filteredNodes outdegree/indegree =0
     filteredNodes.forEach(node => {
         outdegree[node.id] = 0;
         indegree[node.id] = 0;
@@ -2414,8 +1754,8 @@ function loadGlobalData() {
     filteredEdges = connectedEdges;
 
     console.log('original data:', authorData, 
-        '#nodes:', authorData['nodes'].length, ln, lnr, filteredNodes.length, 
-        '#edges:', authorData['edges'].length, le, filteredEdges.length);
+        '#node:', authorData['nodes'].length, ln, lnr, filteredNodes.length, 
+        '#edge:', authorData['edges'].length, le, filteredEdges.length);
     console.log(filteredNodes, filteredEdges);
 
     $('#node-num').text(`${filteredNodes.length}(rm isolated) / ${lnr}(rm survey) / ${ln}(filter) / ${authorData['nodes'].length}(all)`);
@@ -2493,29 +1833,37 @@ function loadGlobalData() {
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
     rangeSlider.noUiSlider.set([min_num, max_num+1]);
 
+    generateTTM();
+    arrangement = simulatedAnnealing(TTM);
+    adjacentMatrix = getAdjacentMatrix(arrangement);
+    console.log('arrangement:', arrangement);
+}
+
+function loadTopicGraph(STopic) {
     // global_nodes.map(d=>Object.keys(d.topicDist).length)
     // new Set(global_nodes.map(d=>d.topic)) // 有多少个topic
     // 1. 将所有topicDist = {}的节点设置为最后一个topic
     // 2. 将所有topic总数小的节点设置为最后一个topic
-    nodes = JSON.parse(JSON.stringify(global_nodes));
-    edges = JSON.parse(JSON.stringify(global_edges));
+    graph = {}
+    graph['nodes'] = JSON.parse(JSON.stringify(global_nodes));
+    graph['edges'] = JSON.parse(JSON.stringify(global_edges));
 
-    if (selectedTopic !== null) {
-        nodes = nodes.filter(d => hasTopic(d, selectedTopic));
-        if (nodes.length == 0) {
-            console.log('No nodes found in the selected topic', selectedTopic);
+    if (STopic !== null) {
+        graph['nodes'] = graph['nodes'].filter(d => hasTopic(d, STopic));
+        if (graph['nodes'].length == 0) {
+            console.log('No node found in the selected topic', STopic);
             return;
         }
 
-        nodeSet = new Set(nodes.map(node => node.id));
-        edges = edges.filter(edge => nodeSet.has(edge.source) && nodeSet.has(edge.target));
-        edgeStrs = edges.map(edge => edge.source + '->' + edge.target); 
+        nodeSet = new Set(graph['nodes'].map(node => node.id));
+        graph['edges'] = graph['edges'].filter(edge => nodeSet.has(edge.source) && nodeSet.has(edge.target));
+        edgeStrs = graph['edges'].map(edge => edge.source + '->' + edge.target); 
 
         let G = new Graph();
-        nodes.forEach(node => {
+        graph['nodes'].forEach(node => {
             G.addNode(node.id, node);
         });
-        edges.forEach(edge => {
+        graph['edges'].forEach(edge => {
             G.addEdge(edge.source, edge.target);
         });
         for (let year = minYear; year <= maxYear; year++) {
@@ -2528,46 +1876,46 @@ function loadGlobalData() {
         }
 
         // 处理上下文边
-        contextEdges = {};
+        graph['contextEdges'] = {};
         global_edges.forEach(edge => {
             if (!edgeStrs.includes(`${edge.source}->${edge.target}`)) {
                 let sourceNode = global_nodes.find(node => node.id === edge.source);
                 let targetNode = global_nodes.find(node => node.id === edge.target);
 
-                if (hasTopic(sourceNode, selectedTopic)) {
+                if (hasTopic(sourceNode, STopic)) {
                     let key = `${sourceNode.id}->r${targetNode.year}`;
-                    if (!contextEdges[key]) contextEdges[key] = [];
-                    contextEdges[key].push(edge);
+                    if (!graph['contextEdges'][key]) graph['contextEdges'][key] = [];
+                    graph['contextEdges'][key].push(edge);
                     G.addEdge(sourceNode.id, `r${targetNode.year}`);
                 }
-                if (hasTopic(targetNode, selectedTopic)) {
+                if (hasTopic(targetNode, STopic)) {
                     let key = `l${sourceNode.year}->${targetNode.id}`;
-                    if (!contextEdges[key]) contextEdges[key] = [];
-                    contextEdges[key].push(edge);
+                    if (!graph['contextEdges'][key]) graph['contextEdges'][key] = [];
+                    graph['contextEdges'][key].push(edge);
                     G.addEdge(`l${sourceNode.year}`, targetNode.id);
                 }
             }
         });
 
-        virtualEdges = [];
+        graph['virtualEdges'] = [];
         let components = G.findConnectedComponents();
         components.forEach(component => {
             let node = G.findLastNodeInComponent(component);
             if (node) {
                 // console.log('findLastNodeInComponent', G.nodeProperties.get(node));
                 let nodeYear = G.nodeProperties.get(node).year;
-                virtualEdges.push(`${node}->r${nodeYear}`);
+                graph['virtualEdges'].push(`${node}->r${nodeYear}`);
             }
         });
     }
     
-    paper_field = [];    //该学者个人的field信息
-    nodes.forEach(node => {
+    graph['paper_field'] = [];    //该学者个人的field信息
+    graph['nodes'].forEach(node => {
         let topic = parseInt(node.topic);
-        let ix = paper_field.findIndex(d => d.id == topic);
+        let ix = graph['paper_field'].findIndex(d => d.id == topic);
         if (ix == -1) {
             // 如果没有统计，在paper_field中新建k-v
-            paper_field.push({
+            graph['paper_field'].push({
                 id: topic,
                 num: 1,
                 name: fields[topic][2],
@@ -2577,89 +1925,13 @@ function loadGlobalData() {
                 label: parseInt(fields[topic][8])
             });
         } else {
-            paper_field[ix].num += 1;
+            graph['paper_field'][ix].num += 1;
         }
     })
-
-    console.log('global_paper_field', JSON.parse(JSON.stringify(global_paper_field)), 
-                'paper_field', JSON.parse(JSON.stringify(paper_field)));
-
-
-    processedNodes = {};
-    processedEdges = {};
-    // Process nodes data
-    global_nodes.forEach(node => {
-        // getTopicList(node).forEach(topic => {
-            let topic = node.topic;
-            let year = Math.floor(node.year / yearGrid) * yearGrid;
-            let key = `${year}_${topic}`;
-
-            if (topic != selectedTopic) {
-                if (!processedNodes[key])  processedNodes[key] = []
-                processedNodes[key].push(node);
-            }
-        // });
-    });
-
-    // Process edges data
-    global_edges.forEach(edge => {
-        // Assuming source and target in edges are node IDs
-        let sourceNode = global_nodes.find(node => node.id === edge.source);
-        let targetNode = global_nodes.find(node => node.id === edge.target);
-
-        let srcTopic = sourceNode.topic;
-        let tgtTopic = targetNode.topic;
-        let srcYear = Math.floor(sourceNode.year / yearGrid) * yearGrid;
-        let tgtYear = Math.floor(targetNode.year / yearGrid) * yearGrid;
-        
-        if (selectedTopic !== null) {
-            if (srcTopic !== selectedTopic && tgtTopic !== selectedTopic) return;   // 外部边
-            if (srcTopic == selectedTopic && tgtTopic == selectedTopic) return;     // 内部边
-
-            let key = srcTopic == selectedTopic? `-${tgtYear}_${tgtTopic}`: `${srcYear}_${srcTopic}-`;
-            
-            if (!processedEdges[key]) processedEdges[key] = []
-            processedEdges[key].push(edge);
-            
-        } else {
-            
-            let key = `${srcYear}_${srcTopic}-${tgtYear}_${tgtTopic}`;
-            if (!processedEdges[key]) {
-                processedEdges[key] = []
-            }
-            processedEdges[key].push(edge);
-        }
-    });
-    console.log('processedNodes', processedNodes, 'processedEdges', processedEdges, 'selectedTopic', selectedTopic);
-
-
-    generateTTM();
-    arrangement = simulatedAnnealing(TTM);
-    adjacentMatrix = getAdjacentMatrix(arrangement);
-    console.log('arrangement:', arrangement);
+    
+    topic2graph[STopic] = graph
 }
 
-
-function findLastNodeInComponent(component) {
-    let maxYear = -Infinity;
-    let lastNode = null;
-
-    // 遍历连通分量中的每个节点
-    component.forEach(node => {
-        // 检查年份，找到最大的年份
-        if (node.data('year') > maxYear) {
-            maxYear = node.data('year');
-            lastNode = node;
-        }
-    });
-
-    // 确认找到的最后一个节点是否以 'l' 或 'r' 开头
-    if (lastNode && !['l', 'r'].includes(lastNode.id()[0])) {
-        return lastNode;
-    }
-
-    return null;  // 如果节点以 'l' 或 'r' 开头或未找到合适的节点，返回 null
-}
 
 function topic2color(topic, sat=undefined) {
     if (topic == undefined) {
@@ -2672,8 +1944,9 @@ function topic2color(topic, sat=undefined) {
 }
 
 function loadAndRender() {
-    loadGlobalData();
-    renderDot();
+    
+    loadTopicGraph(STopic);
+    renderDot(topic2graph[STopic]);
 }
 
 
@@ -2714,11 +1987,11 @@ function highlight_tag(topic_id) {
         .style("stroke", "black");
     d3.select(`#text_${topic_id}`)
         .attr('font-weight', 'bold');
-    if (selectedTopic !== null && selectedTopic != topic_id) {
-        d3.select(`#rect_${selectedTopic}`)
+    if (STopic !== null && STopic != topic_id) {
+        d3.select(`#rect_${STopic}`)
             .attr("fill-opacity", 1)
             .style("stroke", "black");
-        d3.select(`#text_${selectedTopic}`)
+        d3.select(`#text_${STopic}`)
             .attr('font-weight', 'bold');
     }
 }
@@ -2732,11 +2005,11 @@ function reset_tag() {
         .style("stroke", "none");
     d3.selectAll(".tag-text")
         .attr('font-weight', 'normal');
-    if (selectedTopic !== null) {
-        d3.select(`#rect_${selectedTopic}`)
+    if (STopic !== null) {
+        d3.select(`#rect_${STopic}`)
             .attr("fill-opacity", 1)
             .style("stroke", "black");
-        d3.select(`#text_${selectedTopic}`)
+        d3.select(`#text_${STopic}`)
             .attr('font-weight', 'bold');
     }
 }
@@ -2772,11 +2045,6 @@ function highlight_field(topic_id) {
         .style("opacity", 1);
 
     // =========================cell=========================
-    d3.selectAll(".cell")
-        .style("fill", `rgb(0, 0, 255)`)
-    d3.selectAll(`.cell_${topic_id}`)
-        .style("fill", `rgb(255, 0, 0)`);
-
     d3.selectAll(".topic-string")
         .style("opacity", virtualOpacity);
     d3.selectAll(`.topic-string_${topic_id}`)
@@ -2795,44 +2063,21 @@ function highlight_field(topic_id) {
         .style("stroke", "black");
 
     // =========================bar & bar_link=========================
-    // d3.selectAll(".year-topic")
-    //     .attr("fill-opacity", d => {if (topic_id != d.id) return virtualOpacity;});
     d3.selectAll(".bar")
         .style("opacity", virtualOpacity);
     d3.selectAll(`.bar_${topic_id}`)
         .style("opacity", 0.7);
-    
-
-    var color_papers = [], color_papers_topic = [];  
-    // 记录颜色不需要变化的paperID
-    
-    for (let i = 0; i < nodes.length; i++) {
-        if (hasTopic(nodes[i], topic_id)) {
-            color_papers.push(nodes[i].id);
-            color_papers_topic.push(nodes[i].topic);
-        }
-    }
-    // console.log('color_papers', color_papers, color_papers_topic);
-
-
-    g.selectAll(".paper").data(nodes)
-        .attr('fill-opacity', d => {if (color_papers.indexOf(d.id) == -1) return virtualOpacity;})
-        .attr('stroke-opacity', function(d) {
-            if (color_papers.indexOf(d.id) == -1) return virtualOpacity;
-        })
-
-    g.selectAll('.reference').data(edges)
-        .style("stroke", d => 
-            color_papers.indexOf(d.source) != -1 && color_papers.indexOf(d.target) != -1? "red": "#202020")
-        .style("opacity", d=> 
-            color_papers.indexOf(d.source) != -1 && color_papers.indexOf(d.target) != -1? 1: virtualOpacity);
 
     // $("#mainsvg").attr("style", "background-color: #FAFAFA;");
-    Object.entries(combinedContextEdges).forEach(([key, value]) => {
-        if (Object.keys(value.topics).includes(topic_id)) {
-            mouseoverEdge(key, width=value.topics[topic_id] * context_edge_weight, color=topic2color(topic_id));
-        }
-    })
+    // 在 Stopic 面上展示所有highlight 的 edge
+    if (STopic != null) {
+        Object.entries(topic2graph[STopic]['combinedContextEdges']).forEach(([key, value]) => {
+            if (Object.keys(value.topics).includes(topic_id)) {
+                mouseoverEdge(key, width=value.topics[topic_id] * context_edge_weight, color=topic2color(topic_id));
+            }
+        })
+    }
+    
 }
 
 function hsvToColor(color, sat=0.4) {
@@ -2986,27 +2231,8 @@ function reset_field(d) {
         .attr("fill-opacity", 0.6)
         .style("stroke", `rgba(0,0,0,0.5)`);
 
-    d3.selectAll(".cell")
-        .style("fill", `rgb(0, 0, 255)`)
-
-    // 恢复左侧年份主题柱状图
-    gr.selectAll('.rect1, .year-topic')
-        .attr('fill-opacity', 1);
-    gl.selectAll('.rect1, .year-topic')
-        .attr('fill-opacity', 1);
-    //恢复节点填充色和边缘色
-    g.selectAll(".paper").data(nodes)
-        .attr('fill-opacity', 1)
-        .style("stroke", d => updateOutlineColor(d.isKeyPaper, d.citationCount))
-        .attr('stroke-opacity', 1);
-    //恢复边的颜色
-    g.selectAll(".reference")
-        .style("stroke", "#202020")
-        .style("opacity", d => probToOpacity(d.extends_prob))
-        .style("stroke-width", d => probToWidth(d.extends_prob));
-
+        
     // $("#mainsvg").attr("style", "background-color: white;");
-    // gr.selectAll('.year-topic').attr('fill-opacity', 1);
     d3.selectAll(".bar").style("opacity", 0.7);
     // d3.selectAll(".bar_link").style("opacity", 1);
 
@@ -3019,135 +2245,34 @@ function reset_field(d) {
         .style('opacity', 1);
 }
 
-function find_child_nodes(id) { 
+function find_child_nodes(id, graph) { 
     var ids = [];
-    for (let i = 0; i < edges.length; i++) {
-        if (id == edges[i].source) {
-            ids.push(edges[i].target);
+    for (let i = 0; i < graph['edges'].length; i++) {
+        if (id == graph['edges'][i].source) {
+            ids.push(graph['edges'][i].target);
         }
     }
     return ids;
 
 }
 
-function find_parent_nodes(id) {
+function find_parent_nodes(id, graph) {
     var ids = [];
-    for (let i = 0; i < edges.length; i++) {
-        if (id == edges[i].target) {
-            ids.push(edges[i].source);
+    for (let i = 0; i < graph['edges'].length; i++) {
+        if (id == graph['edges'][i].target) {
+            ids.push(graph['edges'][i].source);
         }
     }
     return ids;
 }
 
-function buildTree(centerNodeId, nodes, edges) {
-    const idToNodeMap = new Map(nodes.map(node => [node.id, { ...node, children: [] }]));
-    edges.forEach(edge => {
-        if (idToNodeMap.has(edge.source) && idToNodeMap.has(edge.target)) {
-            idToNodeMap.get(edge.source).children.push(idToNodeMap.get(edge.target));
-        }
-    });
-    return idToNodeMap.get(centerNodeId);
-}
-
-function getAdjacentNodes(nodeId) {
-    let children = edges.filter(edge => edge.source === nodeId).map(edge => edge.target);
-    let parents = edges.filter(edge => edge.target === nodeId).map(edge => edge.source);
-    return Array.from(new Set(children.concat(parents)));
-}
-
-function simplifyNode(node) {
-    return {
-        name: node.name,
-        numLeafs: 0, // 初始设置为 0，稍后计算
-        ottId: node.paperID,
-        children: [],
-        parents: []
-    };
-}
-
-function buildTreeBFS(id) {
-    var parent_ids = [];
-    var new_parent_ids = [id];
-    let idToNodeMap = new Map(nodes.map(node => [node.id, simplifyNode(node)]));
-    console.log('idToNodeMap', idToNodeMap)
-
-    while (new_parent_ids.length != parent_ids.length) {
-        parent_ids = new_parent_ids;
-        for (let i = 0; i < parent_ids.length; i++) {
-            // console.log('node:', parent_ids[i], idToNodeMap[String(parent_ids[i])])
-            let parents = find_parent_nodes(parent_ids[i]);
-            new_parent_ids = new_parent_ids.concat(parents);
-            idToNodeMap.get(parent_ids[i]).parents = parents.map(id => idToNodeMap.get(id))
-        }
-        new_parent_ids = Array.from(new Set(new_parent_ids));
-    }
-
-    var child_ids = [];
-    var new_child_ids = [id];
-    while (new_child_ids.length != child_ids.length) {
-        child_ids = new_child_ids;
-        for (let i = 0; i < child_ids.length; i++) {
-            let childs = find_child_nodes(child_ids[i])
-            new_child_ids = new_child_ids.concat(childs);
-            idToNodeMap.get(child_ids[i]).children = childs.map(id => idToNodeMap.get(id))
-        }
-        new_child_ids = Array.from(new Set(new_child_ids));
-    }
-
-    // DAG图中出现了环！！！！！！！！！！！！！！！！！需要修复
-    // 删除没有子节点的节点的 children 属性
-    function removeEmptyChildren(node) {
-        if (node.children === undefined) return;
-        // console.log('node', node)
-        delete node.parents;
-        if (node.children.length === 0) {
-            delete node.children;
-        } else {
-            // node.children = node.children.concat(node.parents)
-            node.children.forEach(child => removeEmptyChildren(child));
-            node.numLeafs = node.children.reduce((sum, child) => sum + child.numLeafs, 0);
-            node.numLeafs += node.children.length;
-        }
-    }
-    removeEmptyChildren(idToNodeMap.get(id));
-    return idToNodeMap.get(id);
-}
-
-function draw_hyper_tree(id) {
-    return;
-    const hypertreeData = buildTreeBFS(id);
-    console.log('hypertreeData', hypertreeData);
-    const root = d3.hierarchy(hypertreeData);
-
-    const iframeWindow = document.getElementById('hypertreeFrame').contentWindow;
-
-    // 使用 postMessage 发送 hypertreeData
-    iframeWindow.postMessage({ hypertreeData: hypertreeData }, '*');
-
-    // const ht = new hyt.Hypertree(
-    //     {
-    //         parent: d3.select("#radialgraph").node()    
-    //         //d3.select("#radialgraph").node() // 获取 DOM 元素
-    //     },
-    //     {
-    //         dataloader:  hyt.loaders.fromFile('/src/json/test.d3.json'),
-    //         // ok => ok(root),
-    //         langInitBFS: (ht, n)=> n.precalc.label = n.data.name,
-    //     }
-    // )
-    // ht.initPromise
-    //     .then(()=> new Promise((ok, err)=> ht.animateUp(ok, err)))            
-    //     .then(()=> ht.drawDetailFrame());
-}
-
-function get_extend_ids(id) {
+function get_extend_ids(id, graph) {
     var parent_ids = [];
     var new_parent_ids = [id];
     while (new_parent_ids.length != parent_ids.length) {
         parent_ids = new_parent_ids;
         for (let i = 0; i < parent_ids.length; i++) {
-            new_parent_ids = new_parent_ids.concat(find_parent_nodes(parent_ids[i]));
+            new_parent_ids = new_parent_ids.concat(find_parent_nodes(parent_ids[i], graph));
         }
         new_parent_ids = Array.from(new Set(new_parent_ids));
     }
@@ -3156,7 +2281,7 @@ function get_extend_ids(id) {
     while (new_child_ids.length != child_ids.length) {
         child_ids = new_child_ids;
         for (let i = 0; i < child_ids.length; i++) {
-            new_child_ids = new_child_ids.concat(find_child_nodes(child_ids[i]));
+            new_child_ids = new_child_ids.concat(find_child_nodes(child_ids[i], graph));
         }
         new_child_ids = Array.from(new Set(new_child_ids));
     }
@@ -3241,40 +2366,6 @@ function drawTTM() {
         .attr('dx', '-.8em')
         .attr('dy', '.15em')
         // .attr('transform', 'rotate(-90)');
-    
-    
-    // 添加列的拖拽交互逻辑
-    xAxisGroup.selectAll('text')
-        .call(d3.drag()
-        .on('start', dragStarted)
-        .on('drag', dragged)
-        .on('end', dragEnded));
-    
-    let dragStartIndex;
-    
-    function dragStarted(event, d) {
-        dragStartIndex = arrangement.indexOf(parseInt(d));
-    }
-    
-    function dragged(event, d) {
-        // 拖拽过程中可以显示一些交互效果，例如高亮当前拖拽的列
-    }
-    
-    function dragEnded(event, d) {
-        const x = event.x;
-        const dragEndIndex = Math.floor(x / cellSize);
-        if (dragEndIndex >= 0 && dragEndIndex < topicCount) {
-            moveColumn(dragStartIndex, dragEndIndex);
-            drawTTM(); // 重新绘制整个图表以反映新的排列
-        }
-    }
-    
-    function moveColumn(from, to) {
-        // 移动列，并更新全局变量arrangement
-        const [removed] = arrangement.splice(from, 1);
-        arrangement.splice(to, 0, removed);
-        drawTTM();
-    }
 }
 
 function highlight_node(id, draw_hypertree=true, show_node_info=true) {   // 输入：当前node的 id
@@ -3283,64 +2374,13 @@ function highlight_node(id, draw_hypertree=true, show_node_info=true) {   // 输
     reset_node();
     center_node = id;
     highlighted = [id];
-
-    // adjacent_ids = [];
-    // for (let i = 0; i < edges.length; i++) {
-    //     if (id == edges[i].source) {
-    //         adjacent_ids.push(edges[i].target);
-    //     }
-    //     else if (id == edges[i].target) {
-    //     } else if (id == edges[i].target) {
-    //         adjacent_ids.push(edges[i].source);
-    //     }
-    // }
-    extend_ids = get_extend_ids(id);
+    // 仅仅显示当前所选topic的extend_ids
+    extend_ids = get_extend_ids(id, topic2graph[STopic]);
 
     if (draw_hypertree) draw_hyper_tree(id);
     
-    // 改变当前节点颜色和相邻节点
-    d3.selectAll(".paper")  //.data(nodes)
-        .attr("fill-opacity", d => {
-            if (d.id != id && extend_ids.indexOf(d.id) == -1) return virtualOpacity;
-        })
-        .attr("stroke-opacity", d => {
-            if (d.id != id && extend_ids.indexOf(d.id) == -1) return virtualOpacity;
-        });
-
-    // 改变当前节点与其相邻节点间线的颜色为红色
-    d3.selectAll('.reference')
-        .style("stroke", d => {
-            if (highlighted.includes(d.target) || highlighted.includes(d.source)) return 'red';
-        })
-        .style("opacity", d => {
-            if (extend_ids.includes(d.source) & extend_ids.includes(d.target)) return probToOpacity(d.extends_prob);
-            return virtualOpacity;
-        });
-    
     d3.selectAll('.link').style('opacity', 0);
     d3.selectAll(`.link_${id}`).style('opacity', 1);
-
-    // 将当前节点及其邻接点所对应year的topic显示出来
-    let extend_year_topics = [];
-    for (let i = 0; i < nodes.length; i++) {
-        if (extend_ids.indexOf(nodes[i].id) != -1) {
-            extend_year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
-        }
-    }
-
-    // adjacent_ids.push(id);
-    // year_topics = [];
-    // for (let i = 0; i < nodes.length; i++) {
-    //     if (adjacent_ids.indexOf(nodes[i].id) != -1) {
-    //         year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
-    //     }
-    // }
-    // g.selectAll(".year-topic")
-    //     .attr("fill-opacity", d => {
-    //         if (year_topics.indexOf(d.yearTopicId) != -1) return 1
-    //         if (extend_year_topics.indexOf(d.yearTopicId) != -1) return 0.5
-    //         return virtualOpacity;
-    //     });
     
     d3.selectAll('.bar')
         .style("opacity", virtualOpacity)
@@ -3364,46 +2404,36 @@ function highlight_node(id, draw_hypertree=true, show_node_info=true) {   // 输
 
         //更新node-info里的内容
         let fieldLevelVal = $("#field-level").val();
-        let nodes = global_nodes;
-        for (let i = 0; i < global_nodes.length; i++) {
+        let ns = global_nodes;
+        for (let i = 0; i < ns.length; i++) {
             if (global_nodes[i].id == id) {
-                $('#paper-id').text(nodes[i].id);
-                $('#paper-name').text(nodes[i].name);
-                $('#paper-year').text(nodes[i].year);
-                $('#paper-citation').text(nodes[i].citationCount);
-                if (nodes[i].citationCount == '-1') {
+                $('#paper-id').text(ns[i].id);
+                $('#paper-name').text(ns[i].name);
+                $('#paper-year').text(ns[i].year);
+                $('#paper-citation').text(ns[i].citationCount);
+                if (ns[i].citationCount == '-1') {
                     $('#paper-citation').text("Not available");
                 }
-                $('#paper-authors').text(nodes[i].authors);
-                $('#paper-prob').text((parseFloat(nodes[i].isKeyPaper)).toFixed(2));
-                $('#paper-venue').text(nodes[i].venu);
+                $('#paper-authors').text(ns[i].authors);
+                $('#paper-prob').text((parseFloat(ns[i].isKeyPaper)).toFixed(2));
+                $('#paper-venue').text(ns[i].venu);
 
-                let topic = parseInt(nodes[i].topic);
+                let topic = parseInt(ns[i].topic);
                 topic = fieldLevelVal == 1 ? parseInt(fields[topic][8]) : topic;
                 $('#paper-field').text(fields[topic][2].split('_').join(', '));
-                $('#abstract').text(nodes[i].abstract);
+                $('#abstract').text(ns[i].abstract);
             }
         }
     }
 }
 
 function reset_node(reset_info=false) {
-    // if (image_switch == 0)  return;
-    if (visType == 7) return;
-
     console.log('reset_node called')
 
-    // d3.selectAll('.year-topic').attr('fill-opacity', 1);
     d3.selectAll('.bar')
         .style('opacity', 0.7)
         .style("stroke", "none");
-    g.selectAll('.paper').data(nodes)
-        .style('fill-opacity', 1)
-        .style('stroke-opacity', 1);
-    d3.selectAll('.reference')
-        .style("stroke", "#202020")
-        .style('opacity', d => probToOpacity(d.extends_prob))
-        .style('stroke-width', d => probToWidth(d.extends_prob));
+        
     d3.selectAll('.link')
         .style("opacity", 1);
 
@@ -3438,7 +2468,7 @@ function visual_topics() {
 
     d3.select("#topic-map-svg").remove();
 
-    var maxNum = d3.max(paper_field, d => d.num);
+    var maxNum = d3.max(global_paper_field, d => d.num);
     var topic_r = (4 / Math.sqrt(maxNum)).toFixed(2);
     if (topic_r > 2) {
         topic_r = 2;
@@ -3447,11 +2477,11 @@ function visual_topics() {
     $("#topic-slider").val(topic_r);
 
     var xScale = d3.scaleLinear()
-        .domain([d3.min(paper_field, d => d.x), d3.max(paper_field, d => d.x)])
+        .domain([d3.min(global_paper_field, d => d.x), d3.max(global_paper_field, d => d.x)])
         .range([0, topic_width - 2 * topic_margin1]);
 
     var yScale = d3.scaleLinear()
-        .domain([d3.min(paper_field, d => d.y), d3.max(paper_field, d => d.y)])
+        .domain([d3.min(global_paper_field, d => d.y), d3.max(global_paper_field, d => d.y)])
         .range([topic_height * 0.85 - 2 * topic_margin2, 0]);
 
     const topic_map_svg = d3.select("#topic-distribution").append("svg")
@@ -3482,7 +2512,7 @@ function visual_topics() {
     })
     .on('mouseout', reset_field);
     
-    if (paper_field.length == 0) {
+    if (global_paper_field.length == 0) {
         $("#topic-slider").hide();
     }
 
@@ -3500,68 +2530,6 @@ function probToWidth(prob, a=1, b=5) {
     return ret / 2;
 }
 
-function get_graph() {
-    console.log('field_roots', field_roots)
-    var categories = field_roots.map(line=> {
-        color = label2color[line[0]]
-        return {
-            "name": String(line[0]),
-            "color": hsvToHex(color[0], 0.7, color[2])
-        }
-    });
-    var topic2catagory = {};
-    for (let i = 0; i < fields.length; i++) {
-        topic2catagory[i] = fields[i][8];
-    }
-    let node_data = nodes.map(node=> {
-        return {
-            "id": node.id,
-            "name": node.name,
-            "symbolSize": Math.cbrt(node.citationCount) + 5,
-            "category": topic2catagory[node.topic],
-            "value": node.citationCount,
-            "year": node.year,
-            "label": {
-                "normal": {
-                    "show": node.symbolSize > 10
-                }
-            }
-        }
-    });
-    let link_data = edges.map(edge=> {
-        return {
-            "source": edge.source,
-            "target": edge.target,
-        }
-    }).filter(edge=> {
-        return edge.source.length > 4;
-    });
-    return {
-        "nodes": node_data,
-        "links": link_data,
-        "categories": categories
-    }
-}
-
-function updateChart(graph, year) {
-    // 过滤节点
-    let filteredNodes = graph.nodes.filter(node => node.year <= year);
-
-    // 过滤边（只包括过滤后存在的节点）
-    let filteredLinks = graph.links.filter(link => {
-        return filteredNodes.find(node => node.id === link.source) &&
-               filteredNodes.find(node => node.id === link.target);
-    });
-
-    // 设置新的图表数据
-    forceChart.setOption({
-        series: [{
-            data: filteredNodes,
-            links: filteredLinks
-        }]
-    });
-}
-
 function selectorById(id) {
     if (id.indexOf('->'))
         return 'e' + id.replace('->', '_');
@@ -3576,62 +2544,36 @@ function highlight_edge(id, show_edge_info=true) {
     var source = id_arr[0], target = id_arr[1];
     highlighted = [id];
 
-    // 改变边的起点和终点颜色
-    g.selectAll(".paper").data(nodes)
-        .style("fill-opacity", d => {
-            if (d.id != source && d.id != target) return virtualOpacity;
-        })
-        .style('stroke-opacity', d => {
-            if (d.id != source && d.id != target) return virtualOpacity;
-        })
-
-    d3.selectAll('.reference').data(edges)
-        .style("stroke", d => highlighted.includes(d.id)? 'red': "#202020")
-        .style('opacity', d => highlighted.includes(d.id)? 1: virtualOpacity)
-        .style('stroke-width', d => {if (d.id == id) return 10;})
-
     // g.selectAll('.edge-path').style('stroke', 'black').style('opacity', virtualOpacity);
     // g.select('#' + selectorById(id))
     //     .style('stroke', 'red')
     //     .style('fill', 'red')
     //     .style('opacity', 1);
-        
-
-    let year_topics = [];
-    for (let i = 0; i < nodes.length; i++) {
-        if (source == nodes[i].id || target == nodes[i].id) {
-            year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
-        }
-    }
-    d3.selectAll(".year-topic")
-        .style("fill-opacity", d => {
-            if (year_topics.indexOf(d.id) == -1) return virtualOpacity;
-        });
     
     $("#paper-list, #selector, #node-info, #node-info-blank, #up-line, #down-line").hide();
     $("#edge-info").show();
     
     if (show_edge_info) {
         //更新edge-info中的内容
-        let nodes = global_nodes, edges = global_edges;
-        for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].id == source) {
-                $('#source-paper').text(nodes[i].name);
-                $('#source-paper-year').text(nodes[i].year);
-                $('#source-paper-venu').text(nodes[i].venu);
-                $('#source-paper-citation').text(nodes[i].citationCount);
+        let ns = global_nodes, es = global_edges;
+        for (var i = 0; i < ns.length; i++) {
+            if (ns[i].id == source) {
+                $('#source-paper').text(ns[i].name);
+                $('#source-paper-year').text(ns[i].year);
+                $('#source-paper-venu').text(ns[i].venu);
+                $('#source-paper-citation').text(ns[i].citationCount);
             }
-            if (nodes[i].id == target) {
-                $('#target-paper').text(nodes[i].name);
-                $('#target-paper-year').text(nodes[i].year);
-                $('#target-paper-venu').text(nodes[i].venu);
-                $('#target-paper-citation').text(nodes[i].citationCount);
+            if (ns[i].id == target) {
+                $('#target-paper').text(ns[i].name);
+                $('#target-paper-year').text(ns[i].year);
+                $('#target-paper-venu').text(ns[i].venu);
+                $('#target-paper-citation').text(ns[i].citationCount);
             }
         }
-        for (var i = 0; i < edges.length; i++) {
-            if (edges[i].source == source && edges[i].target == target) {
-                $('#citation-context').text(edges[i].citation_context);
-                $('#extend-prob').text(String(edges[i].extends_prob));
+        for (var i = 0; i < es.length; i++) {
+            if (es[i].source == source && es[i].target == target) {
+                $('#citation-context').text(es[i].citation_context);
+                $('#extend-prob').text(String(es[i].extends_prob));
                 break;
             }
         }
@@ -3658,284 +2600,8 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
     return 0;
 }
 
-function getFillColorFunc() {
-    let defaultColor = "#b3ddff";
-    let fillColorVal = $("#fill-color").val();
-    if (fillColorVal == 0)  return d => hsvToColor(d.color);
-    if (fillColorVal == 1)  return defaultColor;
-    if (fillColorVal == 2) {
-        return d => {
-            return d.isKeyPaper == 1? "#40a6ff": (d.isKeyPaper >= 0.5? "#95cdff": defaultColor);
-        }
-    }
-    // if (fillColorVal == 3) {
-    return d => {
-        return d.citationCount < 10? defaultColor: (d.citationCount < 50? "#95cdff": "#40a6ff");
-    }
-}
-
-function updateFillColor() {
-    let fillColorVal = $("#fill-color").val();
-    if (fillColorVal == 0) {
-        d3.selectAll('.paper').data(nodes)
-            .style("fill", d => hsvToColor(d.color));
-        visual_topics();
-        
-        draw_tagcloud();
-    }
-    else {
-        let fillColor = getFillColorFunc();
-        d3.selectAll(".paper").style("fill", fillColor);
-        d3.selectAll('.year-topic').style("fill", fillColor);
-        d3.selectAll('.topic-map').style("fill", fillColor);
-        d3.selectAll('.tag-rect').style("fill", fillColor);
-    }
-}
-
-function updateFieldLevel() {
-    updateFillColor();
-}
 
 function updateVisType() {
     visType = $("#vis-type").val();
-    if (visType == 0 || visType == 3 || visType == 6 || visType == 7 || visType == 8) {
-        // onFullscreenChange();
-        loadAndRender();
-    } else if (visType == 1) {
-        force_layout();
-    } else if (visType == 2) {
-        force_layout(true);
-    } else if (visType == 4) {
-        // ajaxRequest(true);
-        
-        document.getElementById('toggle-switch').onchange = function() {
-            enable_y_focus = this.checked;
-            graph = hyperbolicDistortion(global_graph);
-            console.log('toogle graph', graph)
-            init_graph();
-        };
-
-        graph = hyperbolicDistortion(global_graph);
-        init_graph();
-
-        $("#mainsvg").on("wheel", function(event) {
-            // 防止页面滚动
-            event.preventDefault();
-        
-            // 获取滚轮的滚动方向
-            let delta = event.originalEvent.deltaY;
-        
-            if (delta > 0) {
-                coverage = Math.max(0.05, coverage * 0.9);
-            } else {
-                coverage = Math.min(20, coverage / 0.9);
-            }
-        
-            graph = hyperbolicDistortion(global_graph);
-            console.log("Current coverage value:", coverage);
-            init_graph();
-        });
-
-        // 当鼠标在SVG元素上按下时
-        $("#mainsvg").on("mousedown", function(event) {
-            reset_graph();
-            isMouseDown = true;
-            lastMouseX = event.pageX; // 记录当前鼠标X坐标
-            lastMouseY = event.pageY; // 记录当前鼠标Y坐标
-        });
-
-        // 当鼠标在SVG元素上移动时
-        $("#mainsvg").on("mousemove", function(event) {
-            if (isMouseDown) {
-                // 计算鼠标移动的距离
-                let deltaX = event.pageX - lastMouseX;
-                lastMouseX = event.pageX;
-                focus=focus-deltaX/window.innerWidth;
-
-                let deltaY = event.pageY - lastMouseY;
-                lastMouseY = event.pageY;
-                y_focus=y_focus-deltaY/window.innerHeight;
-
-                graph = hyperbolicDistortion(global_graph);
-                console.log("Current focus value:", focus, y_focus);
-                init_graph();
-            }
-        });
-
-        // 当鼠标释放时
-        $(document).on("mouseup", function() {
-            isMouseDown = false;
-        });
-    } else if (visType == 5) {
-        temporalThematicFlow();
-    }
+    loadAndRender();
 }
-
-
-function sugiyama(years, nodes, edges) {
-    var layers = new Array;
-    years.forEach(year => {
-        let l = new Array;
-        nodes.forEach(node => {
-            if (node.year == year.id) {
-                l.push({id: node.id, x: node.x, y: node.y});
-            }
-        });
-        layers.push(l);
-    });
-    
-    var Gp = new Array;
-    let cnt = 0;
-    edges.forEach(edge => {
-        let d = edge.d;
-        let t = d.split('C');
-        let M = t[0].substring(1).split(',');       // ['29.52', '-1450.22']
-        let C = t[1].substring(1).split(' ');       // ['9.52,-1436.7', '29.52,-1417.88', '29.52,-1404.28']
-        let pre = edge.source;
-        for (let i = 0; i < C.length; i++) {
-            let x_id = parseFloat(C[i].split(',')[0]);
-            let y_id = parseFloat(C[i].split(',')[1]);
-            if (i + 1 == C.length) {
-                Gp.push({source: pre, target: edge.target});
-                break;
-            }
-            if (i % 3 == 2) {
-                for (let j = 0; j < years.length; j++) {
-                    if (years[j].y - years[j].ry < y_id && y_id < years[j].y + years[j].ry) {
-                        layers[j].push({id: "VN" + String(cnt), x: x_id, y: years[j].y});
-                        Gp.push({source: pre, target: "VN" + String(cnt)});
-                        pre = "VN" + String(cnt);
-                        cnt += 1;
-                    }
-                }
-            }
-        }
-    });
-}
-
-function parseGraphProperties(graphStrings) {
-    // 正则表达式匹配数字
-    const numberPattern = /-?\d+(\.\d+)?/g;
-
-    // 从第一个字符串中提取宽度和高度
-    let dimensions = graphStrings[0].match(numberPattern);
-    let width = parseFloat(dimensions[2]);
-    let height = parseFloat(dimensions[3]);
-
-    // 从第二个字符串中提取平移值，这里假设 "translate(x y)" 之后是平移值
-    let translateValues = graphStrings[1].match(numberPattern);
-    let translateX = parseFloat(translateValues[translateValues.length - 2]);
-    let translateY = parseFloat(translateValues[translateValues.length - 1]);
-
-    return {
-        width: width,
-        height: height,
-        translateX: translateX,
-        translateY: translateY
-    };
-}
-
-function hyperbolicDistortion(graph, windowWidth=3000, windowHeight=1600) {
-    console.log('hyperbolicDistortion', focus, enable_y_focus, y_focus, coverage)
-
-    // Extracting graph dimensions and translation
-    const properties = parseGraphProperties(graph[0]);
-    console.log('properties', properties)
-    const graphWidth = properties.width;
-    const graphHeight = properties.height;
-    const translateX = properties.translateX;
-    const translateY = properties.translateY;
-
-    function transformCoordinate(x, y) {
-        // Apply hyperbolic transformation to x-coordinate
-        let xNorm = (x - focus * graphWidth) / graphWidth;
-        let transformedX = hyperbolicTransform(xNorm) * windowWidth;
-
-        if (enable_y_focus) {
-            let yNorm = (y - y_focus * graphHeight) / graphHeight;
-            let transformedY = hyperbolicTransform(yNorm) * windowHeight;
-            return [transformedX, transformedY];
-        }
-
-        let transformedY = y / graphHeight * windowHeight;
-        return [transformedX, transformedY];
-    }
-
-    function transformNode(node) {
-        let newNode = Object.assign({}, node);
-        let ret = transformCoordinate(node.x + translateX, node.y + translateY);
-        // console.log(ret)
-        newNode.x = ret[0];
-        newNode.y = ret[1];
-        // Adjust the node's size - Assuming rx, ry are radii
-        let xNorm = (node.x + translateX - focus * graphWidth) / graphWidth;
-        newNode.rx *= 1.5 * sech2(xNorm * coverage) * windowWidth / graphWidth;
-
-        if (enable_y_focus) {
-            let yNorm = (node.y + translateY - y_focus * graphHeight) / graphHeight;
-            newNode.ry *= 1.5 * sech2(yNorm * coverage) * windowHeight / graphHeight;
-            return newNode;
-        }
-
-        newNode.ry *= windowHeight / graphHeight;
-        return newNode
-    }
-
-    function transformPath(d) {
-        return d.replace(/([MLCQSTAZVH])|(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/g, (match, command, x, _, y) => {
-            if (command) {
-                return command;
-            }
-            let ret = transformCoordinate(parseFloat(x) + translateX, parseFloat(y) + translateY);
-            return `${ret[0]},${ret[1]}`;
-        });
-    }
-
-    function transformPolygon(polygonString) {
-        return polygonString.split(' ').map(coordPair => {
-            const [x, y] = coordPair.split(',').map(Number);
-            let ret = transformCoordinate(x + translateX, y + translateY);
-            return `${ret[0]},${ret[1]}`;
-        }).join(' ');
-    }
-
-    let years = graph[1].map(node=> {
-        return transformNode(node);
-    })
-    
-
-    let nodes = graph[2].map(node => {
-        let n = transformNode(node);
-        // console.log(node, n)
-        return n;
-    });
-    
-    let edges = graph[3].map(edge => {
-        return {
-            source: edge.source,
-            target: edge.target,
-            d: transformPath(edge.d),
-            extends_prob: edge.extends_prob,
-            citation_context: edge.citation_context,
-        }
-    });
-
-    let polygon = graph[4].map(polygon => {
-        return transformPolygon(polygon);
-    });
-    
-
-    return [
-        ['0 0 ' + windowWidth + ' ' + windowHeight, 'translate(0, 0)'],
-        years,
-        nodes,
-        edges,
-        polygon
-    ];
-    // {
-    //     nodes: nodes,
-    //     edges: edges,
-    //     polygon: polygon
-    // };
-}
-

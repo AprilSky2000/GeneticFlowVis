@@ -62,13 +62,22 @@
         "authors": 1306
     },
     "fellow": {
-        "name": "Fellows",
+        "name": "Fellow",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors from CG (similar #paper and #citation)",
         "year": "fellowYear",
         "type": "Top Scholar",
         "papers": 1087725,
         "authors": 4014
+    },
+    "fellows": {
+        "name": "Fellows",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (2024.5.22)",
+        "year": "fellowYear",
+        "type": "Top Scholar",
+        "papers": 786128,
+        "authors": 1860
     },
     "fellowVSNon": {
         "name": "Fellows VS Non-Fellows",

@@ -149,6 +149,7 @@
                                 <option value="6">subgraph + bar</option>
                                 <option value="7">subgraph + side</option>
                                 <option value="8" selected>subgraph + context</option>
+                                <option value="9">TopicPrism</option>
                             </select>
                         </td>
                         <td>
@@ -599,6 +600,7 @@ $(function () {
                 vizContext = vc;
                 d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
                     authorData = data;
+                    loadGlobalData();
                     // console.log('authorData', JSON.parse(JSON.stringify(authorData)));
                     // $("#node-num").text(data['nodes'].length);
                     // $("#edge-num").text(data['edges'].length);
@@ -606,7 +608,6 @@ $(function () {
                     
                     checkScreenSize();
                     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-                    
                     drawYears();
                     loadAndRender();
                     drawTTM();
