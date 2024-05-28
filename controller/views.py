@@ -101,7 +101,7 @@ def read_top_authors(field):
             group = re.search(pattern, s)
             return int(group.group(1)) if group else 0
         df['fellow'].fillna('', inplace=True)
-    if 'original' in df.columns:
+    if 'original' in df.columns and field in ['turing', 'fellowTuring', 'ACMfellow']:
         df['name'] = df['original']
 
     if 'PaperCount' in df.columns and 'PaperCount_field' in df.columns:

@@ -47,7 +47,21 @@
         "type": "Top Scholar"
     },
     "fellow": {
+        "name": "Fellow",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
+        "year": "fellowYear",
+        "type": "Top Scholar"
+    },
+    "fellows": {
         "name": "Fellows",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (2024.5.16)",
+        "year": "fellowYear",
+        "type": "Top Scholar"
+    },
+    "fellowVSNon": {
+        "name": "Fellow vs. Non-Fellow",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
         "year": "fellowYear",

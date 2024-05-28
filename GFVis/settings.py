@@ -15,6 +15,12 @@ import os
 import time
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import os
+import threading
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from django.core.cache import cache
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +43,58 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS.copy()
+
+class Watcher:
+    DIRECTORY_TO_WATCH = "./csv"  # 根目录
+
+    def __init__(self):
+        self.observer = Observer()
+
+    def run(self):
+        event_handler = Handler()
+        # 仅监视根目录下的一层子目录
+        if os.path.exists(self.DIRECTORY_TO_WATCH) and os.path.isdir(self.DIRECTORY_TO_WATCH):
+            for dir_name in os.listdir(self.DIRECTORY_TO_WATCH):
+                dir_path = os.path.join(self.DIRECTORY_TO_WATCH, dir_name)
+                if os.path.isdir(dir_path):
+                    self.observer.schedule(event_handler, dir_path, recursive=False)  # 不递归
+        self.observer.start()
+        try:
+            while True:
+                time.sleep(5)
+        except KeyboardInterrupt:
+            self.observer.stop()
+        self.observer.join()
+
+class Handler(FileSystemEventHandler):
+    @staticmethod
+    def process(event):
+        """
+        event.event_type
+            'modified' | 'created' | 'moved' | 'deleted'
+        event.src_path
+            path to the changed file
+        """
+        if event.event_type == 'modified' and event.src_path.endswith('field_leaves.csv'):
+            clear_cache_and_restart()
+
+    def on_modified(self, event):
+        self.process(event)
+
+def clear_cache_and_restart():
+    print('clear_cache_and_restart')
+    # 清除缓存
+    cache.clear()
+    os.system(f'rm -rf ./static/json')
+
+def start_watcher():
+    watcher = Watcher()
+    watcher_thread = threading.Thread(target=watcher.run)
+    watcher_thread.daemon = True
+    watcher_thread.start()
+
+# 启动文件监视器
+start_watcher()
 
 # Application definition
 

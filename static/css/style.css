@@ -435,3 +435,15 @@ h1 {
     padding-top: 20%; /* 调整文本位置 */
     font-size: 20px; /* 字体大小 */
 }
+
+.d3-tip-matrix {
+    padding: 8px;            /* 增加内边距以确保文本不会贴近边框 */
+    background-color: #000;  /* 背景色设置为黑色 */
+    color: #fff;             /* 字体颜色设置为白色 */
+    border: 1px solid #333;  /* 边框，可选择深色 */
+    text-align: center;      /* 文本居中 */
+    font-size: 14px;         /* 可调整字体大小以更好地适应提示框 */
+    line-height: normal;     /* 行高调整以确保行与行之间的空间适中 */
+    border-radius: 3px;      /* 可选，给提示框添加圆角 */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16); /* 可选，添加阴影以增加立体感 */
+}
