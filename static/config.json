@@ -76,8 +76,8 @@
         "description": "Fellows of the ACM and their competitors (2024.5.22)",
         "year": "fellowYear",
         "type": "Top Scholar",
-        "papers": 786128,
-        "authors": 1860
+        "papers": 534723,
+        "authors": 1940
     },
     "fellowVSNon": {
         "name": "Fellows VS Non-Fellows",

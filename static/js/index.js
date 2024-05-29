@@ -7,6 +7,7 @@ let global_nodes, global_edges, global_paper_field, minYear, maxYear;
 
 let topic2graph = {};
 let STopic = null;
+let g;  // 当前正在focus的元素
 
 
 let svgWidth, svgHeight;
@@ -16,7 +17,6 @@ let edgeBundling = 6;
 let context_edge_weight = 3;
 
 let viz, vizContext, config, visType, authorData;
-let g, gr, gl;  // maingroup, fixedgroup_r, fixedgroup_l
 
 let adjacent_ids = [];
 let extend_ids = [];
@@ -32,7 +32,7 @@ let highlighted = [];
 let TTM = {}, TTMEdges = {};   // topicTransitionMatrix
 let arrangement = [], adjacentMatrix;
 let originalCost, bestCost;
-let bbox, bbox_padding_x=10, bbox_padding_y=100;
+let bbox_padding_x=10, bbox_padding_y=100;
 let yearGrid = 2, alpha = 10;
 let virtualOpacity = 0.1;
 let topicOpacity = 0.25;
@@ -686,22 +686,6 @@ function create_svg(viewBox=undefined, transform=undefined) {
     gl = svg.append('g')
         .attr('transform', transform + fixedXTranslation_l)
         .attr('id', 'fixedgroup_l');
-
-    // zoom = d3.zoom()
-    //     .scaleExtent([0.05, 10])
-    //     .on("zoom", function(){
-    //         let transform = d3.event.transform;
-
-    //         g.attr("transform", d3.event.transform + transform);
-
-    //         // 仅更新Y坐标，X坐标保持不变
-    //         circle.attr("y", transform.y + 100 * transform.k); // 假设初始Y坐标为100，根据缩放比例更新Y坐标
-    //         // 注意：这里的100是圆形初始的Y坐标值，根据您的需要调整
-
-    //         g.attr("transform", d3.event.transform + transform)
-    //     });
-    // svg.call(zoom);
-
     
     zoom = d3.zoom()
         .scaleExtent([0.05, 10])
@@ -727,21 +711,21 @@ function create_svg(viewBox=undefined, transform=undefined) {
 
 
 function mouseoverEdge(id, width=10, color='red') {
-    g.selectAll('#' + selectorById(id))
+    d3.selectAll('#' + selectorById(id))
         .style("stroke", color)
         .style("stroke-width", width)
         .attr('cursor', 'pointer');
-    g.selectAll('#' + selectorById(id) + '_polygon')
+    d3.selectAll('#' + selectorById(id) + '_polygon')
         .style("fill", color)
         .attr('cursor', 'pointer');
 }
 
 function mouseoutEdge(id) {
     if (!highlighted.includes(id)) {
-        g.selectAll('#' + selectorById(id))
+        d3.selectAll('#' + selectorById(id))
             .style("stroke", d=>d.color)
             .style("stroke-width", d=>d.width);
-        g.selectAll('#' + selectorById(id) + '_polygon')
+        d3.selectAll('#' + selectorById(id) + '_polygon')
             .style("fill", d=>d.color);
     }
 }
@@ -755,21 +739,44 @@ function clickEdge(id) {
     g.selectAll('.edge-path-polygon')
         .style("fill", d=>d.color)
         .style('opacity', virtualOpacity);
-    g.selectAll('#' + selectorById(id))
+    d3.selectAll('#' + selectorById(id))
         .style("stroke", "red")
         .style("stroke-width", 10)
         .style('opacity', 1);
-    g.selectAll('#' + selectorById(id) + '_polygon')
+    d3.selectAll('#' + selectorById(id) + '_polygon')
         .style("fill", "red")
         .style("opacity", 1);
 }
 
 function init_graph(graph) {
     visType = $("#vis-type").val();
-    create_svg(graph['viewBox'], graph['transform']);
 
-    if (visType == 8 && STopic !== null) draw_context_edges(graph);
+    if (graph['topic'] !== null) {
+        // subgraph + context
+        processDotContext(graph);
+        graph['svgElement'] = vizContext.renderSVGElement(graph['dotContext']);
+    } else {
+        graph['svgElement'] = viz.renderSVGElement(graph['dot']);
+    }
+    parseSVG(graph);
 
+    // 创建一个无主的SVG元素
+    let svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // let viewBoxHeight = parseFloat(graph['viewBox'].split(' ')[3]);
+    // let transform = `translate(0,${viewBoxHeight})`;
+    svgElement.setAttribute('viewBox', graph['viewBox']);
+    // svgElement.setAttribute('transform', graph['transform']);
+
+    let svg = d3.select(svgElement);
+    g = svg.append('g');
+    graph['g'] = g;
+
+    tip = d3.tip()
+        .attr("class", "d3-tip")
+        .html(d => d.name);
+    svg.call(tip);
+
+    draw_context_edges(graph);
     g.selectAll('circle').data(graph['nodes']).enter().append('ellipse')
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
@@ -791,25 +798,29 @@ function init_graph(graph) {
             tip.hide(d);
         });
 
-    g.selectAll('.text1').data(graph['nodes']).enter().append('text')
+    g.selectAll('.text1')
+        .data(graph['nodes'])
+        .enter().append('text')
         .attr('x', d => d.x)
-        .attr('y', d => d.y)
+        .attr('y', d => d.y + 10)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Archivo Narrow')
         .attr('font-size', 30)
         .attr('class', 'text1')
         .attr("pointer-events", "none")
-        .each(function(d) {
-            // let text = d.text === undefined? d.text1 + '\n' + d.text2 : String(d.citationCount)
-            let text = d.label;
-            var lines = text.split('\n');
-            for (var i = 0; i < lines.length; i++) {
-                d3.select(this).append('tspan')
-                    .attr('x', d.x)
-                    .attr('dy', 10)  // Adjust dy for subsequent lines
-                    .text(lines[i]);
-            }
-        });
+        .text(d => String(d.citationCount));
+        
+        // .each(function(d) {
+        //     // let text = d.text === undefined? d.text1 + '\n' + d.text2 : String(d.citationCount)
+        //     let text = d.label;
+        //     var lines = text.split('\n');
+        //     for (var i = 0; i < lines.length; i++) {
+        //         d3.select(this).append('tspan')
+        //             .attr('x', d.x)
+        //             .attr('dy', 10)  // Adjust dy for subsequent lines
+        //             .text(lines[i]);
+        //     }
+        // });
     
     // 绘制每条边的所有路径
     // 为每条边创建一个独立的group元素
@@ -879,14 +890,11 @@ function init_graph(graph) {
             });
     });
 
-
-
-    bbox = g.node().getBBox();
-
-    if (STopic != null) {
-        draw_bbox();
+    if (visType == 8 && STopic != null) {
+        draw_bbox(graph);
         if (visType == 8) draw_context(graph);
     }
+    graph['svg'] = svgElement;
 }
 
 function draw_context(graph) {
@@ -896,6 +904,7 @@ function draw_context(graph) {
     context_r = {}; 
     // topicID: {"2011": [edge1, edge2, ...], "2012": [], "total": 50}
 
+    let bbox = graph['g'].node().getBBox();
     let all_years_l = [], all_years_r = [];
     let totalWidth = bbox.width;
     for (let edge of Object.values(graph['combinedContextEdges'])) {
@@ -949,6 +958,8 @@ function draw_context_bar(graph, context, width, dir='l') {
     let sorted_keys = Object.entries(context).sort((a, b) => b[1].total - a[1].total).map(entry => entry[0]);
     console.log('context for', dir,  context);
     let totalSize = sorted_keys.reduce((acc, key) => acc + context[key].total, 0);
+    let g = graph['g'];
+    let bbox = g.node().getBBox();
 
     const squareSize = 50; // 正方形大小
     let processedData = [];
@@ -1160,6 +1171,7 @@ function draw_context_bar(graph, context, width, dir='l') {
 }
 
 function draw_context_edges(graph) {
+    if (graph['topic'] == null) return;
     console.log('draw context', graph['combinedContextEdges']);
 
     // draw context graph['edges']:
@@ -1168,7 +1180,7 @@ function draw_context_edges(graph) {
     // - using graph['contextEdges'][edge].length to get width
     // - using all graph['edges'] in graph['contextEdges'][edge], find the target and use topic of target to get color
 
-    const edgeGroups = g.selectAll('.edge-group-context')
+    const edgeGroups = graph['g'].selectAll('.edge-group-context')
     .data(Object.keys(graph['combinedContextEdges'])) // 使用edges数组，每个元素代表一条边
     .enter()
     .append('g')
@@ -1245,7 +1257,10 @@ function draw_context_edges(graph) {
     });
 }   
 
-function draw_bbox() {
+function draw_bbox(graph) {
+    let g = graph['g'];
+    let bbox = g.node().getBBox();
+
     const defs = g.append('defs');
     const filter = defs.append('filter')
         .attr('id', 'drop-shadow')
@@ -1410,7 +1425,12 @@ function createDot(graph) {
         minYear: The minimum year among the graph['nodes'].
         maxYear: The maximum year among the graph['nodes'].
     */
-    let dot = `digraph G {\n${getEdgeBundlingStr()}\n`; // \nnode [shape=circle]
+    let size = '';
+    if (graph['width']!=undefined && graph['height']!=undefined) {
+        size = `size="${graph['width']},${graph['height']}"\nratio="fill"`;
+    }
+
+    let dot = `digraph G {\n${size}\n${getEdgeBundlingStr()}\n`; // \nnode [shape=circle]
     let yearDic = {};
 
     for (let year = minYear; year <= maxYear; year++) {
@@ -1532,9 +1552,15 @@ function processDotContext(graph) {
     ).join('\n');
     let virtualEdgesStr = graph['virtualEdges'] ? graph['virtualEdges'].map(edge => `${edge} [style="invis"]`).join('\n') : '';
     
+    let size = '';
+    if (graph['width']!=undefined && graph['height']!=undefined) {
+        size = `size="${graph['width']},${graph['height']}"\nratio="fill"`;
+        console.log('size', size);
+    }
+
     // 生成最终输出 DOT 字符串 node [shape=circle]
     graph['dotContext'] = `digraph G {
-
+${size}
 crossing_type=1
 ${getEdgeBundlingStr()}
 
@@ -1568,6 +1594,7 @@ ${virtualEdgesStr}
 }
 
 function bindSVGToElement(svgElement, elementId) {
+    console.log('before', svgElement.childNodes.length);
     // 从参数获取容器，并清空容器内的所有元素
     let ele = d3.select(elementId).node();
     d3.select(elementId).selectAll("*").remove();
@@ -1588,8 +1615,11 @@ function bindSVGToElement(svgElement, elementId) {
 
     // 在新 SVG 中添加一个 <g> 元素，并追加旧 SVG 的所有子节点
     let g = svg.append("g").attr("transform", transform);
-    Array.from(svgElement.childNodes).forEach(node => {
-        g.node().appendChild(node.cloneNode(true));
+    // Array.from(svgElement.childNodes).forEach(node => {
+    //     g.node().appendChild(node.cloneNode(true));
+    // });
+    d3.select(svgElement).selectAll('*').each(function() {
+        g.node().appendChild(this);
     });
 
     // 添加缩放和拖拽功能
@@ -1597,35 +1627,48 @@ function bindSVGToElement(svgElement, elementId) {
         .scaleExtent([0.01, 100]) // 可自行调整缩放比例范围
         .on("zoom", () => {
             let currentTransform = d3.event.transform;
-            g.attr("transform", currentTransform);
+            g.attr("transform", transform + currentTransform);
         });
 
     svg.call(zoom);
+    console.log('after', svgElement.childNodes.length); // 输出子节点的数量
 }
 
 
-function parseSVG(svgElement, graph) {
+function parseSVG(graph) {
     graph['id2attr'] = {};
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     // 解析节点
-    svgElement.querySelectorAll('g.node').forEach(node => {
+    graph['svgElement'].querySelectorAll('g.node').forEach(node => {
         const title = node.querySelector('title').textContent;
         const shape = node.querySelector('ellipse, polygon'); // 支持椭圆或多边形
         const text = node.querySelector('text');
+
+        const cx = parseFloat(shape.getAttribute('cx')) || 0;
+        const cy = parseFloat(shape.getAttribute('cy')) || 0;
+        const rx = parseFloat(shape.getAttribute('rx')) || parseFloat(shape.getAttribute('width')) / 2 || 0;
+        const ry = parseFloat(shape.getAttribute('ry')) || parseFloat(shape.getAttribute('height')) / 2 || 0;
+
+
+        minX = Math.min(minX, cx - rx);
+        maxX = Math.max(maxX, cx + rx);
+        minY = Math.min(minY, cy - ry);
+        maxY = Math.max(maxY, cy + ry);
         
         graph['id2attr'][title] = {
             id: title,
             fill: shape.getAttribute('fill'),
             stroke: shape.getAttribute('stroke'),
-            x: parseFloat(shape.getAttribute('cx')) || 0,
-            y: parseFloat(shape.getAttribute('cy')) || 0,
-            rx: parseFloat(shape.getAttribute('rx')) || parseFloat(shape.getAttribute('width')) / 2,
-            ry: parseFloat(shape.getAttribute('ry')) || parseFloat(shape.getAttribute('height')) / 2,
+            x: cx,
+            y: cy,
+            rx: rx,
+            ry: ry,
             label: text ? text.textContent : ''
         };
     });
 
     // 解析边
-    svgElement.querySelectorAll('g.edge').forEach(edge => {
+    graph['svgElement'].querySelectorAll('g.edge').forEach(edge => {
         // dismiss port
         const title = edge.querySelector('title').textContent.replace(/:w|:e/g, '');;
         const paths = edge.querySelectorAll('path');
@@ -1654,8 +1697,14 @@ function parseSVG(svgElement, graph) {
             } : null
         };
     });
-    graph['viewBox'] = svgElement.getAttribute('viewBox');
-    graph['transform'] = svgElement.getAttribute('transform');
+    // graph['viewBox'] = graph['svgElement'].getAttribute('viewBox');
+    // let viewBoxHeight = parseFloat(graph['viewBox'].split(' ')[3]);
+    // let transform = `translate(0,${viewBoxHeight})`;
+    // graph['transform'] = graph['svgElement'].getAttribute('transform');
+
+    graph['viewBox'] = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
+    graph['transform'] = `translate(0,${maxY - minY})`;
+
     graph['nodes'].forEach(node => {
         Object.assign(node, graph['id2attr'][node.id]);
     });
@@ -1676,24 +1725,6 @@ function getEndPoint(d, type) {
     return type === 's' ? points[0] : points[points.length - 1];
 }
 
-
-
-function renderDot(graph) {
-    createDot(graph);
-    let svgElement;
-
-    if (visType == 8 && STopic !== null) {
-        // subgraph + context
-        processDotContext(graph);
-        svgElement = vizContext.renderSVGElement(graph['dotContext']);
-    } else {
-        svgElement = viz.renderSVGElement(graph['dot']);
-    }
-    
-    bindSVGToElement(svgElement, "#originsvg");
-    parseSVG(svgElement, graph);
-    init_graph(graph);
-}
 
 function loadGlobalData() {
     let filteredNodes = authorData['nodes'].filter(d => d.isKeyPaper >= nodeSlider.noUiSlider.get() && d.year > 1900);
@@ -1798,6 +1829,7 @@ function loadGlobalData() {
         }
     })
     global_paper_field.sort(op('num'));
+    global_paper_field.forEach(d=>{d.size = d.num});
     console.log('global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
     let total = global_paper_field.reduce((acc, cur) => acc + cur.num, 0);
     let sum = 0;
@@ -1837,6 +1869,12 @@ function loadGlobalData() {
     arrangement = simulatedAnnealing(TTM);
     adjacentMatrix = getAdjacentMatrix(arrangement);
     console.log('arrangement:', arrangement);
+
+    // 加载所有话题图
+    loadTopicGraph(null);
+    global_paper_field.forEach(d => {
+        loadTopicGraph(d.id);
+    })
 }
 
 function loadTopicGraph(STopic) {
@@ -1845,6 +1883,7 @@ function loadTopicGraph(STopic) {
     // 1. 将所有topicDist = {}的节点设置为最后一个topic
     // 2. 将所有topic总数小的节点设置为最后一个topic
     graph = {}
+    graph['topic'] = STopic;
     graph['nodes'] = JSON.parse(JSON.stringify(global_nodes));
     graph['edges'] = JSON.parse(JSON.stringify(global_edges));
 
@@ -1928,13 +1967,14 @@ function loadTopicGraph(STopic) {
             graph['paper_field'][ix].num += 1;
         }
     })
-    
+
+    createDot(graph);
     topic2graph[STopic] = graph
 }
 
 
 function topic2color(topic, sat=undefined) {
-    if (topic == undefined) {
+    if (topic == undefined || topic == null) {
         return hsvToColor([0, 0, 0]);
     }
     // console.log('getTopicColor', topic, fields[topic])
@@ -1943,10 +1983,149 @@ function topic2color(topic, sat=undefined) {
     return sat == undefined? hsvToColor(c): hsvToColor(c, sat);
 }
 
+function drawTopicPrism() {
+    const prism = document.getElementById('prism');
+    const container = document.getElementById('prism-container');
+    let isRotating = true;
+    let lastMouseX;
+    let rotationAngleY = 0;
+    let rotationAngleX = 90;
+    let perspectiveDistance = 2000;
+
+    // const topics = [
+    //   { name: "Topic 1", size: 120 },
+    //   { name: "Topic 2", size: 96 },
+    //   { name: "Topic 3", size: 72 },
+    //   { name: "Topic 4", size: 48 },
+    //   { name: "Topic 5", size: 24 }
+    // ];
+    let topics = global_paper_field;
+
+    const prismWidth = container.offsetWidth;
+    const totalSize = d3.sum(topics, d => d.size);
+    const radius = 500;
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    let currentAngle = 0;
+    topics.forEach((topic, i) => {
+        const topicAngle = (topic.size / totalSize) * 360;
+        currentAngle += topicAngle / 2;
+        const theta = (topic.size / totalSize) * 2 * Math.PI;
+        
+        const width = 2 * radius * Math.sin(theta / 2);
+        const distance = radius * Math.cos(theta / 2);
+
+        svgWrapper = d3.select("#prism").append("div")
+            .attr("id", `svg-wrapper-${topic.id}`)
+            .attr("class", "svg-wrapper")
+            .style("transform", `rotateY(${currentAngle}deg) translateZ(${distance}px) translateX(${prismWidth/2}px)`);
+
+        // height 与 svg-wrapper 的高度一致
+        const height = svgWrapper._groups[0][0].offsetHeight;
+
+        let graph = topic2graph[topic.id];
+        graph['width'] = width / 72;    // 英寸转为pt
+        graph['height'] = height / 72;
+        init_graph(graph);
+        let svgElement = graph['svg'];
+        console.log(graph);
+
+        const svg = svgWrapper.append("svg")
+            .style("overflow", "visible");
+
+        svg.append("rect")
+            .attr("x", -width / 2)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", topic2color(graph['topic'], sat=0.2))
+            .attr("stroke", "#000")
+            .attr("stroke-width", 0.2);
+
+        svg.append("text")
+            .attr("x", 0)
+            .attr("y", height / 2)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("fill", "#000")
+            .text(topic.shortName);
+
+        // 创建一个新的嵌套 svg 元素并设置 viewBox 和 transform
+        let nestedSvg = svg.append("svg")
+            .attr("x", -width / 2)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", graph['viewBox']) // 设置 viewBox
+            .attr("transform", graph['transform']); // 设置 transform
+
+        // 将 svgElement 的子元素移动到嵌套的 svg 元素中
+        d3.select(svgElement).selectAll('*').each(function() {
+            nestedSvg.node().appendChild(this);
+        });
+
+
+        currentAngle += topicAngle / 2;
+    });
+
+    document.getElementById('toggle-rotation').addEventListener('click', function() {
+      isRotating = !isRotating;
+      this.textContent = isRotating ? '停止旋转' : '开始旋转';
+      prism.style.animation = isRotating ? 'rotate 20s infinite linear' : 'none';
+    });
+
+    container.addEventListener('mousedown', function(event) {
+      lastMouseX = event.clientX;
+      document.addEventListener('mousemove', mouseMoveHandler);
+      document.addEventListener('mouseup', function() {
+        document.removeEventListener('mousemove', mouseMoveHandler);
+      });
+    });
+
+    function mouseMoveHandler(event) {
+      const deltaX = event.clientX - lastMouseX;
+      lastMouseX = event.clientX;
+      rotationAngleY += deltaX / 5;
+      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+    }
+
+    container.addEventListener('wheel', function(event) {
+      perspectiveDistance += event.deltaY * 4;
+      container.style.perspective = `${perspectiveDistance}px`;
+    });
+
+    const viewAngleSlider = document.getElementById('view-angle');
+    viewAngleSlider.addEventListener('input', function() {
+      rotationAngleX = this.value;
+      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+    });
+
+    if (isRotating) {
+      prism.style.animation = 'rotate 20s infinite linear';
+    }
+}
+
 function loadAndRender() {
+
+    if (visType==9) {
+        $("#mainsvg").hide();
+        $("#originsvg").hide();
+        $("#TopicPrism").show();
+
+        drawTopicPrism();
+    } else {
+        $("#mainsvg").show();
+        $("#originsvg").hide();
+        $("#TopicPrism").hide();
+
+        let graph = topic2graph[STopic];
+        console.log('current graph:', graph);
+        
+        init_graph(graph);
+        bindSVGToElement(graph['svgElement'], "#originsvg");
+        bindSVGToElement(graph['svg'], "#mainsvg");
+    }
     
-    loadTopicGraph(STopic);
-    renderDot(topic2graph[STopic]);
 }
 
 

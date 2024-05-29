@@ -731,6 +731,12 @@ def index(request):
 def clean(request):
     fieldType = request.GET.get("field")
     path = f"static/json/{fieldType}"
+
+    global field2top_authors
+    global field2topicDist
+    field2top_authors.clear()
+    field2topicDist.clear()
+
     try:
         shutil.rmtree(path)
         return HttpResponse("Successfully deleted " + path)

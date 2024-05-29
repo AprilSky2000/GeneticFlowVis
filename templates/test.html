@@ -13,15 +13,15 @@
       align-items: center;
       background-color: #f0f0f0;
     }
-    .prism-container {
+    #prism-container {
       position: relative;
-      width: 1000px;
-      height: 1000px;
+      width: 800px;
+      height: 800px;
       perspective: 2000px;
       overflow: hidden;
       border: 1px solid #000;
     }
-    .prism {
+    #prism {
       position: absolute;
       width: 100%;
       height: 60%;
@@ -39,7 +39,7 @@
       from { transform: rotateY(0deg); }
       to { transform: rotateY(360deg); }
     }
-    .center-marker, .origin-marker {
+    .center-marker {
       position: absolute;
       width: 2px;
       height: 600px;
@@ -47,14 +47,10 @@
       left: 50%;
       transform: translateX(-50%);
     }
-    .origin-marker {
-      background-color: blue;
-      transform: translateX(-50%) translateY(300px);
-    }
     .slider-container {
       position: absolute;
       top: 50%;
-      right: -50px;
+      right: 50px;
       transform: translateY(-50%);
       height: 200px;
       display: flex;
@@ -66,20 +62,19 @@
 </head>
 <body>
   <button id="toggle-rotation">切换旋转</button>
-  <div class="prism-container" id="container">
-    <div id="prism" class="prism">
+  <div id="prism-container">
+    <div id="prism">
       <div class="center-marker"></div>
-      <div class="origin-marker"></div>
     </div>
-    <div class="slider-container">
-      <input type="range" id="view-angle" min="0" max="90" value="90" style="writing-mode: bt-lr; transform: rotate(-90deg);">
-      <label for="view-angle">视角调整</label>
-    </div>
+  </div>
+  <div class="slider-container">
+    <input type="range" id="view-angle" min="0" max="90" value="90" style="writing-mode: bt-lr; transform: rotate(-90deg);">
+    <label for="view-angle">视角调整</label>
   </div>
   <script src="https://d3js.org/d3.v6.min.js"></script>
   <script>
     const prism = document.getElementById('prism');
-    const container = document.getElementById('container');
+    const container = document.getElementById('prism-container');
     let isRotating = true;
     let lastMouseX;
     let rotationAngleY = 0;
@@ -96,7 +91,7 @@
 
     const prismWidth = container.offsetWidth;
     const totalSize = d3.sum(topics, d => d.size);
-    const radius = 500;
+    const radius = 400;
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     let currentAngle = 0;
