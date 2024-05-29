@@ -360,6 +360,11 @@ def clean(request):
     import shutil
     fieldType = request.GET.get("field")
     path = f"static/json/{fieldType}"
+    global field2top_authors
+    global field2topics
+    field2top_authors.clear()
+    field2topics.clear()
+
     try:
         shutil.rmtree(path)
         return HttpResponse("Successfully deleted " + path)
