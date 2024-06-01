@@ -35,11 +35,6 @@
         "icon": "fas fa-eye icon",
         "type": "CS Subfield"
     },
-    "ACMfellow.0112": {
-        "name": "ACM Fellows (old version)",
-        "icon": "fa-solid fa-graduation-cap icon",
-        "description": "Fellows of the ACM"
-    },
     "ACMfellow": {
         "name": "ACM Fellows",
         "icon": "fa-solid fa-graduation-cap icon",
@@ -49,21 +44,28 @@
     "fellow": {
         "name": "Fellow",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
+        "description": "Fellows of the ACM and their competitors (20240301 old version)",
         "year": "fellowYear",
         "type": "Top Scholar"
     },
-    "fellows": {
-        "name": "Fellows",
+    "fellowV1": {
+        "name": "FellowV1",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (2024.5.16)",
+        "description": "Fellows of the ACM and their competitors (20240501)",
         "year": "fellowYear",
         "type": "Top Scholar"
     },
-    "fellowVSNon": {
-        "name": "Fellow vs. Non-Fellow",
+    "fellowV2": {
+        "name": "FellowV2",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (similar #paper and #citation)",
+        "description": "Fellows of the ACM and their competitors (20240516 similar #paper and #citation)",
+        "year": "fellowYear",
+        "type": "Top Scholar"
+    },
+    "fellowV3": {
+        "name": "FellowV3",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (20240601 CSPaperRatio > 0.9)",
         "year": "fellowYear",
         "type": "Top Scholar"
     },

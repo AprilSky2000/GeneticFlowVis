@@ -296,15 +296,15 @@ function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
     });
 
     const years = Object.keys(yearIndexRanges).map(Number).sort((a, b) => a - b);
-    var colorScale = d3.scaleSequential(d3.interpolateViridis)
-        .domain([0, years.length - 1]);
-    var colorList = years.map((_, i) => colorScale(i));
+    // var colorScale = d3.scaleSequential(d3.interpolateViridis)
+    //     .domain([0, years.length - 1]);
+    // var colorList = years.map((_, i) => colorScale(i));
+    var colorList = d3.schemeCategory10.slice(0, years.length);
     years.forEach((year, idx) => {
         const currentRange = yearIndexRanges[year];
         for (let nextIdx = years.length - 1; nextIdx >= idx; nextIdx--) {
             const nextYear = years[nextIdx];
             const nextRange = yearIndexRanges[nextYear];
-            // 绘制矩形覆盖从当前年份的起始到后续年份的结束
             matrixGroup.append('rect')
                 .attr('x', nextRange.start * cellSize)
                 .attr('y', currentRange.start * cellSize)
@@ -312,7 +312,8 @@ function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
                 .attr('height', (currentRange.end - currentRange.start + 1) * cellSize)
                 .attr('fill', 'none')
                 .attr('stroke', colorList[nextIdx - idx])
-                .attr('stroke-width', 20);
+                .attr('stroke-width', 30)
+                .attr('class', 'yearMatrix');
         }
     });
 }
@@ -369,7 +370,7 @@ function shiftSubMatrix() {
         .data(subMatrix.flat())
         .enter()
         .append('rect')
-        .attr('x', (_, i) => mainMatrixSize + gap + (i % len) * subMatrixSize)
+        .attr('x', (_, i) => (i % len) * subMatrixSize)
         .attr('y', (_, i) => Math.floor(i / len) * subMatrixSize)
         .attr('width', subMatrixSize)
         .attr('height', subMatrixSize)
