@@ -26,7 +26,6 @@ function downloadSvg(svgList, fileName) {
             var scale = maxWidth / svg.width.baseVal.value;
             canvas.height = svg.height.baseVal.value * scale;
             if (localCnt >= 1) ratio = ratio * 0.5;
-            console.log(ratio);
 
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);

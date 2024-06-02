@@ -91,7 +91,11 @@ function addAllListeners() {
         d3.select('#mainsvg').transition().duration(500).call(zoom.scaleBy, 0.9);
     });
     $("#restore").click(function() {
-        reset_graph();
+        if (isFullScreen == 1) {
+            ajaxRequest();
+        } else {
+            reset_graph();
+        }
     });
 
     // 初始设置，第一个按钮加粗，透明度为1，其他按钮透明度为0.5
@@ -109,341 +113,6 @@ function addAllListeners() {
     window.addEventListener('resize', onFullscreenChange);
     window.onload = checkScreenSize;
     guidence()
-}
-
-function drawMatrix() {
-    var topicNodesMap = new Map();
-    nodes.forEach(node => {
-        const topicKey = node.topic;
-        if (!topicNodesMap.has(topicKey)) {
-            topicNodesMap.set(topicKey, []);
-        }
-        topicNodesMap.get(topicKey).push(node);
-    });
-    topicNodesMap.forEach((value, _) => {
-        value.sort((a, b) => {
-            if (a.year != b.year) return a.year - b.year;
-            else return b.citationCount - a.citationCount;
-        });
-    });
-
-    topicNodesList = Array.from(topicNodesMap).sort((a, b) => b[1].length - a[1].length);
-
-    sortNodes = topicNodesList.reduce((accumulator, current) => {
-        return accumulator.concat(current[1]);
-    }, []);
-
-    var adjacencyMatrix = Array(sortNodes.length).fill().map(() =>
-            Array(sortNodes.length).fill().map(() => ({
-                // "color": [0, 0, 0],         // 初始化为白色
-                "source":"", "target":"",
-                "sourceCitation": -1, "targetCitation": -1,
-            })));
-
-    const findIndexById = (id) => sortNodes.findIndex(node => node.id == id);
-
-    edges.forEach(edge => {
-        const source = findIndexById(edge.source);
-        const target = findIndexById(edge.target);
-        if (source != -1 && target != -1) {
-            // adjacencyMatrix[source][target].color =
-            //         sortNodes[source].topic == sortNodes[target].topic ? sortNodes[source].color : [0, 0, 0.5];
-            adjacencyMatrix[source][target].source = `${sortNodes[source].name}(${sortNodes[source].year})(${sortNodes[source].citationCount})`;
-            adjacencyMatrix[source][target].target = `${sortNodes[target].name}(${sortNodes[target].year})(${sortNodes[target].citationCount})`;
-            adjacencyMatrix[source][target].sourceCitation = sortNodes[source].citationCount || 0;
-            adjacencyMatrix[source][target].targetCitation = sortNodes[target].citationCount || 0;
-        }
-    });
-
-    // 绘制矩阵
-    d3.select('#maingroup').remove();
-    d3.select('#mainsvg').append("g")
-            // .attr('transform', d3.event.transform)
-            .attr("id", "maingroup");
-    zoom = d3.zoom()
-            .scaleExtent([0.05, 10])
-            .on("zoom", _ => d3.select("#maingroup").attr("transform", d3.event.transform));
-    d3.select("#mainsvg").call(zoom);
-    const size = 50;
-    // const maxCitation = Math.max(...sortNodes.map(node => node.citationCount || 0));
-    const maxCitation = 1000;
-    const barMaxWidth = 500;  // 柱状图的最大宽度，可根据需要调整
-
-    d3.select('#maingroup').selectAll('.topicMatrix')
-        .data(adjacencyMatrix.flat())
-        .enter()
-        .append('rect')
-        .attr('x', (_, i) => (i % nodes.length) * size)
-        .attr('y', (_, i) => Math.floor(i / nodes.length) * size)
-        .attr('width', size)
-        .attr('height', size)
-        .attr('fill', d => {
-            if (d.sourceCitation == -1 && d.targetCitation == -1) return "white";
-            else if (d.sourceCitation >= 100 && d.targetCitation >= 100) return "red";
-            else if (d.sourceCitation >= 100 && d.targetCitation < 100) return "orange";
-            else if (d.sourceCitation < 100 && d.targetCitation >= 100) return "blue";
-            else if (d.sourceCitation < 100 && d.targetCitation < 100) return d3.rgb(169,169,169);
-        })
-        .attr('stroke', d3.hsv(0, 0, 1))
-        .attr('stroke-width', 0)
-        .attr('class', 'topicMatrix');
-    const tipMatrix = d3.tip()
-        .attr("class", "d3-tip-matrix")
-        .html(d => {
-            if (d.source == '' && d.target == '') return "";
-            return `<div>${d.source}</div><div>&#8595;</div><div>${d.target}</div>`;
-        });
-
-    d3.select('#mainsvg').call(tipMatrix);
-    d3.selectAll(".topicMatrix")
-    .on('mouseover', function (d) {
-        d3.select(this).attr('cursor', 'pointer');
-        tipMatrix.show(d, this);
-    })
-    .on('mouseout', function (d) {
-        tipMatrix.hide(d, this);
-    });
-
-    d3.select('#maingroup').selectAll('.unknown')
-        .data(sortNodes)
-        .enter()
-        .append('rect')
-        .attr('x', node => - (((node.citationCount > maxCitation ? maxCitation : node.citationCount) || 0) / maxCitation * barMaxWidth))
-        .attr('y', (_, i) => i * size)
-        .attr('width', node => (((node.citationCount > maxCitation ? maxCitation : node.citationCount) || 0) / maxCitation * barMaxWidth))
-        .attr('height', size)
-        .attr('fill', d3.rgb(169,169,169))
-        .attr('class', 'matrixBar');
-    d3.select('#maingroup').selectAll('.unknown')
-        .data(sortNodes)
-        .enter()
-        .append('rect')
-        .attr('x', (_, i) => i * size)
-        .attr('y', node => - (((node.citationCount > maxCitation ? maxCitation : node.citationCount) || 0) / maxCitation * barMaxWidth))
-        .attr('width', size)
-        .attr('height', node => ((node.citationCount > maxCitation ? maxCitation : node.citationCount) || 0) / maxCitation * barMaxWidth)
-        .attr('fill', d3.rgb(169,169,169))
-        .attr('class', 'matrixBar');
-
-    const tipMatrixBar = d3.tip()
-        .attr("class", "d3-tip-matrix")
-        .html(d => {
-            return `<div>${d.name}(${d.citationCount})</div>`;
-        });
-    d3.select('#mainsvg').call(tipMatrixBar);
-    d3.selectAll(".matrixBar")
-    .on('mouseover', function (d) {
-        d3.select(this).attr('cursor', 'pointer');
-        tipMatrixBar.show(d, this);
-    })
-    .on('mouseout', function (d) {
-        tipMatrixBar.hide(d, this);
-    });
-
-    // Draw submatrix borders
-    var start = 0;
-    topicNodesList.forEach(([topicId, topicNodeSet], index) => {
-        const len = topicNodeSet.length;
-        d3.select('#maingroup').append('rect')
-            .attr('x', start * size)
-            .attr('y', start * size)
-            .attr('width', len * size)
-            .attr('height', len * size)
-            .attr('fill', 'none')
-            .attr('stroke', hsvToColor(topicNodeSet[0].color))
-            .attr('stroke-width', 10);
-        start += len;
-    });
-}
-
-function addYearLabels(matrixGroup, nodes, cellSize, gap) {
-    const labelOffset = Math.min(cellSize * 0.1, gap * 0.1); // 标签与矩阵的距离，设置为单元格大小的一半
-    const fontSize = Math.min(cellSize * 0.3, gap * 0.1);    // 字体大小设置为单元格大小的30%
-
-    // 添加列标签（年份）
-    matrixGroup.selectAll('.unknown')
-        .data(nodes)
-        .enter()
-        .append('text')
-        .text(d => d.year)  // 假设节点对象中有一个年份属性
-        .attr('x', (_, i) => i * cellSize + cellSize / 2)  // 居中对齐
-        .attr('y', -labelOffset)  // 在矩阵上方留出一些空间
-        .attr('text-anchor', 'middle')  // 文本居中对齐
-        .attr('font-size', `${fontSize}px`)  // 设置字体大小
-        .attr('class', 'yearLabel');
-
-    // 添加行标签（年份）
-    matrixGroup.selectAll('.unknown')
-        .data(nodes)
-        .enter()
-        .append('text')
-        .text(d => d.year)
-        .attr('x', -labelOffset)  // 在矩阵左侧留出更多空间
-        .attr('y', (_, i) => i * cellSize + cellSize / 2 + fontSize / 3)  // 调整位置以居中对齐
-        .attr('text-anchor', 'end')  // 文本右对齐
-        .attr('font-size', `${fontSize}px`)  // 设置字体大小
-        .attr('class', 'yearLabel');
-}
-
-function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
-    const yearIndexRanges = {};
-    topicNodes.forEach((node, index) => {
-        if (!yearIndexRanges[node.year]) {
-            yearIndexRanges[node.year] = { start: index, end: index };
-        } else {
-            yearIndexRanges[node.year].end = index;
-        }
-    });
-
-    const years = Object.keys(yearIndexRanges).map(Number).sort((a, b) => a - b);
-    // var colorScale = d3.scaleSequential(d3.interpolateViridis)
-    //     .domain([0, years.length - 1]);
-    // var colorList = years.map((_, i) => colorScale(i));
-    var colorList = d3.schemeCategory10.slice(0, years.length);
-    years.forEach((year, idx) => {
-        const currentRange = yearIndexRanges[year];
-        for (let nextIdx = years.length - 1; nextIdx >= idx; nextIdx--) {
-            const nextYear = years[nextIdx];
-            const nextRange = yearIndexRanges[nextYear];
-            matrixGroup.append('rect')
-                .attr('x', nextRange.start * cellSize)
-                .attr('y', currentRange.start * cellSize)
-                .attr('width', (nextRange.end - nextRange.start + 1) * cellSize)
-                .attr('height', (currentRange.end - currentRange.start + 1) * cellSize)
-                .attr('fill', 'none')
-                .attr('stroke', colorList[nextIdx - idx])
-                .attr('stroke-width', 30)
-                .attr('class', 'yearMatrix');
-        }
-    });
-}
-
-function shiftSubMatrix() {
-    // 清除之前的子矩阵元素和标签
-    d3.select('#maingroup').selectAll('.subMatrix').remove();
-    d3.select('#topicLabel').remove();
-    d3.select('#nextTopicButton').remove();
-    d3.select('#nextTopicButtonText').remove();
-    d3.select('#maingroup').select('#matrixGroup').remove();
-
-    var topicNodes = topicNodesList[topicIndex % topicNodesList.length][1];
-    let fieldDepthVal = $("#field-level").val();
-    let fields = fieldDepthVal == 1 ? field_roots : field_leaves;
-    var topicName = fields[topicNodes[0].topic][2];
-    var len = topicNodes.length;
-
-    // 设置子矩阵的方格大小
-    const mainMatrixSize = sortNodes.length * 50; // 主矩阵总宽度
-    const gap = sortNodes.length * 10; // 主矩阵与子矩阵之间的间隙
-    const matrixPadding = 200; // 预留空间给按钮和标签
-    const subMatrixWidth = mainMatrixSize - matrixPadding; // 子矩阵的总宽度
-    var subMatrixSize = subMatrixWidth / len; // 计算子矩阵每个方格的大小
-    var matrixGroup = d3.select('#maingroup').append('g')
-        .attr('transform', `translate(${mainMatrixSize + gap}, ${0})`)
-        .attr('id', 'matrixGroup');
-
-    // 调用添加年份标签的函数
-    addYearLabels(matrixGroup, topicNodes, subMatrixSize, gap);
-
-    var subMatrix = Array(len).fill().map(() => Array(len).fill().map(() => ({
-        "color": [0, 0, 0], // 初始化为白色
-        "source": "", "target": "",
-        "sourceCitation": -1, "targetCitation": -1,
-    })));
-
-    const localIndexById = id => topicNodes.findIndex(node => node.id == id);
-
-    edges.forEach(edge => {
-        const localSource = localIndexById(edge.source);
-        const localTarget = localIndexById(edge.target);
-        if (localSource != -1 && localTarget != -1 && topicNodes[localSource].topic == topicNodesList[topicIndex % topicNodesList.length][0]) {
-            subMatrix[localSource][localTarget].color = topicNodes[localSource].color;
-            subMatrix[localSource][localTarget].source = `${topicNodes[localSource].name}(${sortNodes[localSource].year})(${topicNodes[localSource].citationCount})`;
-            subMatrix[localSource][localTarget].target = `${topicNodes[localTarget].name}(${sortNodes[localTarget].year})(${topicNodes[localTarget].citationCount})`;
-            subMatrix[localSource][localTarget].sourceCitation = topicNodes[localSource].citationCount || 0;
-            subMatrix[localSource][localTarget].targetCitation = topicNodes[localTarget].citationCount || 0;
-        }
-    });
-
-    // 绘制子矩阵
-    matrixGroup.selectAll('.subMatrix')
-        .data(subMatrix.flat())
-        .enter()
-        .append('rect')
-        .attr('x', (_, i) => (i % len) * subMatrixSize)
-        .attr('y', (_, i) => Math.floor(i / len) * subMatrixSize)
-        .attr('width', subMatrixSize)
-        .attr('height', subMatrixSize)
-        .attr('fill', d => {
-            if (d.sourceCitation == -1 && d.targetCitation == -1) return "white";
-            else if (d.sourceCitation >= 100 && d.targetCitation >= 100) return "red";
-            else if (d.sourceCitation >= 100 && d.targetCitation < 100) return "orange";
-            else if (d.sourceCitation < 100 && d.targetCitation >= 100) return "blue";
-            else if (d.sourceCitation < 100 && d.targetCitation < 100) return d3.rgb(169,169,169);
-        })
-        .attr('stroke', 'black')
-        .attr('stroke-width', 5)
-        .attr('class', 'subMatrix');
-
-    // 绘制年份交互
-    drawInterYearInteractions(matrixGroup, topicNodes, subMatrixSize);
-
-    // 添加显示topic名称的标签，字体更大
-    const labelFontSize = 100;
-    d3.select('#maingroup')
-        .append('text')
-        .attr('id', 'topicLabel')
-        .attr('x', mainMatrixSize * 1.5 - topicName.length * 0.25 * labelFontSize)
-        .attr('y', len * subMatrixSize + labelFontSize)
-        .attr('font-size', labelFontSize + 'px')
-        .text(topicName);
-
-    // 绘制Prev和Next按钮
-    const buttonSize = sortNodes.length * 4; // 按钮大小
-    const offsetY = subMatrixSize * topicNodes.length / 2; // 垂直居中
-    // Prev Topic按钮
-    matrixGroup.append('path')
-        .attr('d', `M ${-buttonSize * 2} ${offsetY} l ${buttonSize} -${buttonSize / 2} l 0 ${buttonSize}`)
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 10)
-        .attr('cursor', 'pointer')
-        .on('click', () => {
-            // 切换到上一个主题
-            topicIndex = topicIndex - 1;
-            if (topicIndex < 0) topicIndex = 0;
-            shiftSubMatrix(topicIndex);
-        });
-
-    // Next Topic按钮
-    matrixGroup.append('path')
-        .attr('d', `M ${subMatrixWidth + buttonSize} ${offsetY - buttonSize / 2} l ${buttonSize} ${buttonSize / 2} l -${buttonSize} ${buttonSize / 2}`)
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 10)
-        .attr('cursor', 'pointer')
-        .on('click', () => {
-            // 切换到下一个主题
-            topicIndex = topicIndex + 1;
-            shiftSubMatrix(topicIndex);
-        });
-
-    // 使用提示工具显示信息
-    const tipSubMatrix = d3.tip()
-        .attr("class", "d3-tip-matrix")
-        .html(d => {
-            if (d.source == '' && d.target == '') return "";
-            return `<div>${d.source}</div><div>&#8595;</div><div>${d.target}</div>`;
-        });
-    d3.select('#mainsvg').call(tipSubMatrix);
-    d3.selectAll(".subMatrix")
-    .on('mouseover', function (d) {
-        d3.select(this).attr('cursor', 'pointer');
-        tipSubMatrix.show(d, this);
-    })
-    .on('mouseout', function (d) {
-        tipSubMatrix.hide(d, this);
-    });
 }
 
 function toggleFullscreen() {
@@ -464,7 +133,7 @@ function toggleFullscreen() {
     paramData.extendsProb = edgeSlider.noUiSlider.get();
     paramData.ratio = ratio;
 
-    if (full_screen == 0) {
+    if (isFullScreen == 0) {
         $.ajax({
             headers: {"X-CSRFToken": getCookie("csrftoken")},
             type: "POST",
@@ -494,7 +163,7 @@ function toggleFullscreen() {
                 console.log("Response:", jqXHR.responseText);
             }
         });
-        full_screen = 1;
+        isFullScreen = 1;
     }
     else {
         ajaxRequest();
@@ -553,7 +222,7 @@ function onEscKeyPressed(event) {
 }
 
 function reset_graph() {
-    image_status = image_data.length == 0 ? 0 : 2;
+    imageStatus = imageData.length == 0 ? 0 : 2;
     $("#description").hide();
     $("#tagcloud").show();
     $("#mainsvg").show();
@@ -819,7 +488,7 @@ function draw_tag_cloud() {
         .attr("fill", d => hsvToColor(d.color)) //rgba(15, 161, 216, ${d.opacity})
         //`rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`
         .attr("fill-opacity", 0.8)
-        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseover', function(d) {highlightTopic(d, this)})
         .on('mouseout', reset_field);
 
     words.selectAll("text")
@@ -836,7 +505,7 @@ function draw_tag_cloud() {
         .attr("font-size", d => d.size + "px")
         .attr("fill", d => `rgb(0,0,0)`)
         .attr("pointer-events", "none");
-    // .on('mouseover', function(d) {highlight_field(d, this)})
+    // .on('mouseover', function(d) {highlightTopic(d, this)})
         // .on('mouseout', reset_field);
 }
 
@@ -865,7 +534,7 @@ function update_nodes() {
     let fieldLevelVal = $("#field-level").val();
     for (let i = 0; i < nodes.length; i++) {
         // fields为当前是顶层field还是底层field，topic为当前论文在1层/2层情况下对应的topicID
-        let topic = parseInt(nodes[i].topic);
+        let topic = parseInt(nodes[i]['topic']);
         let fields = field_leaves;
         if (fieldLevelVal == 1) {
             topic = parseInt(field_leaves[topic][8]);
@@ -892,95 +561,75 @@ function updateField() {
     let fieldDepthVal = $("#field-level").val();
     let fields = fieldDepthVal == 1 ? field_roots : field_leaves; //该领域所有的field信息
 
-    var mapField = [];    // 学者个人的field信息
-    for (let i = 0; i < nodes.length; i++) {
-        // 判断该论文节点的topic是叶子层还是顶层
-        let topic = parseInt(nodes[i].topic);
-        topic = fieldDepthVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-        // 统计该学者的topic信息，如果已经统计(纳入了mapField)，
-        var j;
-        for (j = 0; j < mapField.length; j++) {
-            if (topic == mapField[j].id) {
-                mapField[j].num += 1;
-                break;
-            }
-        }
-        // 如果没有统计，在mapField中新建k-v
-        if (j == mapField.length) {
-            let dic = {
-                "id": topic,
-                "num": 1,
-                "name": fields[topic][2],
-                "color": [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])],
-                "cx": parseFloat(fields[topic][3]),
-                "cy": parseFloat(fields[topic][4]),
-            };
-            mapField.push(dic);
-        }
-    }
-    mapField.sort(op('num'));
+    var topicMap = new Map(); // 使用Map来存储学者的field信息
 
-    barField = [];
-    for (let i = 0; i < years.length; i++) {
-        for (let j = 0; j < mapField.length; j++) {
+    // 统计每个field的出现次数
+    for (let i = 0; i < nodes.length; i++) {
+        let topicId = parseInt(nodes[i]['topic']);
+        topicId = fieldDepthVal == 1 ? parseInt(field_leaves[topicId][8]) : topicId;
+
+        if (topicMap.has(topicId)) {
+            let topicVal = topicMap.get(topicId);
+            topicVal.num += 1;
+        } else {
             let dic = {
-                "id": `${years[i].id}${mapField[j].id}`,
-                "name": mapField[j].name,
-                "num"  : 0,
-                "color": mapField[j].color,
-            }
-            barField.push(dic);
+                "id": topicId,
+                "num": 1,
+                "name": fields[topicId][2],
+                "color": [parseFloat(fields[topicId][5]), parseFloat(fields[topicId][6]), parseInt(fields[topicId][7])],
+                "cx": parseFloat(fields[topicId][3]),
+                "cy": parseFloat(fields[topicId][4]),
+            };
+            topicMap.set(topicId, dic);
         }
     }
-    for (let i = 0; i < barField.length; i++) {
+
+    // 将Map转换为数组并排序
+    let sortedTopicList = Array.from(topicMap.values()).sort((a, b) => b.num - a.num);
+
+    topicBar = [];
+    for (let i = 0; i < years.length; i++) {
+        for (let j = 0; j < sortedTopicList.length; j++) {
+            let dic = {
+                "id": `${years[i].id}${sortedTopicList[j].id}`,
+                "name": sortedTopicList[j].name,
+                "num"  : 0,
+                "color": sortedTopicList[j].color,
+            }
+            topicBar.push(dic);
+        }
+    }
+    for (let i = 0; i < topicBar.length; i++) {
         for (let j = 0; j < nodes.length; j++) {
-            let topic = parseInt(nodes[j].topic);
-            topic = fieldDepthVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
-            if (barField[i].id == `${nodes[j].year}${topic}`) barField[i].num += 1;
+            let topicId = parseInt(nodes[j]['topic']);
+            topicId = fieldDepthVal == 1 ? parseInt(field_leaves[topicId][8]) : topicId;
+            if (topicBar[i].id == `${nodes[j].year}${topicId}`) topicBar[i].num += 1;
         }
     }
     barTranslate = 0;
     for (let i = 0; i < years.length; i++) {
         var x = years[i].cx, y = years[i].cy;
         var barLength = 0;
-        for (let j = 0; j < mapField.length; j++) {
-            let idx = i * mapField.length + j;
-            barField[idx].x = x;
-            barField[idx].y = y;
-            x -= barField[idx].num * 40;
-            barLength += barField[idx].num * 40;
+        for (let j = 0; j < sortedTopicList.length; j++) {
+            let idx = i * sortedTopicList.length + j;
+            topicBar[idx].x = x;
+            topicBar[idx].y = y;
+            x -= topicBar[idx].num * 40;
+            barLength += topicBar[idx].num * 40;
         }
         if (barLength > barTranslate) barTranslate = barLength;
     }
 
-    return mapField;
+    return sortedTopicList;
 }
 
-function highlight_field(d, that) {
-    if (image_status == 1)  return;
-    // 选择具有特定ID的元素
-    // d3.select("#circle" + field_id).select(".topic-map-tip")
-    //     .style("display", "block");
+function highlightTopic(d, that, isYearTopic=false) {
+    if (imageStatus == 1)  return;
 
     let duration = 200;
-    let field_id = d.id;
-    // let field_color = hsvToRgb(d.color[0], d.color[1] * 0.5 + 0.5, d.color[2]);
-    // let field_color = hsvToColor(d.color);
-    // topic_map_tip.show(d);
+    let topicId = d.id;
 
     tip.show(d);
-
-    // if d is an item in paper_field
-    // if (d.hasOwnProperty('num')) {
-    //     let word = wordPosition.flat().find(item => item.id == d.id);
-    //     tip.show(word);
-    // }
-
-    // // if d is an item in wordPosition
-    // if (d.hasOwnProperty('ratio')) {
-    //     let field = paper_field.find(item => item.id == d.id);
-    //     tip.show(field);
-    // }
 
     // =========================tagcloud=========================
     d3.selectAll(".tag-rect")
@@ -989,10 +638,6 @@ function highlight_field(d, that) {
     d3.select(`#rect_${d.id}`)
         .attr("fill-opacity", 1)
         .attr("stroke", "black");
-    // show tooltip
-    // d3.select(`#tag-tooltip`).text(d.name)
-    //     .style("opacity", 1);
-    // d3.select(`.overall-topic-tip`).show(d);
 
     d3.select(`#text_${d.id}`)
         .attr('font-weight', 'bold');
@@ -1004,29 +649,39 @@ function highlight_field(d, that) {
     d3.selectAll(".topic-map")
         .attr("fill-opacity", 0.2)
         .attr("stroke", "none");
-    d3.select("#circle" + field_id)
+    d3.select("#circle" + topicId)
         // .transition()
         // .duration(duration)
         .attr("fill-opacity", 1)
         .attr("stroke", "black");
 
     g.selectAll(".topic-bar")
-        .attr("fill-opacity", d => {if (field_id != d.id) return virtualOpacity;});
+        .attr('fill-opacity', d => {if (topicId != d.id) return virtualOpacity;})
+        .attr('stroke', function(d) {
+            if ((isYearTopic == true && topicId == d.id) || (isYearTopic == false && topicId == d.id.slice(4))) {
+                return this.getAttribute('stroke');
+            } else {
+                return d3.rgb(200, 200, 200);
+            }
+        });
 
-    var color_papers = [];  // 记录颜色不需要变化的paperID
+    var colorNodeList = [];  // 记录颜色不需要变化的paperID
     let field_level_val = $("#field-level").val();
     for (let i = 0; i < nodes.length; i++) {
-        let topic = parseInt(nodes[i].topic);
-        topic = field_level_val == 1 ? parseInt(field_leaves[topic][8]) : topic;
-        if (topic == field_id) {
-            color_papers.push(nodes[i].id);
+        let nodeYear = nodes[i]['year'];
+        let nodeTopic = parseInt(nodes[i]['topic']);
+        nodeTopic = field_level_val == 1 ? parseInt(field_leaves[nodeTopic][8]) : nodeTopic;
+        if (isYearTopic == true && d.id == `${nodeYear}${nodeTopic}`) {
+            colorNodeList.push(nodes[i]['id']);
+        } else if (isYearTopic == false && d.id == nodeTopic) {
+            colorNodeList.push(nodes[i]['id']);
         }
     }
     g.selectAll(".paper").data(nodes)
-        .attr('fill-opacity', d => {if (color_papers.indexOf(d.id) == -1) return virtualOpacity;})
+        .attr('fill-opacity', d => {if (colorNodeList.indexOf(d.id) == -1) return virtualOpacity;})
         .attr('stroke', function(d) {
             // 在箭头函数中使用 this 时，this 不会指向当前的 DOM 元素，而是指向定义该箭头函数的上下文。
-            if (color_papers.indexOf(d.id) == -1) {
+            if (colorNodeList.indexOf(d.id) == -1) {
                 return d3.rgb(200, 200, 200);
             } else {
                 return this.getAttribute('stroke');
@@ -1035,7 +690,7 @@ function highlight_field(d, that) {
 
     g.selectAll('.reference').data(edges)
         .attr('stroke', d => {
-            if (color_papers.indexOf(d.source) != -1 || color_papers.indexOf(d.target) != -1)
+            if (colorNodeList.indexOf(d.source) != -1 || colorNodeList.indexOf(d.target) != -1)
                 return  probToColor(d.extends_prob);
             else
                 return d3.rgb(200, 200, 200);
@@ -1053,7 +708,7 @@ function hsvToColor(color) {
 }
 
 function reset_field(d) {
-    if (image_status == 1)  return;
+    if (imageStatus == 1)  return;
     // =========================tagcloud=========================
     // reset rect color
     d3.select(`#rect_${d.id}`)
@@ -1098,7 +753,7 @@ function reset_field(d) {
 }
 
 function highlight_node(id, highlight_neighbor = false) {   // 输入：当前node的 id
-    if (image_status == 1)  return;
+    if (imageStatus == 1)  return;
 
     // 将被点击节点的状态设为1，未被点击的设为2
     for (let i = 0; i < nodes.length; i++) {
@@ -1153,7 +808,7 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
     let year_topics = [];
     for (let i = 0; i < nodes.length; i++) {
         if (adjacent_ids.indexOf(nodes[i].id) != -1) {
-            year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+            year_topics.push(String(nodes[i].year) + String(nodes[i]['topic']));
         }
     }
     g.selectAll(".topic-bar")
@@ -1164,7 +819,7 @@ function highlight_node(id, highlight_neighbor = false) {   // 输入：当前no
 }
 
 function reset_node() {
-    if (image_status == 1)  return;
+    if (imageStatus == 1)  return;
 
     d3.selectAll('.topic-bar').attr('fill-opacity', 1);
     g.selectAll('.paper').data(nodes)
@@ -1249,8 +904,8 @@ function visual_topics() {
     topic_map_svg.call(topic_map_tip);
 
     topics
-    .on('mouseover', function(d) {highlight_field(d, this)})
-    .on('mouseout', reset_field);
+        .on('mouseover', function(d) {highlightTopic(d, this)})
+        .on('mouseout', reset_field);
 
     if (paper_field.length == 0) {
         $("#topic-slider").hide();
@@ -1355,7 +1010,7 @@ function visual_graph(polygon, viewBox, transform) {
     const gWidth = g.node().getBBox().width;
     g.selectAll('.topic-bar').remove();
 
-    g.selectAll('.topic-bar').data(barField).enter().append('rect')
+    g.selectAll('.topic-bar').data(topicBar).enter().append('rect')
         .attr('x', d => d.x - d.num * 40 - 29)
         .attr('y', d => d.y - 25)
         .attr('width', d => d.num * 40)
@@ -1365,7 +1020,7 @@ function visual_graph(polygon, viewBox, transform) {
         .attr('id', d => d.id);
 
     g.selectAll('.topic-bar')
-        .on('mouseover', function(d) {highlight_field(d, this)})
+        .on('mouseover', function(d) {highlightTopic(d, this, true)})
         .on('mouseout', reset_field);
 
     let newScale = scaleParams[0] * ((gWidth - barTranslate) / gWidth);
@@ -1409,7 +1064,7 @@ function visual_graph(polygon, viewBox, transform) {
                 $('#paper-prob').text((parseFloat(nodes[i].isKeyPaper)).toFixed(2));
                 $('#paper-venue').text(nodes[i].venu);
 
-                let topic = parseInt(nodes[i].topic);
+                let topic = parseInt(nodes[i]['topic']);
                 topic = fieldLevelVal == 1 ? parseInt(field_leaves[topic][8]) : topic;
                 $('#paper-field').text(fields[topic][2].split('_').join(', '));
                 $('#abstract').text(nodes[i].abstract);
@@ -1545,7 +1200,7 @@ function visual_graph(polygon, viewBox, transform) {
         let year_topics = [];
         for (let i = 0; i < nodes.length; i++) {
             if (source == nodes[i].id || target == nodes[i].id) {
-                year_topics.push(String(nodes[i].year) + String(nodes[i].topic));
+                year_topics.push(String(nodes[i].year) + String(nodes[i]['topic']));
             }
         }
         g.selectAll(".topic-bar")
