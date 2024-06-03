@@ -39,6 +39,12 @@
     <script src="/src/js/download-svg.js"></script>
     <script src="/src/js/cola.min.js"></script>
     
+    <style>
+        html, body {
+            overflow: hidden;
+            height: 100%;
+        }
+    </style>
 </head>
 
 <body>
@@ -334,18 +340,14 @@
                     <div id="originsvg" style="display:none; grid-row: 1;"></div>
                     <div id="tagcloud" style="background-color: #dee9f4; grid-row: 2;"></div>
                     <div id="yearSlider" class="noUi-target vertical-slider" style="display: none; margin-left:80%; position: absolute; right: 0; top: 0; height: 100%; width: 15%;"></div>
-                
+                    
                     <div id="TopicPrism" style="display: none; grid-row: 1;">
-                        <button id="toggle-rotation">切换旋转</button>
                         <div id="prism-container">
                             <div id="prism">
-                            <div class="center-marker"></div>
+                                <div class="center-marker"></div>
                             </div>
                         </div>
-                        <div class="prism-slider-container">
-                            <input type="range" id="view-angle" min="0" max="90" value="90" style="writing-mode: bt-lr; transform: rotate(-90deg);">
-                            <label for="view-angle">视角调整</label>
-                        </div>
+                        <button id="toggle-rotation" style="position: absolute; top: 10%">Stop Rotating</button>
                     </div>
                 </div>
                 

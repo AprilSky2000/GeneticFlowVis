@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Topic Prism</title>
   <style>
-    body, html {
+    #TPContainer {
       height: 100%;
       margin: 0;
       display: flex;
@@ -14,18 +14,21 @@
       background-color: #f0f0f0;
     }
     #prism-container {
+      justify-content: center;
+      align-items: center;
       position: relative;
-      width: 800px;
-      height: 800px;
-      perspective: 2000px;
-      overflow: hidden;
-      border: 1px solid #000;
+      width: 100px;
+      height: 1500px;
+      perspective: 3000px;
+      overflow: visible;
+      /* border: 1px solid #000; */
     }
     #prism {
       position: absolute;
+      overflow: visible;
       width: 100%;
-      height: 60%;
-      margin-top: 20%;
+      height: 100%;
+      margin-top: 0%;
       transform-style: preserve-3d;
       transform-origin: center center;
     }
@@ -34,10 +37,6 @@
       height: 100%;
       width: 100%;
       transform-origin: center;
-    }
-    @keyframes rotate {
-      from { transform: rotateY(0deg); }
-      to { transform: rotateY(360deg); }
     }
     .center-marker {
       position: absolute;
@@ -58,15 +57,23 @@
       justify-content: center;
       align-items: center;
     }
+    html, body {
+    overflow: hidden;
+    height: 100%;
+}
   </style>
 </head>
 <body>
-  <button id="toggle-rotation">切换旋转</button>
-  <div id="prism-container">
-    <div id="prism">
-      <div class="center-marker"></div>
+  <div id="TPContainer">
+    <div id="prism-container">
+      <div id="prism">
+        <div class="center-marker"></div>
+      </div>
     </div>
+    <button id="toggle-rotation" style="position: absolute; left: 10%;">切换旋转</button>
   </div>
+  
+  
   <div class="slider-container">
     <input type="range" id="view-angle" min="0" max="90" value="90" style="writing-mode: bt-lr; transform: rotate(-90deg);">
     <label for="view-angle">视角调整</label>
@@ -80,23 +87,384 @@
     let rotationAngleY = 0;
     let rotationAngleX = 90;
     let perspectiveDistance = 2000;
+    let scale = 0.2;
+    prism.style.transform = `scale(${scale})`
 
     const topics = [
-      { name: "Topic 1", size: 120 },
-      { name: "Topic 2", size: 96 },
-      { name: "Topic 3", size: 72 },
-      { name: "Topic 4", size: 48 },
-      { name: "Topic 5", size: 24 }
+    {
+        "id": 10,
+        "num": 18,
+        "name": "software_engineering_development_project_process_developer_requirement_code_architectural",
+        "color": {
+            "h": 67.4,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 5.2357736,
+        "y": 12.576788,
+        "label": 16,
+        "size": 18
+    },
+    {
+        "id": 83,
+        "num": 7,
+        "name": "test_case_prioritization_regression_suite_software_coverage",
+        "color": {
+            "h": 68.2,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 5.0890627,
+        "y": 12.723262,
+        "label": 16,
+        "size": 7
+    },
+    {
+        "id": 71,
+        "num": 4,
+        "name": "hoc_ad_rout_manet_protocol_mobile_network_node",
+        "color": {
+            "h": 203.1,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.91672,
+        "y": -1.6741098,
+        "label": 13,
+        "size": 4
+    },
+    {
+        "id": 12,
+        "num": 4,
+        "name": "social_community_twitter_medium_influence_network_online_tweet_news",
+        "color": {
+            "h": 68.5,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 7.309338,
+        "y": 18.583418,
+        "label": 12,
+        "size": 4
+    },
+    {
+        "id": 50,
+        "num": 3,
+        "name": "peer_p2p_bittorrent_file_overlay_share_stream_dht_system",
+        "color": {
+            "h": 101.2,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.3062112,
+        "y": 16.768042,
+        "label": 9,
+        "size": 3
+    },
+    {
+        "id": 25,
+        "num": 3,
+        "name": "sensor_network_wireless_energy_lifetime_node_wsns_coverage",
+        "color": {
+            "h": 194,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.903709,
+        "y": -0.970484,
+        "label": 13,
+        "size": 3
+    },
+    {
+        "id": 76,
+        "num": 3,
+        "name": "byzantine_consensus_asynchronous_agreement_failure_process_faulty_protocol_quorum",
+        "color": {
+            "h": 97.7,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -1.3534982,
+        "y": 10.056511,
+        "label": 1,
+        "size": 3
+    },
+    {
+        "id": 67,
+        "num": 2,
+        "name": "grid_resource_service_compute_globus_distribute_science",
+        "color": {
+            "h": 48.9,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 7.880275,
+        "y": 9.036197,
+        "label": 11,
+        "size": 2
+    },
+    {
+        "id": 38,
+        "num": 2,
+        "name": "localization_indoor_position_location_sensor_wireless_accuracy_measurement",
+        "color": {
+            "h": 7.9,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 6.3893337,
+        "y": 0.8877806,
+        "label": 7,
+        "size": 2
+    },
+    {
+        "id": 62,
+        "num": 2,
+        "name": "transaction_replication_concurrency_replicate_consistency_database_serializability_lock_distribute",
+        "color": {
+            "h": 97.7,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -1.3535521,
+        "y": 10.056627,
+        "label": 1,
+        "size": 2
+    },
+    {
+        "id": 58,
+        "num": 2,
+        "name": "mac_802_protocol_wireless_11_ieee_throughput_access_hoc_channel",
+        "color": {
+            "h": 204,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.889735,
+        "y": -1.7347077,
+        "label": 13,
+        "size": 2
+    },
+    {
+        "id": 41,
+        "num": 1,
+        "name": "ontology_semantic_web_owl_knowledge_rdf_domain_information",
+        "color": {
+            "h": 138.7,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -9.980002,
+        "y": 8.75675,
+        "label": 0,
+        "size": 1
+    },
+    {
+        "id": 40,
+        "num": 1,
+        "name": "uav_uavs_drone_aerial_unmanned_vehicle_ground_communication",
+        "color": {
+            "h": 47,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 11.777689,
+        "y": 12.61728,
+        "label": 3,
+        "size": 1
+    },
+    {
+        "id": 77,
+        "num": 1,
+        "name": "query_plan_index_database_join_optimizer_optimization_relational",
+        "color": {
+            "h": 140.2,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -10.221928,
+        "y": 8.515378,
+        "label": 0,
+        "size": 1
+    },
+    {
+        "id": 64,
+        "num": 1,
+        "name": "embodiment_electronic_document_multimedia_method_user_invention_message_apparatus",
+        "color": {
+            "h": 90.3,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -0.14781539,
+        "y": 24.936872,
+        "label": 6,
+        "size": 1
+    },
+    {
+        "id": 53,
+        "num": 1,
+        "name": "context_display_mobile_aware_awareness_user_device_contextual_information",
+        "color": {
+            "h": 90.3,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -0.14782837,
+        "y": 24.936882,
+        "label": 6,
+        "size": 1
+    },
+    {
+        "id": 24,
+        "num": 1,
+        "name": "tcp_congestion_multicast_control_packet_atm_traffic_bandwidth_flow_rate",
+        "color": {
+            "h": 202.6,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.9398854,
+        "y": -1.6404254,
+        "label": 13,
+        "size": 1
+    },
+    {
+        "id": 117,
+        "num": 1,
+        "name": "optical_wavelength_wdm_network_provision_protection_lightpath_rout_groom",
+        "color": {
+            "h": 195,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -4.0401926,
+        "y": -1.0831599,
+        "label": 13,
+        "size": 1
+    },
+    {
+        "id": 72,
+        "num": 1,
+        "name": "fpga_fpgas_programmable_reconfigurable_gate_architecture_hardware_logic_design_area",
+        "color": {
+            "h": 65.9,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 1.6017141,
+        "y": 3.5849168,
+        "label": 20,
+        "size": 1
+    },
+    {
+        "id": 37,
+        "num": 1,
+        "name": "database_xml_schema_query_relational_mapping_sql",
+        "color": {
+            "h": 139.1,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -10.046971,
+        "y": 8.690103,
+        "label": 0,
+        "size": 1
+    },
+    {
+        "id": 48,
+        "num": 1,
+        "name": "parallel_program_parallelism_compiler_parallelization_irregular_parallelize_memory",
+        "color": {
+            "h": 63.4,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 1.7301815,
+        "y": 3.4525008,
+        "label": 20,
+        "size": 1
+    },
+    {
+        "id": 63,
+        "num": 1,
+        "name": "gpu_gpus_cuda_graphic_cpu_factorization_memory_performance_matrix_gpgpu",
+        "color": {
+            "h": 65.9,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 1.60523,
+        "y": 3.5803359,
+        "label": 20,
+        "size": 1
+    },
+    {
+        "id": 17,
+        "num": 1,
+        "name": "cache_memory_coherence_dram_share_miss_chip_processor_performance",
+        "color": {
+            "h": 101.2,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": -3.306176,
+        "y": 16.768059,
+        "label": 9,
+        "size": 1
+    },
+    {
+        "id": 31,
+        "num": 1,
+        "name": "cloud_virtual_resource_vm_virtualization_vms_migration_service_machine",
+        "color": {
+            "h": 48.9,
+            "s": 0.4,
+            "v": 1,
+            "opacity": 1
+        },
+        "x": 7.8805246,
+        "y": 9.036295,
+        "label": 11,
+        "size": 1
+    }
     ];
 
     const prismWidth = container.offsetWidth;
     const totalSize = d3.sum(topics, d => d.size);
-    const radius = 400;
+    const radius = 2000;
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     let currentAngle = 0;
+    rects = [];
+    const topicRanges = [];
+
     topics.forEach((topic, i) => {
       const topicAngle = (topic.size / totalSize) * 360;
+      const startAngle = currentAngle;
       currentAngle += topicAngle / 2;
       const theta = (topic.size / totalSize) * 2 * Math.PI;
       
@@ -113,30 +481,99 @@
       const svg = svgWrapper.append("svg")
         .style("overflow", "visible");
 
-      svg.append("rect")
-        .attr("x", -width / 2)
-        .attr("y", 0)
-        .attr("width", width)
-        .attr("height", height)
-        .attr("fill", color(i))
-        .attr("stroke", "#000")
-        .attr("stroke-width", 1);
+      const rect = svg.append("rect")
+          .attr("x", -width / 2)
+          .attr("y", 0)
+          .attr("width", width)
+          .attr("height", height)
+          .attr("fill", color(i))
+          // .attr("stroke", "#000")
+          // .attr("stroke-width", 1)
+          .attr("fill-opacity", 0.5)
+          .on("mouseover", function() {
+            d3.select(this).attr("fill-opacity", 1);
+          })
+          .on("mouseout", function() {
+            d3.select(this).attr("fill-opacity", 0.5);
+          });
+        // .attr("stroke", "#000")
+        // .attr("stroke-width", 1);
+
+      let maxNum = Math.max(...topics.map(d=>d.num));
+      let ratio = Math.cbrt(topic.num / maxNum);
+      let shortName = topic.name.split("_").slice(0, 3).join(' ');
+      if (ratio < 0.5) {
+          shortName = topic.name.split("_").slice(0, 2).join(' ');
+      }
 
       svg.append("text")
-        .attr("x", 0)
-        .attr("y", height / 2)
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
-        .attr("fill", "#000")
-        .text(topic.name);
+            .attr("x", 0)
+            .attr("y", height / 10)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .style("font-family", "Archivo Narrow")
+            .attr("font-size", Math.sqrt(width) + "px")
+            .attr("fill", "black")
+            .text(shortName);
 
       currentAngle += topicAngle / 2;
+      const endAngle = currentAngle;
+      topicRanges.push({ startAngle, endAngle });
+      rects.push(rect);
     });
+
+    console.log(topicRanges)
+
+    let rotateInterval;
+    let currentIndex = -1;
+
+    function updateOpacity() {
+      const activeAngle = (360 - rotationAngleY) % 360;
+      console.log(`Active angle: ${activeAngle}`)
+      let newIndex = -1;
+      for (let i = 0; i < topicRanges.length; i++) {
+        const { startAngle, endAngle } = topicRanges[i];
+        if (startAngle <= activeAngle && activeAngle < endAngle) {
+          newIndex = i;
+          break;
+        }
+      }
+      console.log(`New index: ${newIndex}`)
+
+      if (newIndex !== currentIndex) {
+
+        if (currentIndex !== -1) {
+          rects[currentIndex].attr("fill-opacity", 0.5);
+        }
+        if (newIndex !== -1) {
+          rects[newIndex].attr("fill-opacity", 1);
+        }
+        currentIndex = newIndex;
+        console.log(`Current index: ${currentIndex}`);
+      }
+    }
+
+    function startRotation() {
+      rotateInterval = setInterval(() => {
+        rotationAngleY -= 0.2; // 控制旋转速度
+        if(rotationAngleY <= 0) rotationAngleY += 360;
+        prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`; // 保持缩小状态
+        updateOpacity()
+      }, 1000 / 60); // 每秒60帧
+    }
+
+    function stopRotation() {
+      clearInterval(rotateInterval);
+    }
 
     document.getElementById('toggle-rotation').addEventListener('click', function() {
       isRotating = !isRotating;
       this.textContent = isRotating ? '停止旋转' : '开始旋转';
-      prism.style.animation = isRotating ? 'rotate 20s infinite linear' : 'none';
+      if (isRotating) {
+        startRotation();
+      } else {
+        stopRotation();
+      }
     });
 
     container.addEventListener('mousedown', function(event) {
@@ -151,7 +588,8 @@
       const deltaX = event.clientX - lastMouseX;
       lastMouseX = event.clientX;
       rotationAngleY += deltaX / 5;
-      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+      prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+      updateOpacity()
     }
 
     container.addEventListener('wheel', function(event) {
@@ -162,12 +600,11 @@
     const viewAngleSlider = document.getElementById('view-angle');
     viewAngleSlider.addEventListener('input', function() {
       rotationAngleX = this.value;
-      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+      prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+      updateOpacity()
     });
 
-    if (isRotating) {
-      prism.style.animation = 'rotate 20s infinite linear';
-    }
+    startRotation(); // 初始化时开始旋转
   </script>
 </body>
 </html>

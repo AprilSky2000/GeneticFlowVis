@@ -64,29 +64,38 @@
     "fellow": {
         "name": "Fellow",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors from CG (similar #paper and #citation)",
+        "description": "Fellows of the ACM and their competitors (20240301 old version)",
         "year": "fellowYear",
         "type": "Top Scholar",
         "papers": 1087725,
         "authors": 4014
     },
-    "fellows": {
-        "name": "Fellows",
+    "fellowV1": {
+        "name": "FellowV2",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors (2024.5.22)",
+        "description": "Fellows of the ACM and their competitors (20240501)",
+        "year": "fellowYear",
+        "type": "Top Scholar",
+        "papers": 980931,
+        "authors": 4420
+    },
+    "fellowV2": {
+        "name": "FellowV1",
+        "icon": "fas fa-user-graduate icon",
+        "description": "Fellows of the ACM and their competitors (20240516 similar #paper and #citation)",
         "year": "fellowYear",
         "type": "Top Scholar",
         "papers": 534723,
         "authors": 1940
     },
-    "fellowVSNon": {
-        "name": "Fellows VS Non-Fellows",
+    "fellowV3": {
+        "name": "FellowV3",
         "icon": "fas fa-user-graduate icon",
-        "description": "Fellows of the ACM and their competitors from all fields (similar #paper and #citation)",
+        "description": "Fellows of the ACM and their competitors (20240601 CSPaperRatio > 0.9)",
         "year": "fellowYear",
         "type": "Top Scholar",
-        "papers": 980931,
-        "authors": 4420
+        "papers": 549683,
+        "authors": 1986
     },
     "fellowTuring": {
         "name": "Turing Award (old version)",

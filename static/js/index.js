@@ -1,7 +1,7 @@
 window.onload = checkScreenSize;
 
 // global variable (STopic == null)
-let global_nodes, global_edges, global_paper_field, minYear, maxYear;
+let global_nodes, global_edges, global_paper_field, minYear, maxYear, global_colors;
 
 // subgraph variable (global / subgraph, the graph to render)
 
@@ -411,11 +411,6 @@ function textSize(text, size) {
     return {width, height};
 }
 
-function getShortName(topicID) {
-    let name = fields[parseInt(topicID)][2];
-    return name.split("_").slice(0, 3).join(' ');
-}
-
 function calculateWordPosition(sortedData, maxFontSize) {
     let ele = d3.select("#tagcloud").node();
     let svgWidth = ele.getBoundingClientRect().width;
@@ -436,13 +431,8 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let size = ratio * maxFontSize;
         let height = ratio * lineHeight;
         let opacity = ratio * 0.8 + 0.1;
-        let shortName = d.name.split("_").slice(0, 3).join(' ');
-        if (ratio < 0.5) {
-            shortName = d.name.split("_").slice(0, 2).join(' ');
-        }
-        shortName = topic2order(d.id) + '. ' + shortName;
         // let width = size * shortName.length * 0.5;
-        let width = textSize(shortName, size).width * 0.88;
+        let width = textSize(d.shortName, size).width * 0.88;
         if (currentLineWidth + width > svgWidth) {
             if (currentLine.length == 0) return null
             for (const word of currentLine) {
@@ -461,7 +451,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
             height: height,
             name: d.name,
             ratio: ratio,
-            shortName: shortName,
+            shortName: d.shortName,
             opacity: opacity,
             x: currentLineWidth,
             y: currentLineHeight
@@ -493,6 +483,11 @@ function draw_tagcloud(min=0, max=Infinity) {
     let svg = d3.select("#tagcloud").append("svg")
         .attr("width", ele.getBoundingClientRect().width)
         .attr("height", ele.getBoundingClientRect().height) ;
+
+    tip = d3.tip()
+        .attr("class", "d3-tip")
+        .html(d => d.name);
+    svg.call(tip);
 
 
     let paper_field_filter = global_paper_field.filter(item => item.num >= min && item.num <= max);
@@ -571,78 +566,127 @@ function draw_tagcloud(min=0, max=Infinity) {
     draw_chord();
 }
 
-function draw_chord(){
+function sumRowsAndColumns(matrix) {
+    let rowSums = matrix.map(row => row.reduce((a, b) => a + b, 0));
+    let colSums = matrix[0].map((_, colIndex) => matrix.reduce((sum, row) => sum + row[colIndex], 0));
+
+    return { rowSums, colSums }; // 返回一个对象
+}
+
+function draw_chord() {
     let ele = d3.select(".address-text").node();
     d3.select("#chord").selectAll("*").remove();
     let height = ele.getBoundingClientRect().width;
     let width = ele.getBoundingClientRect().width;
     const outerRadius = Math.min(width, height) * 0.5 - 20;
     const innerRadius = outerRadius - 10;
-    let data = Object.assign(
-        adjacentMatrix, {
-            names: global_paper_field.map(d => topic2order(d.id)),
-            colors: global_paper_field.map(d => topic2color(d.id))
-        }
-    )
-    console.log(data)
+    let { rowSums: outdegree, colSums: indegree } = sumRowsAndColumns(adjacentMatrix); // 解构赋值
 
-    const {names, colors} = data;
-    const sum = d3.sum(data.flat());
-    const formatValue = d3.format(".1~%");
+    let names = global_paper_field.map(d => d.shortName),
+        colors = global_paper_field.map(d => topic2color(d.id)),
+        weights = global_paper_field.map(d => d.num);
+        
+    let degree = outdegree.map((d, i) => d + indegree[i]);
 
-    const chord = d3.chord()
-      .padAngle(10 / innerRadius)
-      .sortSubgroups(d3.descending)
-      .sortChords(d3.descending);
+    let totalWeight = d3.sum(weights);
+    let interval = totalWeight / 100;
+    totalWeight += interval * names.length;
 
-  const arc = d3.arc()
-      .innerRadius(innerRadius)
-      .outerRadius(outerRadius);
+    console.log('degree', degree);
+    const angleScale = d3.scaleLinear().domain([0, totalWeight]).range([0, 2 * Math.PI]);
+    let cumulativeAngle = 0;
+    const nodeAngles = weights.map(weight => {
+        const startAngle = cumulativeAngle;
+        cumulativeAngle += angleScale(weight);
+        const endAngle = cumulativeAngle;
+        cumulativeAngle += angleScale(interval);
+        return {
+            index: weights.indexOf(weight),
+            startAngle: startAngle,
+            endAngle: endAngle,
+            weight: weight
+        };
+    });
 
-  const ribbon = d3.ribbon()
-      .radius(innerRadius - 1)
-    //   .padAngle(1 / innerRadius);
+    const chords = [];
+    let angles = JSON.parse(JSON.stringify(nodeAngles));
+    adjacentMatrix.forEach((row, i) => {
+        row.forEach((value, j) => {
+            if (value > 0) {
+                const source = nodeAngles[i];
+                const target = nodeAngles[j];
+                chords.push({
+                    source: {
+                        index: i,
+                        startAngle: source.startAngle,
+                        endAngle: source.startAngle + angleScale(value / degree[i] * source.weight),
+                        value: value
+                    },
+                    target: {
+                        index: j,
+                        startAngle: target.endAngle - angleScale(value / degree[j] * target.weight),
+                        endAngle: target.endAngle,
+                        value: value
+                    }
+                });
+                source.startAngle += angleScale(value / degree[i] * source.weight);
+                target.endAngle -= angleScale(value / degree[j] * target.weight);
+            }
+        });
+    });
+    angles.forEach((d, i) => d.splitAngle = nodeAngles[i].startAngle)
+    console.log('angles', angles)
+    console.log('chords', chords)
 
-  const color = d3.scaleOrdinal(names, colors);
+    const color = d3.scaleOrdinal(names, colors);
 
-  const svg = d3.select("#chord").append("svg")
+    const svg = d3.select("#chord").append("svg")
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [-width / 2, -height / 2, width, height])
       .attr("style", "width: 100%; height: auto; font: 10px sans-serif;");
 
-  const chords = chord(data);
 
-  const group = svg.append("g")
-    .selectAll()
-    .data(chords.groups)
-    .join("g");
 
-  group.append("path")
-      .attr("fill", d => color(names[d.index]))
-      .attr("d", arc);
+    const group = svg.append("g")
+        .selectAll("g")
+        .data(angles)
+        .join("g");
 
-  group.append("title")
-      .text(d => `${names[d.index]}\n${d.value}`);
+    group.append("path")
+        .attr("fill", d => color(names[d.index]))
+        .attr("d", d3.arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius)
+            .startAngle(d => d.startAngle)
+            .endAngle(d => d.endAngle)
+        );
 
-  group.select("text")
-      .attr("font-weight", "bold")
-      .text(function(d) {
-        return this.getAttribute("text-anchor") === "end"
-            ? `↑ ${names[d.index]}`
-            : `${names[d.index]} ↓`;
-      });
+    group.append("title")
+        .text(d => `${names[d.index]}\n${d.weight}`);
 
-  svg.append("g")
-      .attr("fill-opacity", 0.8)
-    .selectAll("path")
-    .data(chords)
-    .join("path")
-      .style("mix-blend-mode", "multiply")
-      .attr("fill", d => color(names[d.source.index]))
-      .attr("d", ribbon)
-    .append("title")
-      .text(d => `${d.source.value} ${names[d.target.index]} → ${names[d.source.index]}${d.source.index === d.target.index ? "" : `\n${d.target.value} ${names[d.source.index]} → ${names[d.target.index]}`}`);
+    group.append("path")
+        .attr("fill", d => color(names[d.index]))
+        .attr("d", d3.arc()
+            .innerRadius(outerRadius)
+            .outerRadius(outerRadius+10)
+            .startAngle(d => d.splitAngle - 0.002)
+            .endAngle(d => d.splitAngle + 0.002)
+        );
+
+    svg.append("g")
+        .attr("fill-opacity", 0.8)
+        .selectAll("path")
+        .data(chords)
+        .join("path")
+        .style("mix-blend-mode", "multiply")
+        .attr("fill", d => color(names[d.source.index]))
+        .attr("d", d3.ribbon()
+            .radius(innerRadius - 1)
+        )
+        .append("title")
+        .text(d => `${d.source.value} ${names[d.target.index]} → ${names[d.source.index]}${d.source.index === d.target.index ? "" : `\n${d.target.value} ${names[d.source.index]} → ${names[d.target.index]}`}`);
+
 }
 
 function create_svg(viewBox=undefined, transform=undefined) {
@@ -664,11 +708,6 @@ function create_svg(viewBox=undefined, transform=undefined) {
         .attr("width", svgWidth)
         .attr("height", svgHeight)
         .attr("viewBox", viewBox);
-
-    tip = d3.tip()
-        .attr("class", "d3-tip")
-        .html(d => d.name);
-    svg.call(tip);
 
     //获取viewBox的宽度
     let moveDistance_r = Math.max(viewBoxWidth, viewBoxWidth / 2 +  svgWidth * viewBoxHeight / svgHeight / 2) * 0.95;
@@ -890,10 +929,6 @@ function init_graph(graph) {
             });
     });
 
-    if (visType == 8 && STopic != null) {
-        draw_bbox(graph);
-        if (visType == 8) draw_context(graph);
-    }
     graph['svg'] = svgElement;
 }
 
@@ -1306,84 +1341,11 @@ function draw_bbox(graph) {
         .attr('y', bbox.y - bbox_padding_y)
         .attr('width', bbox.width + bbox_padding_x * 2)
         .attr('height', bbox.height + bbox_padding_y * 2)
-        .style("fill", topic2color(STopic, sat=0.04))
+        .style("fill", topic2color(graph['topic'], sat=0.05))
         .style("stroke", 'red')
         .style("stroke-width", 2)
         .attr('filter', 'url(#drop-shadow)')
         .attr('id', 'background');
-
-    let belowY = bbox.y + bbox.height + bbox_padding_y * 2;
-
-    g.insert('text', ':first-child')
-        .attr('x', bbox.x + bbox.width / 2)
-        .attr('y', belowY)
-        .attr('text-anchor', 'middle')
-        .attr('font-family', 'Archivo Narrow')
-        .text(getShortName(STopic))
-        .attr('font-size', 48)
-        .style("fill", 'red')
-        .attr('id', 'background-text');
-
-    function onClick(shift) {
-        let currentIndex = arrangement.indexOf(STopic);
-        let newIndex = currentIndex + shift;
-        if (newIndex < 0 || newIndex >= arrangement.length) return;
-        let newTopic = arrangement[newIndex];
-        STopic = newTopic;
-        loadAndRender();
-    }
-
-    const radius = 30; // 圆的半径
-    const opacity = 0.8; // 圆与外框的距离
-
-    // 添加左侧圆形按钮
-    g.append('circle')
-        .attr('cx', bbox.x)
-        .attr('cy', belowY)
-        .attr('r', radius)
-        .style("fill", '#CCE8EB')
-        .attr('id', 'leftCircle')
-        .style("opacity", opacity)
-        .on('mouseover', function() {
-            d3.select(this).attr('r', radius * 1.5).style("opacity", 1); // 鼠标悬停时增大半径
-        })
-        .on('mouseout', function() {
-            d3.select(this).attr('r', radius).style("opacity", opacity); // 鼠标离开时恢复半径
-        })
-        .on('click', _ => onClick(-1));
-
-    // 添加右侧圆形按钮
-    g.append('circle')
-        .attr('cx', bbox.x + bbox.width)
-        .attr('cy', belowY)
-        .attr('r', radius)
-        .style("fill", '#CCE8EB')
-        .attr('id', 'rightCircle')
-        .style("opacity", opacity)
-        .on('mouseover', function() {
-            d3.select(this).attr('r', radius * 1.5).style("opacity", 1);
-        })
-        .on('mouseout', function() {
-            d3.select(this).attr('r', radius).style("opacity", opacity);
-        })
-        .on('click', _ => onClick(1));
-
-    
-    // 添加左箭头按钮
-    g.append('path')
-        .attr('d', `M ${bbox.x}, ${belowY - 10} l -15,15 l 15,15`)
-        .style("stroke", 'black')
-        .style("fill", 'none')
-        .style("stroke-width", 5)
-        .attr('pointer-events', 'none');
-
-    // 添加右箭头按钮
-    g.append('path')
-        .attr('d', `M ${bbox.x + bbox.width}, ${belowY - 10} l 15,15 l -15,15`)
-        .style("stroke", 'black')
-        .style("fill", 'none')
-        .style("stroke-width", 5)
-        .attr('pointer-events', 'none');
 }
 
 function generateD3Path(points, curve = false) {
@@ -1593,7 +1555,8 @@ ${virtualEdgesStr}
 }`;
 }
 
-function bindSVGToElement(svgElement, elementId) {
+function bindSVGToElement(graph, key, elementId) {
+    let svgElement = graph[key];
     console.log('before', svgElement.childNodes.length);
     // 从参数获取容器，并清空容器内的所有元素
     let ele = d3.select(elementId).node();
@@ -1608,7 +1571,7 @@ function bindSVGToElement(svgElement, elementId) {
     let transform = svgElement.getAttribute('transform') || "translate(0,0) scale(1)";
 
     // 创建新的 SVG 元素，并设置属性
-    let svg = d3.select(elementId).append("svg")
+    const svg = d3.select(elementId).append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
         .attr("viewBox", viewBox);
@@ -1621,6 +1584,9 @@ function bindSVGToElement(svgElement, elementId) {
     d3.select(svgElement).selectAll('*').each(function() {
         g.node().appendChild(this);
     });
+
+    graph[key] = svg; // 更新 svgElement 为新的 SVG 元素
+    if (key === 'svg') graph['g'] = g;
 
     // 添加缩放和拖拽功能
     const zoom = d3.zoom()
@@ -1819,7 +1785,6 @@ function loadGlobalData() {
                 id: topic,
                 num: 1,
                 name: fields[topic][2],
-                color: topic2color(topic),
                 x: parseFloat(fields[topic][3]),
                 y: parseFloat(fields[topic][4]),
                 label: parseInt(fields[topic][8])
@@ -1830,7 +1795,6 @@ function loadGlobalData() {
     })
     global_paper_field.sort(op('num'));
     global_paper_field.forEach(d=>{d.size = d.num});
-    console.log('global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
     let total = global_paper_field.reduce((acc, cur) => acc + cur.num, 0);
     let sum = 0;
     let min_num = 0;
@@ -1864,10 +1828,24 @@ function loadGlobalData() {
     });
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
     rangeSlider.noUiSlider.set([min_num, max_num+1]);
+    let maxNum = Math.max(...global_paper_field.map(d=>d.num));
+    let colors = generateRainbowColors(global_paper_field.length);
+    global_colors = {}
+    global_paper_field.forEach((topic, i)=>{
+        let ratio = Math.cbrt(topic.num / maxNum);
+        let shortName = topic.name.split("_").slice(0, 3).join(' ');
+        if (ratio < 0.5) {
+            shortName = topic.name.split("_").slice(0, 2).join(' ');
+        }
+        topic.shortName = shortName;
+        topic.color = colors[i];
+        global_colors[topic.id] = colors[i];
+    })
+    console.log('global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
 
     generateTTM();
     arrangement = simulatedAnnealing(TTM);
-    adjacentMatrix = getAdjacentMatrix(arrangement);
+    adjacentMatrix = getAdjacentMatrix();
     console.log('arrangement:', arrangement);
 
     // 加载所有话题图
@@ -1876,6 +1854,16 @@ function loadGlobalData() {
         loadTopicGraph(d.id);
     })
 }
+
+function generateRainbowColors(numColors) {
+    let colors = [];
+    for (let i = 0; i < numColors; i++) {
+        let hue = i * (360 / numColors); // 色相均匀分布
+        colors.push(hsvToColor([hue, 1, 1]));
+    }
+    return colors;
+}
+
 
 function loadTopicGraph(STopic) {
     // global_nodes.map(d=>Object.keys(d.topicDist).length)
@@ -1977,19 +1965,89 @@ function topic2color(topic, sat=undefined) {
     if (topic == undefined || topic == null) {
         return hsvToColor([0, 0, 0]);
     }
-    // console.log('getTopicColor', topic, fields[topic])
     topic = parseInt(topic);
-    let c = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])]
-    return sat == undefined? hsvToColor(c): hsvToColor(c, sat);
+    let c = global_colors[topic];
+    c = [c.h, c.s, c.v];
+    // let c = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])]
+    ret= sat == undefined? hsvToColor(c): hsvToColor(c, sat);
+    // console.log(ret)
+    return ret;
+}
+
+function showPopup(topic) {
+    console.log('showPopup', topic)
+    let graph = topic2graph[topic.id];
+    // 创建弹窗背景
+    const popupBackground = document.createElement('div');
+    popupBackground.style.position = 'fixed';
+    popupBackground.style.top = 0;
+    popupBackground.style.left = 0;
+    popupBackground.style.width = '100%';
+    popupBackground.style.height = '100%';
+    popupBackground.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    popupBackground.style.display = 'flex';
+    popupBackground.style.justifyContent = 'center';
+    popupBackground.style.alignItems = 'center';
+    popupBackground.style.zIndex = 1000;
+
+    // 创建弹窗
+    const popup = document.createElement('div');
+    // height设置为窗口高度
+    let height = Math.min(window.innerHeight, graph['height'] * 72);
+    let width = Math.min(window.innerWidth * 0.8, graph['width'] * 72 * 2);
+
+    popup.style.width = width + 'px';
+    popup.style.height = height + 'px';
+    popup.style.backgroundColor = 'white';
+    popup.style.position = 'relative';
+    popup.style.padding = '0px';
+    popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+    popupBackground.appendChild(popup);
+        
+    // 创建标题
+    const title = document.createElement('h1');
+    title.textContent = topic.shortName;
+    title.style.fontSize = '24px';
+    title.style.fontFamily = 'Archivo Narrow';
+    title.style.color = 'black'
+    title.style.padding = '10px';
+    popup.appendChild(title);
+
+    // 创建内容容器
+    const content = document.createElement('div');
+    content.setAttribute('class', 'popup');
+    content.setAttribute('id', 'popup-' + topic.id);
+    content.style.width = '100%';
+    content.style.height = 'calc(100% - 40px)';
+    content.style.overflow = 'visible';
+    popup.appendChild(content);
+
+    // 添加关闭功能
+    popupBackground.addEventListener('click', function(event) {
+        if (event.target === popupBackground) {
+            document.body.removeChild(popupBackground);
+        }
+    });
+
+    document.body.appendChild(popupBackground);
+
+    init_graph(graph);
+    bindSVGToElement(graph, 'svg', `#popup-${topic.id}`)
+    draw_bbox(graph);
+    draw_context(graph);
 }
 
 function drawTopicPrism() {
     const prism = document.getElementById('prism');
     const container = document.getElementById('prism-container');
     let isRotating = true;
-    let lastMouseX;
+    let lastMouseX, lastMouseY;
     let rotationAngleY = 0;
-    let rotationAngleX = 90;
+    let rotationAngleX = 0;
+    let isMouseDown = false;
+    let scale = 0.5;
+    // prism.style.transform = `scale(${scale})`
+    
     let perspectiveDistance = 2000;
 
     // const topics = [
@@ -2003,12 +2061,18 @@ function drawTopicPrism() {
 
     const prismWidth = container.offsetWidth;
     const totalSize = d3.sum(topics, d => d.size);
-    const radius = 500;
+    const radius = 800;
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     let currentAngle = 0;
+    const rects = [];
+    const topicRanges = [];
+    let rotateInterval;
+    let currentIndex = -1;
+
     topics.forEach((topic, i) => {
         const topicAngle = (topic.size / totalSize) * 360;
+        const startAngle = currentAngle;
         currentAngle += topicAngle / 2;
         const theta = (topic.size / totalSize) * 2 * Math.PI;
         
@@ -2031,23 +2095,38 @@ function drawTopicPrism() {
         console.log(graph);
 
         const svg = svgWrapper.append("svg")
-            .style("overflow", "visible");
+            .style("overflow", "visible")
+            .attr('id', `svg-${topic.id}`);
 
-        svg.append("rect")
+        const rect = svg.append("rect")
             .attr("x", -width / 2)
             .attr("y", 0)
             .attr("width", width)
             .attr("height", height)
             .attr("fill", topic2color(graph['topic'], sat=0.2))
-            .attr("stroke", "#000")
-            .attr("stroke-width", 0.2);
+            .attr("fill-opacity", 0.5)
+            .attr("fill-opacity", 0.5)
+            .on("mouseover", function() {
+                d3.select(this).attr("fill-opacity", 1);
+                tip.show(topic);
+            })
+            .on("mouseout", function() {
+                if (Math.abs(rotationAngleX) < 80 && currentIndex != i)
+                    d3.select(this).attr("fill-opacity", 0.5);
+                tip.hide();
+            })
+            .on("click", function() {
+                showPopup(topic);
+            });
 
         svg.append("text")
             .attr("x", 0)
-            .attr("y", height / 2)
+            .attr("y", height / 15 - (i % 2) * height / 30)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "middle")
-            .attr("fill", "#000")
+            .style("font-family", "Archivo Narrow")
+            .attr("font-size", Math.sqrt(width) * 2 + "px")
+            .attr("fill", "black")
             .text(topic.shortName);
 
         // 创建一个新的嵌套 svg 元素并设置 viewBox 和 transform
@@ -2057,52 +2136,110 @@ function drawTopicPrism() {
             .attr("width", width)
             .attr("height", height)
             .attr("viewBox", graph['viewBox']) // 设置 viewBox
-            .attr("transform", graph['transform']); // 设置 transform
+            .attr("transform", graph['transform'])
+            .attr('id', `nestedSvg-${topic.id}`);; // 设置 transform
 
         // 将 svgElement 的子元素移动到嵌套的 svg 元素中
         d3.select(svgElement).selectAll('*').each(function() {
             nestedSvg.node().appendChild(this);
         });
 
+        // Array.from(svgElement.childNodes).forEach(node => {
+        //     nestedSvg.node().appendChild(node.cloneNode(true));
+        // });
 
         currentAngle += topicAngle / 2;
+        const endAngle = currentAngle;
+        topicRanges.push({ startAngle, endAngle });
+        rects.push(rect);
     });
 
-    document.getElementById('toggle-rotation').addEventListener('click', function() {
-      isRotating = !isRotating;
-      this.textContent = isRotating ? '停止旋转' : '开始旋转';
-      prism.style.animation = isRotating ? 'rotate 20s infinite linear' : 'none';
-    });
+    function updateOpacity() {
+        if(Math.abs(rotationAngleX) > 80) {
+            rects.forEach(rect => rect.attr("fill-opacity", 1));
+            currentIndex = -1;
+            return;
+        } else {
+            if (currentIndex == -1)
+                rects.forEach(rect => rect.attr("fill-opacity", 0.5));
+        }
+
+      const activeAngle = (720 - rotationAngleY) % 360;
+      let newIndex = -1;
+      for (let i = 0; i < topicRanges.length; i++) {
+        const { startAngle, endAngle } = topicRanges[i];
+        if (startAngle <= activeAngle && activeAngle < endAngle) {
+          newIndex = i;
+          break;
+        }
+      }
+
+      if (newIndex !== currentIndex) {
+
+        if (currentIndex !== -1) {
+          rects[currentIndex].attr("fill-opacity", 0.5);
+        }
+        if (newIndex !== -1) {
+          rects[newIndex].attr("fill-opacity", 1);
+        }
+        currentIndex = newIndex;
+        // console.log(`Current index: ${currentIndex}`);
+      }
+    }
+
+    function startRotation() {
+        rotateInterval = setInterval(() => {
+          rotationAngleY -= 0.3; // 控制旋转速度
+          if(rotationAngleY <= 0) rotationAngleY += 360;
+          prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`; // 保持缩小状态
+          updateOpacity()
+        }, 1000 / 30); // 每秒60帧
+      }
+  
+      function stopRotation() {
+        clearInterval(rotateInterval);
+      }
+  
+      document.getElementById('toggle-rotation').addEventListener('click', function() {
+        isRotating = !isRotating;
+        this.textContent = isRotating ? 'Stop Rotating' : 'Start Rotating';
+        if (isRotating) {
+          startRotation();
+        } else {
+          stopRotation();
+        }
+      });
 
     container.addEventListener('mousedown', function(event) {
-      lastMouseX = event.clientX;
-      document.addEventListener('mousemove', mouseMoveHandler);
-      document.addEventListener('mouseup', function() {
-        document.removeEventListener('mousemove', mouseMoveHandler);
-      });
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+        });
     });
 
     function mouseMoveHandler(event) {
-      const deltaX = event.clientX - lastMouseX;
-      lastMouseX = event.clientX;
-      rotationAngleY += deltaX / 5;
-      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
+        const deltaX = event.clientX - lastMouseX;
+        const deltaY = event.clientY - lastMouseY;
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+        rotationAngleY += deltaX / 5;
+        rotationAngleX -= deltaY / 5;
+        rotationAngleX = Math.max(-90, Math.min(90, rotationAngleX));
+        requestAnimationFrame(() => {
+            prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`;
+            updateOpacity()
+        });
     }
 
     container.addEventListener('wheel', function(event) {
-      perspectiveDistance += event.deltaY * 4;
+      perspectiveDistance += event.deltaY * 2;
       container.style.perspective = `${perspectiveDistance}px`;
     });
 
-    const viewAngleSlider = document.getElementById('view-angle');
-    viewAngleSlider.addEventListener('input', function() {
-      rotationAngleX = this.value;
-      prism.style.transform = `rotateX(${rotationAngleX - 90}deg) rotateY(${rotationAngleY}deg)`;
-    });
 
-    if (isRotating) {
-      prism.style.animation = 'rotate 20s infinite linear';
-    }
+    startRotation(); // 初始化时开始旋转
 }
 
 function loadAndRender() {
@@ -2122,8 +2259,13 @@ function loadAndRender() {
         console.log('current graph:', graph);
         
         init_graph(graph);
-        bindSVGToElement(graph['svgElement'], "#originsvg");
-        bindSVGToElement(graph['svg'], "#mainsvg");
+        bindSVGToElement(graph, 'svgElement', "#originsvg");
+        bindSVGToElement(graph, 'svg', "#mainsvg");
+        if (graph['topic'] != null) {
+            console.log('context', graph)
+            draw_bbox(graph);
+            draw_context(graph);
+        }
     }
     
 }
@@ -2783,4 +2925,38 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
 function updateVisType() {
     visType = $("#vis-type").val();
     loadAndRender();
+}
+
+
+function downloadSVGElement(elementId) {
+    // 获取 SVG 元素
+    const svgElement = document.getElementById(elementId);
+
+    // 确保元素存在
+    if (svgElement) {
+        // 将 SVG 元素序列化为字符串
+        const serializer = new XMLSerializer();
+        const source = serializer.serializeToString(svgElement);
+
+        // 创建 Blob 对象
+        const svgBlob = new Blob(['<?xml version="1.0" standalone="no"?>\r\n' + source], { type: 'image/svg+xml;charset=utf-8' });
+
+        // 创建 URL 对象
+        const url = URL.createObjectURL(svgBlob);
+
+        // 创建临时下载链接
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = elementId + '.svg';
+
+        // 触发下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+
+        // 清理临时链接和 URL 对象
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(url);
+    } else {
+        console.error(`SVG element with id "${elementId}" not found.`);
+    }
 }

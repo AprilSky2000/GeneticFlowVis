@@ -6,7 +6,7 @@ import os
 config = json.load(open('config.json', 'r'))
 
 # 读取papers信息
-fields = ['fellows'] # config.keys()
+fields = ['fellow'] # config.keys()
 
 for field in fields:
     print(field)
