@@ -2,6 +2,7 @@ window.onload = checkScreenSize;
 
 // global variable (STopic == null)
 let global_nodes, global_edges, global_paper_field, minYear, maxYear, global_colors;
+let paperID2topic = {};
 
 // subgraph variable (global / subgraph, the graph to render)
 
@@ -15,13 +16,13 @@ let paperID2year = {};
 let dot = '';
 let edgeBundling = 6;
 let context_edge_weight = 3;
+let prismRadius = 800;
 
 let viz, vizContext, config, visType, authorData;
 
 let adjacent_ids = [];
 let extend_ids = [];
 let center_node = null;
-let paperID2topic = {};
 let forceChart = null;
 let coverage=5, focus=0.5;
 let isMouseDown = false; // 跟踪鼠标是否被按下
@@ -37,6 +38,12 @@ let yearGrid = 2, alpha = 10;
 let virtualOpacity = 0.1;
 let topicOpacity = 0.25;
 let maxOpacity = 0.8;
+let polygenView = false;
+
+// 在函数外部缓存选择结果
+let defaultOpacity = 0.8;
+let chord_arcs = d3.selectAll(".chord-arc");
+let chord_ribbons = d3.selectAll(".chord-ribbon");
 
 const tanh = x => Math.tanh(x);
 const sech2 = x => 1 / (Math.cosh(x) ** 2);
@@ -170,6 +177,12 @@ function addAllListeners() {
         let grandma = $(event.target).parent().parent();
         if (grandma.is('#draw-area'))
             reset_node(true);
+    });
+
+    document.getElementById('toggle-polygen').addEventListener('click', function() {
+        polygenView = !polygenView;
+        this.textContent = polygenView ? 'Chord View' : 'Polygen View';
+        draw_chord();
     });
 
 }
@@ -573,35 +586,102 @@ function sumRowsAndColumns(matrix) {
     return { rowSums, colSums }; // 返回一个对象
 }
 
+function polarToCartesian(radius, angle) {
+    return {
+        x: radius * Math.cos(angle - Math.PI / 2),
+        y: radius * Math.sin(angle - Math.PI / 2)
+    };
+}
+
+function lineIntersection(angle, point1, point2) {
+    console.log('intersect', angle, point1, point2);
+
+    // 通过给定角度计算直线的斜率和截距
+    const m1 = Math.tan(angle - Math.PI / 2);
+    const b1 = 0;  // 给定角度的直线通过原点
+
+    // 通过两个点计算另一条直线的斜率和截距
+    const m2 = (point2.y - point1.y) / (point2.x - point1.x);
+    const b2 = point1.y - m2 * point1.x;
+
+    // 如果两条直线平行，则没有交点
+    if (m1 === m2) {
+        return null;
+    }
+
+    // 计算交点
+    const intersectX = (b2 - b1) / (m1 - m2);
+    const intersectY = m1 * intersectX;
+
+    console.log('intersect', intersectX, intersectY);
+
+    return {
+        x: intersectX,
+        y: intersectY
+    };
+}
+
+
 function draw_chord() {
-    let ele = d3.select(".address-text").node();
-    d3.select("#chord").selectAll("*").remove();
-    let height = ele.getBoundingClientRect().width;
-    let width = ele.getBoundingClientRect().width;
-    const outerRadius = Math.min(width, height) * 0.5 - 20;
-    const innerRadius = outerRadius - 10;
+    // let ele = d3.select(".address-text").node();
+    // d3.select("#chord-content").selectAll("*").remove();
+    // let height = ele.getBoundingClientRect().width;
+    // let width = ele.getBoundingClientRect().width;
+
+    let svgElement = init_chord(polygenView);
+    bindSVG(svgElement, "#chord-content");
+}
+
+function highlight_arc(index) {
+    chord_arcs.transition().style("opacity", defaultOpacity / 2);
+    chord_ribbons.transition().style("opacity", defaultOpacity / 2);
+
+    chord_arcs.filter(`.chord-arc-${index}`).transition().style("opacity", 1);
+    chord_ribbons.filter(`.chord-ribbon-from-${index}`).transition().style("opacity", 1);
+    chord_ribbons.filter(`.chord-ribbon-to-${index}`).transition().style("opacity", 1);
+}
+
+function init_chord(isPolygenView=false) {
+    // 创建一个无主的SVG元素
+    let width = prismRadius * 2;
+    let height = width;
+    let svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgElement.setAttribute("width", width);
+    svgElement.setAttribute("height", height);
+    svgElement.setAttribute("viewBox", [-width / 2, -height / 2, width, height]);
+
+    let svg = d3.select(svgElement)
+        .attr("style", "width: 100%; height: auto; font: 10px Archivo Narrow;");
+
+
+    const outerRadius = Math.min(width, height) * 0.5;
+    const innerRadius = outerRadius - 20;
     let { rowSums: outdegree, colSums: indegree } = sumRowsAndColumns(adjacentMatrix); // 解构赋值
 
     let names = global_paper_field.map(d => d.shortName),
         colors = global_paper_field.map(d => topic2color(d.id)),
-        weights = global_paper_field.map(d => d.num);
-        
+        weights = global_paper_field.map(d => d.size);
+    // 使用size而不是num作为权重
+
     let degree = outdegree.map((d, i) => d + indegree[i]);
 
     let totalWeight = d3.sum(weights);
-    let interval = totalWeight / 100;
-    totalWeight += interval * names.length;
+    let interval = 0;
+    if (!isPolygenView){
+        interval = totalWeight / 100;
+        totalWeight += interval * names.length;
+    }
 
     console.log('degree', degree);
     const angleScale = d3.scaleLinear().domain([0, totalWeight]).range([0, 2 * Math.PI]);
-    let cumulativeAngle = 0;
-    const nodeAngles = weights.map(weight => {
-        const startAngle = cumulativeAngle;
-        cumulativeAngle += angleScale(weight);
+    let cumulativeAngle = 2 * Math.PI;
+    const nodeAngles = weights.map((weight, ix) => {
         const endAngle = cumulativeAngle;
-        cumulativeAngle += angleScale(interval);
+        cumulativeAngle -= angleScale(weight);
+        const startAngle = cumulativeAngle;
+        cumulativeAngle -= angleScale(interval);
         return {
-            index: weights.indexOf(weight),
+            index: ix,
             startAngle: startAngle,
             endAngle: endAngle,
             weight: weight
@@ -638,55 +718,171 @@ function draw_chord() {
     console.log('angles', angles)
     console.log('chords', chords)
 
-    const color = d3.scaleOrdinal(names, colors);
+    function highlight_ribbon(d) {
+        const sourceIndex = d.source.index;
+        const targetIndex = d.target.index;
+        // 将所有元素透明度设为默认值的一半
+        chord_arcs.transition().style("opacity", defaultOpacity / 2);
+        chord_ribbons.transition().style("opacity", defaultOpacity / 2);
+    
+        // 高亮特定元素
+        chord_arcs.filter(`.chord-arc-${sourceIndex}, .chord-arc-${targetIndex}`)
+            .transition()
+            .style("opacity", 1);
+        chord_ribbons.filter(`.chord-ribbon-${sourceIndex}-${targetIndex}`)
+            .transition()
+            .style("opacity", 1);
+    }
+    
+    function mouseout() {
+        // 将所有元素的透明度恢复为默认值
+        chord_arcs.transition().style("opacity", defaultOpacity);
+        chord_ribbons.transition().style("opacity", defaultOpacity);
+    }
 
-    const svg = d3.select("#chord").append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [-width / 2, -height / 2, width, height])
-      .attr("style", "width: 100%; height: auto; font: 10px sans-serif;");
+    if (isPolygenView) {
+        // 计算多边形的顶点。添加多边形蒙版。
+        const polygonPoints = angles.map(d => {
+            const startPoint = polarToCartesian(innerRadius - 5, d.startAngle);
+            const endPoint = polarToCartesian(innerRadius - 5, d.endAngle);
+            return [endPoint, startPoint];
+        }).flat();
+
+        const polygonChunks = angles.map(d => {
+            const innerStart = polarToCartesian(innerRadius, d.startAngle);
+            const innerEnd = polarToCartesian(innerRadius, d.endAngle);
+            const outerStart = polarToCartesian(outerRadius, d.startAngle);
+            const outerEnd = polarToCartesian(outerRadius, d.endAngle);
+            const intersect = lineIntersection(d.splitAngle, innerStart, innerEnd);
+            ret = [innerStart, innerEnd, outerEnd, outerStart];
+
+            Object.assign(ret, {
+                radius: Math.sqrt(intersect.x ** 2 + intersect.y ** 2),
+                splitAngle: d.splitAngle,
+            })
+            return ret;
+        });
+        
+        // 创建蒙版
+        const mask = svg.append("defs")
+            .append("mask")
+            .attr("id", "polygon-mask");
+        
+        mask.append("polygon")
+            .attr("points", polygonPoints.map(d => `${d.x},${d.y}`).join(" "))
+            .attr("fill", "white");
+        
+        // 应用蒙版到chords
+        svg.append("g")
+            .attr("fill-opacity", defaultOpacity)
+            .selectAll("path")
+            .data(chords)
+            .join("path")
+            .attr("mask", "url(#polygon-mask)")  // 应用蒙版
+            .style("mix-blend-mode", "multiply")
+            .attr("fill", d => colors[d.source.index])
+            .attr('class', d => `chord-ribbon chord-ribbon-from-${d.source.index} chord-ribbon-to-${d.target.index} chord-ribbon-${d.source.index}-${d.target.index}`)
+            .attr("d", d3.ribbon()
+                .radius(innerRadius - 5)
+            )
+            .on("mouseover", highlight_ribbon)
+            .on("mouseout", mouseout)
+            .append("title")
+            .text(d => `\n${d.target.value} ${names[d.source.index]} → ${names[d.target.index]}`);
+        
+        polygonChunks.forEach((chunk, ix) => {
+            console.log('chunk', chunk)
+            svg.append("polygon")
+                .style("opacity", defaultOpacity)
+                .attr('class', 'chord-arc chord-arc-' + ix)
+                .attr("points", chunk.map(d => `${d.x},${d.y}`).join(" "))
+                .attr("fill", d => {
+                    let c = colors[ix];
+                    return hsvToColor([c.h, c.s, c.v], 0.8)
+                })
+                .on("mouseover", highlight_arc(ix))
+                .on("mouseout", mouseout);
+            
+            svg.append("path")
+                .attr('class', 'chord-arc chord-arc-' + ix)
+                .style("opacity", defaultOpacity)
+                .attr("fill", d => {
+                    let c = colors[ix];
+                    return hsvToColor([c.h, c.s, c.v], 0.8)
+                })
+                .attr("d", d3.arc()
+                    .innerRadius(chunk.radius-10)
+                    .outerRadius(chunk.radius+30)
+                    .startAngle(chunk.splitAngle - 0.003)
+                    .endAngle(chunk.splitAngle + 0.003)
+                )
+                .on("mouseover", highlight_arc(ix))
+                .on("mouseout", mouseout);
+        });
+        chord_arcs = d3.selectAll(".chord-arc");
+        chord_ribbons = d3.selectAll(".chord-ribbon");
+    } else {
+        const group = svg.append("g")
+            .selectAll("g")
+            .data(angles)
+            .join("g");
+
+        group.append("path")
+            .attr("fill", d => {
+                let c = colors[d.index];
+                return hsvToColor([c.h, c.s, c.v], 0.8)
+            })
+            .attr("d", d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .startAngle(d => d.startAngle)
+                .endAngle(d => d.endAngle)
+            )
+            .style("opacity", defaultOpacity)
+            .attr('class', d => 'chord-arc chord-arc-' + d.index)
+            .on("mouseover", d=> highlight_arc(d.index))
+            .on("mouseout", mouseout);
 
 
+        group.append("title")
+            .text(d => `${names[d.index]}\n${d.weight}`);
 
-    const group = svg.append("g")
-        .selectAll("g")
-        .data(angles)
-        .join("g");
+        group.append("path")
+            .attr("fill", d => {
+                let c = colors[d.index];
+                return hsvToColor([c.h, c.s, c.v], 0.8)
+            })
+            .attr("d", d3.arc()
+                .innerRadius(innerRadius-10)
+                .outerRadius(outerRadius+10)
+                .startAngle(d => d.splitAngle - 0.003)
+                .endAngle(d => d.splitAngle + 0.003)
+            )
+            .attr('class', d => 'chord-arc chord-arc-' + d.index)
+            .on("mouseover", d=> highlight_arc(d.index))
+            .on("mouseout", mouseout);
 
-    group.append("path")
-        .attr("fill", d => color(names[d.index]))
-        .attr("d", d3.arc()
-            .innerRadius(innerRadius)
-            .outerRadius(outerRadius)
-            .startAngle(d => d.startAngle)
-            .endAngle(d => d.endAngle)
-        );
+        svg.append("g")
+            .attr("opacity", defaultOpacity)
+            .selectAll("path")
+            .data(chords)
+            .join("path")
+            .style("mix-blend-mode", "multiply")
+            .attr('class', d => `chord-ribbon chord-ribbon-from-${d.source.index} chord-ribbon-to-${d.target.index} chord-ribbon-${d.source.index}-${d.target.index}`)
+            .attr("fill", d => colors[d.source.index])
+            .attr("d", d3.ribbon()
+                .radius(innerRadius - 5)
+            )
+            .on("mouseover", highlight_ribbon)
+            .on("mouseout", mouseout)
+            .append("title")
+            .text(d => `${d.target.value} ${names[d.source.index]} → ${names[d.target.index]}`);
+    }
 
-    group.append("title")
-        .text(d => `${names[d.index]}\n${d.weight}`);
-
-    group.append("path")
-        .attr("fill", d => color(names[d.index]))
-        .attr("d", d3.arc()
-            .innerRadius(outerRadius)
-            .outerRadius(outerRadius+10)
-            .startAngle(d => d.splitAngle - 0.002)
-            .endAngle(d => d.splitAngle + 0.002)
-        );
-
-    svg.append("g")
-        .attr("fill-opacity", 0.8)
-        .selectAll("path")
-        .data(chords)
-        .join("path")
-        .style("mix-blend-mode", "multiply")
-        .attr("fill", d => color(names[d.source.index]))
-        .attr("d", d3.ribbon()
-            .radius(innerRadius - 1)
-        )
-        .append("title")
-        .text(d => `${d.source.value} ${names[d.target.index]} → ${names[d.source.index]}${d.source.index === d.target.index ? "" : `\n${d.target.value} ${names[d.source.index]} → ${names[d.target.index]}`}`);
-
+    // 每次生成新的SVG元素时，我们都需要更新选择器
+    chord_arcs = d3.selectAll(".chord-arc");
+    chord_ribbons = d3.selectAll(".chord-ribbon");
+    return svgElement;
 }
 
 function create_svg(viewBox=undefined, transform=undefined) {
@@ -809,11 +1005,6 @@ function init_graph(graph) {
     let svg = d3.select(svgElement);
     g = svg.append('g');
     graph['g'] = g;
-
-    tip = d3.tip()
-        .attr("class", "d3-tip")
-        .html(d => d.name);
-    svg.call(tip);
 
     draw_context_edges(graph);
     g.selectAll('circle').data(graph['nodes']).enter().append('ellipse')
@@ -1557,14 +1748,28 @@ ${virtualEdgesStr}
 
 function bindSVGToElement(graph, key, elementId) {
     let svgElement = graph[key];
-    console.log('before', svgElement.childNodes.length);
+    let {svg: svg, g: g} = bindSVG(svgElement, elementId);
+
+    graph[key] = svg; // 更新 svgElement 为新的 SVG 元素
+    if (key === 'svg') graph['g'] = g;
+}
+
+
+function bindSVG(svgElement, elementId) {
+    // console.log('before', svgElement.childNodes.length);
     // 从参数获取容器，并清空容器内的所有元素
     let ele = d3.select(elementId).node();
     d3.select(elementId).selectAll("*").remove();
 
+    let wasHidden = $(ele).is(':hidden');
+    if (wasHidden) $(ele).show();
     // 获取容器尺寸
     let svgWidth = ele.getBoundingClientRect().width;
     let svgHeight = ele.getBoundingClientRect().height;
+    console.log('svg size', svgWidth, svgHeight, elementId)
+    
+    if (wasHidden) $(ele).hide();
+    
 
     // 获取并修正 SVG 的 viewBox 和 transform 属性
     let viewBox = svgElement.getAttribute('viewBox') || `0 0 ${svgWidth} ${svgHeight}`;
@@ -1581,12 +1786,14 @@ function bindSVGToElement(graph, key, elementId) {
     // Array.from(svgElement.childNodes).forEach(node => {
     //     g.node().appendChild(node.cloneNode(true));
     // });
-    d3.select(svgElement).selectAll('*').each(function() {
+    // d3.select(svgElement).selectAll('*').each(function() {
+    //     g.node().appendChild(this);
+    // });
+    d3.select(svgElement).selectAll('*').filter(function() {
+        return this.parentNode === svgElement;
+    }).each(function() {
         g.node().appendChild(this);
     });
-
-    graph[key] = svg; // 更新 svgElement 为新的 SVG 元素
-    if (key === 'svg') graph['g'] = g;
 
     // 添加缩放和拖拽功能
     const zoom = d3.zoom()
@@ -1597,9 +1804,10 @@ function bindSVGToElement(graph, key, elementId) {
         });
 
     svg.call(zoom);
-    console.log('after', svgElement.childNodes.length); // 输出子节点的数量
-}
+    // console.log('after', svgElement.childNodes.length); // 输出子节点的数量
 
+    return {svg, g};
+}
 
 function parseSVG(graph) {
     graph['id2attr'] = {};
@@ -1708,10 +1916,6 @@ function loadGlobalData() {
         return;
     }
     
-    // 注意year的计算在selectedTopic之前
-    minYear = Math.min(...filteredNodes.map(node => node.year));
-    maxYear = Math.max(...filteredNodes.map(node => node.year));
-
     let ln = filteredNodes.length, le = filteredEdges.length;
     let modeValue = document.getElementById('mode').value;
     let surveyValue = document.getElementById('remove-survey').value;
@@ -1750,6 +1954,10 @@ function loadGlobalData() {
     }
     filteredEdges = connectedEdges;
 
+    // 注意year的计算在selectedTopic之前，但是在过滤之后
+    minYear = Math.min(...filteredNodes.map(node => node.year));
+    maxYear = Math.max(...filteredNodes.map(node => node.year));
+
     console.log('original data:', authorData, 
         '#node:', authorData['nodes'].length, ln, lnr, filteredNodes.length, 
         '#edge:', authorData['edges'].length, le, filteredEdges.length);
@@ -1770,7 +1978,8 @@ function loadGlobalData() {
         if (d.topicDist === undefined || Object.keys(d.topicDist)==0) {
             d.topic = fields.length - 1;
         }
-        paperID2topic[d.id] = d.topic;
+        // 注意global_nodes的topic可能有更新，所以不能在这里更新paperID2topic
+        // paperID2topic[d.id] = d.topic;
         paperID2year[d.id] = d.year;
         return d;
     });
@@ -1781,6 +1990,7 @@ function loadGlobalData() {
         let ix = global_paper_field.findIndex(d => d.id == topic);
         if (ix == -1) {
             // 如果没有统计，在paper_field中新建k-v
+            // num是直接对应话题的文章数，size是所有 TopicProb > threshold的文章数，需要在后面重新计算
             global_paper_field.push({
                 id: topic,
                 num: 1,
@@ -1794,31 +2004,41 @@ function loadGlobalData() {
         }
     })
     global_paper_field.sort(op('num'));
-    global_paper_field.forEach(d=>{d.size = d.num});
+    console.log('original global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
     let total = global_paper_field.reduce((acc, cur) => acc + cur.num, 0);
     let sum = 0;
-    let min_num = 0;
+    let min_num = 2;    // 话题的最小值是2
     let cnt = 0;
     for (const d of global_paper_field) {
         sum += d.num;
         cnt += 1;
-        if (sum >= 0.95 * total || cnt >= 25) {
+        if (sum >= 0.95 * total || cnt >= 25 || d.num == min_num) {
             min_num = d.num;
             break;
         }
     }
     // 注意逻辑：item.num >= min_num && item.id !== fields.length-1 会过滤others
-    global_paper_field = global_paper_field.filter(item => item.num >= min_num || item.id == fields.length-1);
+    global_paper_field = global_paper_field.filter(item => item.num >= min_num);
+    let topic = fields.length-1;
+    let num = 0;
     let global_topics = global_paper_field.map(d => d.id);
     global_nodes.forEach(d => {
         if(!global_topics.includes(parseInt(d.topic))) {
-            d.topic = fields.length - 1;
+            num += 1;
+            d.topic = topic;
         }
+        paperID2topic[d.id] = d.topic;
     });
-    let other = global_paper_field.find(d => d.id == fields.length-1);
-    if (other !== undefined) {
-        other.num = global_nodes.filter(d=> d.topic==fields.length-1).length;
-    }
+    global_paper_field.push({
+        id: topic,
+        num: num,
+        name: fields[topic][2],
+        x: parseFloat(fields[topic][3]),
+        y: parseFloat(fields[topic][4]),
+        label: parseInt(fields[topic][8])
+    })
+    
+    
     let max_num = Math.max(...global_paper_field.map(d=>d.num));
     rangeSlider.noUiSlider.updateOptions({
         range: {
@@ -1877,6 +2097,7 @@ function loadTopicGraph(STopic) {
 
     if (STopic !== null) {
         graph['nodes'] = graph['nodes'].filter(d => hasTopic(d, STopic));
+        global_paper_field.find(d => d.id == STopic).size = graph['nodes'].length;
         if (graph['nodes'].length == 0) {
             console.log('No node found in the selected topic', STopic);
             return;
@@ -1993,8 +2214,8 @@ function showPopup(topic) {
     // 创建弹窗
     const popup = document.createElement('div');
     // height设置为窗口高度
-    let height = Math.min(window.innerHeight, graph['height'] * 72);
-    let width = Math.min(window.innerWidth * 0.8, graph['width'] * 72 * 2);
+    let height = Math.min(window.innerHeight, Math.sqrt(graph['height']) * 500);
+    let width = Math.min(window.innerWidth * 0.8, Math.sqrt(graph['width']) * 500);
 
     popup.style.width = width + 'px';
     popup.style.height = height + 'px';
@@ -2043,12 +2264,18 @@ function drawTopicPrism() {
     let isRotating = true;
     let lastMouseX, lastMouseY;
     let rotationAngleY = 0;
-    let rotationAngleX = 0;
+    let rotationAngleX = -20;
     let isMouseDown = false;
     let scale = 0.5;
+    let highlightOpacity = 0.8;
     // prism.style.transform = `scale(${scale})`
     
-    let perspectiveDistance = 2000;
+    // container.style
+    let height = container.offsetHeight;
+    const prismWidth = container.offsetWidth;
+    const style = window.getComputedStyle(container);
+    let perspectiveDistance = parseFloat(style.perspective);
+    prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg)`;
 
     // const topics = [
     //   { name: "Topic 1", size: 120 },
@@ -2058,10 +2285,7 @@ function drawTopicPrism() {
     //   { name: "Topic 5", size: 24 }
     // ];
     let topics = global_paper_field;
-
-    const prismWidth = container.offsetWidth;
     const totalSize = d3.sum(topics, d => d.size);
-    const radius = 800;
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     let currentAngle = 0;
@@ -2071,13 +2295,14 @@ function drawTopicPrism() {
     let currentIndex = -1;
 
     topics.forEach((topic, i) => {
+        console.log('prism topic', topic)
         const topicAngle = (topic.size / totalSize) * 360;
         const startAngle = currentAngle;
         currentAngle += topicAngle / 2;
         const theta = (topic.size / totalSize) * 2 * Math.PI;
         
-        const width = 2 * radius * Math.sin(theta / 2);
-        const distance = radius * Math.cos(theta / 2);
+        const width = 2 * prismRadius * Math.sin(theta / 2);
+        const distance = prismRadius * Math.cos(theta / 2);
 
         svgWrapper = d3.select("#prism").append("div")
             .attr("id", `svg-wrapper-${topic.id}`)
@@ -2085,7 +2310,7 @@ function drawTopicPrism() {
             .style("transform", `rotateY(${currentAngle}deg) translateZ(${distance}px) translateX(${prismWidth/2}px)`);
 
         // height 与 svg-wrapper 的高度一致
-        const height = svgWrapper._groups[0][0].offsetHeight;
+        // const height = svgWrapper._groups[0][0].offsetHeight;
 
         let graph = topic2graph[topic.id];
         graph['width'] = width / 72;    // 英寸转为pt
@@ -2103,21 +2328,20 @@ function drawTopicPrism() {
             .attr("y", 0)
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", topic2color(graph['topic'], sat=0.2))
-            .attr("fill-opacity", 0.5)
-            .attr("fill-opacity", 0.5)
+            .attr("fill", topic2color(graph['topic'], sat=0.1))
+            .attr("fill-opacity", highlightOpacity / 2)
             .on("mouseover", function() {
-                d3.select(this).attr("fill-opacity", 1);
+                d3.select(this).attr("fill-opacity", highlightOpacity);
                 tip.show(topic);
             })
             .on("mouseout", function() {
                 if (Math.abs(rotationAngleX) < 80 && currentIndex != i)
-                    d3.select(this).attr("fill-opacity", 0.5);
+                    d3.select(this).attr("fill-opacity", highlightOpacity / 2);
                 tip.hide();
             })
-            .on("click", function() {
-                showPopup(topic);
-            });
+            // .on("click", function() {
+            //     showPopup(topic);
+            // });
 
         svg.append("text")
             .attr("x", 0)
@@ -2140,7 +2364,9 @@ function drawTopicPrism() {
             .attr('id', `nestedSvg-${topic.id}`);; // 设置 transform
 
         // 将 svgElement 的子元素移动到嵌套的 svg 元素中
-        d3.select(svgElement).selectAll('*').each(function() {
+        d3.select(svgElement).selectAll('*').filter(function() {
+            return this.parentNode === svgElement;
+        }).each(function() {
             nestedSvg.node().appendChild(this);
         });
 
@@ -2154,37 +2380,56 @@ function drawTopicPrism() {
         rects.push(rect);
     });
 
+    // 绘制topview弦图
+    svgWrapper = d3.select("#prism").append("div")
+        .attr("id", `svg-wrapper-chord`)
+        .attr("class", "svg-wrapper")
+        .style("transform", `rotateX(90deg) translateZ(${height/2}px) rotateZ(180deg) translate(${prismWidth/2}px, ${height/2}px)`);
+
+    const svg = svgWrapper.append("svg")
+        .style("overflow", "visible")
+        .attr('id', `svg-chord`);
+
+    let svgElement = init_chord(true);
+    d3.select(svgElement).selectAll('*').filter(function() {
+        return this.parentNode === svgElement;
+    }).each(function() {
+        svg.node().appendChild(this);
+    });
+
+
     function updateOpacity() {
         if(Math.abs(rotationAngleX) > 80) {
-            rects.forEach(rect => rect.attr("fill-opacity", 1));
+            rects.forEach(rect => rect.attr("fill-opacity", highlightOpacity));
             currentIndex = -1;
             return;
         } else {
             if (currentIndex == -1)
-                rects.forEach(rect => rect.attr("fill-opacity", 0.5));
+                rects.forEach(rect => rect.attr("fill-opacity", highlightOpacity / 2));
         }
 
-      const activeAngle = (720 - rotationAngleY) % 360;
-      let newIndex = -1;
-      for (let i = 0; i < topicRanges.length; i++) {
-        const { startAngle, endAngle } = topicRanges[i];
-        if (startAngle <= activeAngle && activeAngle < endAngle) {
-          newIndex = i;
-          break;
+        const activeAngle = (720 - rotationAngleY) % 360;
+        let newIndex = -1;
+        for (let i = 0; i < topicRanges.length; i++) {
+            const { startAngle, endAngle } = topicRanges[i];
+            if (startAngle <= activeAngle && activeAngle < endAngle) {
+            newIndex = i;
+            break;
+            }
         }
-      }
 
-      if (newIndex !== currentIndex) {
+        if (newIndex !== currentIndex) {
+            highlight_arc(newIndex);
 
-        if (currentIndex !== -1) {
-          rects[currentIndex].attr("fill-opacity", 0.5);
+            if (currentIndex !== -1) {
+                rects[currentIndex].attr("fill-opacity", highlightOpacity / 2);
+            }
+            if (newIndex !== -1) {
+                rects[newIndex].attr("fill-opacity", highlightOpacity);
+            }
+            currentIndex = newIndex;
+            // console.log(`Current index: ${currentIndex}`);
         }
-        if (newIndex !== -1) {
-          rects[newIndex].attr("fill-opacity", 1);
-        }
-        currentIndex = newIndex;
-        // console.log(`Current index: ${currentIndex}`);
-      }
     }
 
     function startRotation() {
@@ -2209,6 +2454,13 @@ function drawTopicPrism() {
           stopRotation();
         }
       });
+
+    document.getElementById('show-detail').addEventListener('click', function() {
+        const topic = topics[currentIndex];
+        if (topic) {
+            showPopup(topic);
+        }
+    });
 
     container.addEventListener('mousedown', function(event) {
         lastMouseX = event.clientX;

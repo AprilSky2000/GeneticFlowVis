@@ -614,7 +614,7 @@ input:checked + .slider:before {
   #prism-container {
 	position: relative;
 	width: 100px;
-	height: 1200px;
+	height: 800px;
 	perspective: 2500px;
 	overflow: visible;
 	/* overflow: hidden; */

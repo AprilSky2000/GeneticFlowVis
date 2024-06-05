@@ -214,10 +214,10 @@
                     <li>
                         <ul class="address-text" style="background-color: #054863; border-top-left-radius: 10px; border-top-right-radius: 10px;">
                             <li style="width: 30%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
-                                <button id="topic-button">Topic Map</button>
+                                <button id="hypertree-button">Chord</button>
                             </li>
                             <li style="width: 30%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
-                                <button id="hypertree-button">Chord</button>
+                                <button id="topic-button">Topic Map</button>
                             </li>
                             <li style="width: 25%; font-size: 16px; margin-top: 4%; margin-bottom: 3%; padding-left: 5%;">
                                 <button id="TTM-button">TTM</button>
@@ -225,7 +225,7 @@
                         </ul>
                     </li>
                     <script>
-                        $("#chord").hide();
+                        $("#topic-map-graph").hide();
                         $("#TTM-graph").hide();
                         $("#topic-button").click(function () {
                             $("#topic-map-graph").show();
@@ -243,7 +243,13 @@
                             $("#TTM-graph").show();
                         })
                     </script>
-
+                    <li>
+                        <div id="chord">
+                            <button id="toggle-polygen">Polygen View</button>
+                            <!-- <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="400px"></iframe> -->
+                            <div id="chord-content" style="width: 420px; height: 420px;"></div>
+                        </div>
+                    </li>
                     <li>
                         <div id="topic-map-graph" style="padding-bottom:4%">
                             <div id="topic-distribution"></div>
@@ -263,11 +269,7 @@
                             </div>
                         </div>
                     </li>
-                    <li>
-                        <div id="chord">
-                            <!-- <iframe id="hypertreeFrame" src="/hypertree/" width="100%" height="400px"></iframe> -->
-                        </div>
-                    </li>
+                    
                     <li>
                         <div id="TTM-graph"></div>
                     </li>
@@ -347,7 +349,8 @@
                                 <div class="center-marker"></div>
                             </div>
                         </div>
-                        <button id="toggle-rotation" style="position: absolute; top: 10%">Stop Rotating</button>
+                        <button id="toggle-rotation" style="position: absolute; top: 40px; left:20px;">Stop Rotating</button>
+                        <button id="show-detail" style="position: absolute; top: 40px; left:140px;">Show Detail</button>
                     </div>
                 </div>
                 
@@ -557,7 +560,7 @@ $(function () {
     ])
     // $("#field-level option[value='1']").remove();
     // $("#field-level option[value='2']").text(1);
-    $("#chord").hide();
+    $("#topic-map-graph").hide();
     $("#TTM-graph").hide();
     
     d3.json(`/src/config.json`).then(data => {
