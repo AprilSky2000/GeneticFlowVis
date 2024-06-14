@@ -11,111 +11,186 @@
         "name": "NLP",
         "icon": "fa-solid fa-pencil icon",
         "description": "Natural Language Processing",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 38885,
+        "authors": 1000,
+        "links": 419941,
+        "topic": 153
     },
     "CG": {
         "name": "Graphics",
         "icon": "fa-brands fa-codepen icon",
         "description": "Computer Graphics",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 109058,
+        "authors": 6744,
+        "links": 130650,
+        "topic": 76
     },
     "VCG": {
         "name": "Graphics & Visualization",
         "icon": "fa-solid fa-cubes icon",
         "description": "Computer Graphics and Visualization",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 113597,
+        "authors": 6109,
+        "links": 130650,
+        "topic": 81
     },
     "database": {
         "name": "Database & Data Science",
         "icon": "fa-solid fa-database icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 157334,
+        "authors": 6350,
+        "links": 136688,
+        "topic": 83
     },
     "visualization": {
         "name": "Visualization",
         "icon": "fas fa-eye icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 80017,
+        "authors": 5942,
+        "links": 80026,
+        "topic": 101
     },
     "ACMfellow": {
         "name": "ACM Fellows",
         "icon": "fa-solid fa-graduation-cap icon",
         "description": "Fellows of the ACM",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 336475,
+        "authors": 1306,
+        "links": 683003,
+        "topic": 490
     },
     "fellow": {
         "name": "Fellow",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (20240301 old version)",
         "year": "fellowYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 921697,
+        "authors": 4014,
+        "links": 2012274,
+        "topic": 280
     },
     "fellowV1": {
         "name": "FellowV1",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (20240501)",
         "year": "fellowYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 491415,
+        "authors": 1940,
+        "links": 1124744,
+        "topic": 123
     },
     "fellowV2": {
         "name": "FellowV2",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (20240516 similar #paper and #citation)",
         "year": "fellowYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 923512,
+        "authors": 4420,
+        "links": 2018056,
+        "topic": 114
     },
     "fellowV3": {
         "name": "FellowV3",
         "icon": "fas fa-user-graduate icon",
         "description": "Fellows of the ACM and their competitors (20240601 CSPaperRatio > 0.9)",
         "year": "fellowYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 512868,
+        "authors": 1986,
+        "links": 1206448,
+        "topic": 119
     },
     "fellowTuring": {
         "name": "Turing Award (old version)",
         "icon": "fa-solid fa-trophy icon",
-        "year": "turingYear"
+        "year": "turingYear",
+        "papers": 15839,
+        "authors": 76,
+        "links": 28517,
+        "topic": 494
     },
     "turing": {
         "name": "Turing Award Winners",
         "icon": "fa-solid fa-trophy icon",
         "year": "turingYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 15575,
+        "authors": 76,
+        "links": 30614,
+        "topic": 490
     },
     "ACMfellowTuring": {
         "name": "ACM Fellows & Turing Award",
         "icon": "fa-solid fa-award icon",
         "description": "Fellows of the ACM and Turing Award Winners",
         "year": "fellowYear",
-        "type": "Top Scholar"
+        "type": "Top Scholar",
+        "papers": 337693,
+        "authors": 1309,
+        "links": 690459,
+        "topic": 481
     },
     "SE": {
         "name": "Software & Programming Language",
         "icon": "fa-brands fa-microsoft icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 236711,
+        "authors": 11144,
+        "links": 346424,
+        "topic": 96
     },
     "HCI": {
         "name": "Human-Computer Interaction",
         "icon": "fa-solid fa-display icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 131650,
+        "authors": 6265,
+        "links": 149321,
+        "topic": 86
     },
     "CN": {
         "name": "Networking & Parallel/Distributed/Real-time/Embedded Computing",
         "icon": "fa-solid fa-network-wired icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 878492,
+        "authors": 20307,
+        "links": 1128046,
+        "topic": 149
     },
     "AI": {
         "name": "Artificial Intelligence at Large",
         "icon": "fa-solid fa-robot icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 3881366,
+        "authors": 54876,
+        "links": 3665282,
+        "topic": 384
     },
     "CA": {
         "name": "Computer Architecture",
         "icon": "fa-solid fa-database icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 543558,
+        "authors": 22138,
+        "links": 646885,
+        "topic": 125
     },
     "Security": {
         "name": "Computer Security",
         "icon": "fa-brands fa-microsoft icon",
-        "type": "CS Subfield"
+        "type": "CS Subfield",
+        "papers": 172497,
+        "authors": 10532,
+        "links": 173608,
+        "topic": 91
     }
 }
-

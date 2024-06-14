@@ -84,7 +84,7 @@ select {
     transition: background-color 0.3s, color 0.3s;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 30px; /* 增大字号 */
-    font-weight: bold; /* 加粗文本 */
+    /* font-weight: bold; */
     box-shadow: 0 0 7px #3c4043;
     margin: 7px;
 }

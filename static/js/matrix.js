@@ -1,3 +1,6 @@
+let showUnreferenced = false;  // 默认不显示无引用关系的论文
+let showYearMatrix = false;    // 默认不显示年份矩阵
+
 function drawMatrix() {
     var topicNodesMap = new Map();
     nodes.forEach(node => {
@@ -172,9 +175,38 @@ function addYearLabels(matrixGroup, nodes, cellSize, gap) {
         .attr('class', 'yearLabel');
 }
 
-function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
+// function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
+//     const yearIndexRanges = {};
+//     topicNodes.forEach((node, index) => {
+//         if (!yearIndexRanges[node.year]) {
+//             yearIndexRanges[node.year] = { start: index, end: index };
+//         } else {
+//             yearIndexRanges[node.year].end = index;
+//         }
+//     });
+
+//     const years = Object.keys(yearIndexRanges).map(Number).sort((a, b) => a - b);
+//     var colorList = d3.schemeCategory10.slice(0, years.length);
+//     years.forEach((year, idx) => {
+//         const currentRange = yearIndexRanges[year];
+//         for (let nextIdx = years.length - 1; nextIdx >= idx; nextIdx--) {
+//             const nextYear = years[nextIdx];
+//             const nextRange = yearIndexRanges[nextYear];
+//             matrixGroup.append('rect')
+//                 .attr('x', nextRange.start * cellSize)
+//                 .attr('y', currentRange.start * cellSize)
+//                 .attr('width', (nextRange.end - nextRange.start + 1) * cellSize)
+//                 .attr('height', (currentRange.end - currentRange.start + 1) * cellSize)
+//                 .attr('fill', 'none')
+//                 .attr('stroke', colorList[nextIdx - idx])
+//                 .attr('stroke-width', 30)
+//                 .attr('class', 'yearMatrix');
+//         }
+//     });
+// }
+function drawInterYearInteractions(matrixGroup, nodes, cellSize) {
     const yearIndexRanges = {};
-    topicNodes.forEach((node, index) => {
+    nodes.forEach((node, index) => {
         if (!yearIndexRanges[node.year]) {
             yearIndexRanges[node.year] = { start: index, end: index };
         } else {
@@ -183,23 +215,37 @@ function drawInterYearInteractions(matrixGroup, topicNodes, cellSize) {
     });
 
     const years = Object.keys(yearIndexRanges).map(Number).sort((a, b) => a - b);
-    // var colorScale = d3.scaleSequential(d3.interpolateViridis)
-    //     .domain([0, years.length - 1]);
-    // var colorList = years.map((_, i) => colorScale(i));
-    var colorList = d3.schemeCategory10.slice(0, years.length);
+    const colorScale = d3.scaleLinear()
+        .domain([0, years.length - 1])
+        .range(["#505050", "#D3D3D3"]);  // 从深灰到浅灰
+
     years.forEach((year, idx) => {
         const currentRange = yearIndexRanges[year];
-        for (let nextIdx = years.length - 1; nextIdx >= idx; nextIdx--) {
-            const nextYear = years[nextIdx];
-            const nextRange = yearIndexRanges[nextYear];
+        if (showYearMatrix) {
+            // 绘制所有存在年份差的矩阵
+            for (let nextIdx = years.length - 1; nextIdx >= idx; nextIdx--) {
+                const nextYear = years[nextIdx];
+                const nextRange = yearIndexRanges[nextYear];
+                matrixGroup.append('rect')
+                    .attr('x', nextRange.start * cellSize)
+                    .attr('y', currentRange.start * cellSize)
+                    .attr('width', (nextRange.end - nextRange.start + 1) * cellSize)
+                    .attr('height', (currentRange.end - currentRange.start + 1) * cellSize)
+                    .attr('fill', 'none')
+                    .attr('stroke', colorScale(nextIdx - idx))
+                    .attr('stroke-width', 50)
+                    .attr('class', 'yearMatrix');
+            }
+        } else {
+            // 仅绘制对角线上的正方形
             matrixGroup.append('rect')
-                .attr('x', nextRange.start * cellSize)
+                .attr('x', currentRange.start * cellSize)
                 .attr('y', currentRange.start * cellSize)
-                .attr('width', (nextRange.end - nextRange.start + 1) * cellSize)
+                .attr('width', (currentRange.end - currentRange.start + 1) * cellSize)
                 .attr('height', (currentRange.end - currentRange.start + 1) * cellSize)
                 .attr('fill', 'none')
-                .attr('stroke', colorList[nextIdx - idx])
-                .attr('stroke-width', 30)
+                .attr('stroke', '#505050')  // 使用浅灰色
+                .attr('stroke-width', 50)
                 .attr('class', 'yearMatrix');
         }
     });
@@ -213,9 +259,33 @@ function shiftSubMatrix() {
     d3.select('#nextTopicButtonText').remove();
     d3.select('#maingroup').select('#matrixGroup').remove();
 
+    const localIndexById = id => topicNodes.findIndex(node => node.id == id);
+
     var topicNodes = topicNodesList[topicIndex % topicNodesList.length][1];
     let fieldDepthVal = $("#field-level").val();
     let fields = fieldDepthVal == 1 ? field_roots : field_leaves;
+
+    // 检测并过滤无引用关系的论文
+    let activeNodes = [];
+    let activeNodeIndices = new Set();  // 用于存储有引用关系的索引
+
+    edges.forEach(edge => {
+        const localSource = localIndexById(edge.source);
+        const localTarget = localIndexById(edge.target);
+        if (localSource != -1 && localTarget != -1 && topicNodes[localSource].topic == topicNodesList[topicIndex % topicNodesList.length][0]) {
+            activeNodeIndices.add(localSource);
+            activeNodeIndices.add(localTarget);
+        }
+    });
+
+    // 根据有效的索引过滤节点
+    activeNodes = topicNodes.filter((_, index) => activeNodeIndices.has(index));
+
+    // 根据showUnreferenced变量决定是否过滤无引用关系的论文
+    if (!showUnreferenced) {
+        topicNodes = activeNodes;
+    }
+
     var topicName = fields[topicNodes[0].topic][2];
     var len = topicNodes.length;
 
@@ -237,8 +307,6 @@ function shiftSubMatrix() {
         "source": "", "target": "",
         "sourceCitation": -1, "targetCitation": -1,
     })));
-
-    const localIndexById = id => topicNodes.findIndex(node => node.id == id);
 
     edges.forEach(edge => {
         const localSource = localIndexById(edge.source);
@@ -331,4 +399,69 @@ function shiftSubMatrix() {
     .on('mouseout', function (d) {
         tipSubMatrix.hide(d, this);
     });
+
+    addToggleButton();
+    addYearMatrixToggleButton();
+}
+
+function addToggleButton() {
+    const buttonSize = 300;  // 按钮大小
+    const matrixGroup = d3.select('#matrixGroup');
+    const mainMatrixSize = sortNodes.length * 50;
+
+    matrixGroup.append('rect')
+        .attr('x', mainMatrixSize)
+        .attr('y', mainMatrixSize / 3)
+        .attr('width', buttonSize * 2)
+        .attr('height', buttonSize)
+        .attr('fill', 'lightgray')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1)
+        .attr('cursor', 'pointer')
+        .on('click', function() {
+            showUnreferenced = !showUnreferenced;  // 切换状态
+            shiftSubMatrix();  // 重新渲染子矩阵
+        });
+
+    // 添加文本标签来指示按钮功能
+    matrixGroup.append('text')
+        .attr('x', mainMatrixSize)
+        .attr('y', 30)
+        .text(showUnreferenced ? 'Hide Unreferenced' : 'Show Unreferenced')
+        .attr('cursor', 'pointer')
+        .on('click', function() {
+            showUnreferenced = !showUnreferenced;  // 切换状态
+            shiftSubMatrix();  // 重新渲染子矩阵
+        });
+}
+
+function addYearMatrixToggleButton() {
+    const matrixGroup = d3.select('#matrixGroup');
+    const buttonSize = 300;  // 按钮大小
+    const mainMatrixSize = sortNodes.length * 50;
+
+    matrixGroup.append('rect')
+        .attr('x', mainMatrixSize)
+        .attr('y', mainMatrixSize / 3 * 2)
+        .attr('width', buttonSize * 2)
+        .attr('height', buttonSize)
+        .attr('fill', 'lightgray')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1)
+        .attr('cursor', 'pointer')
+        .on('click', function() {
+            showYearMatrix = !showYearMatrix;  // 切换显示状态
+            shiftSubMatrix();  // 根据状态切换年份矩阵的显示
+        });
+
+    // 添加文本标签来指示按钮功能
+    // matrixGroup.append('text')
+    //     .attr('x', buttonX + buttonSize + 5)
+    //     .attr('y', buttonY + buttonSize / 2 + 5)
+    //     .text(showYearMatrix ? 'Hide Years' : 'Show Years')
+    //     .attr('cursor', 'pointer')
+    //     .on('click', function() {
+    //         showYearMatrix = !showYearMatrix;  // 切换显示状态
+    //         shiftSubMatrix();  // 根据状态切换年份矩阵的显示
+    //     });
 }
