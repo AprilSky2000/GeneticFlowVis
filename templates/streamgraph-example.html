@@ -1,0 +1,254 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js & color scale-->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+
+<script>
+    let keys;
+    var activeArea = null; // 用于存储当前激活的stack area
+var margin = {top: 30, right: 30, bottom: 0, left: 60},
+    intervalWidth = 400,
+    width = 800 - margin.left - margin.right,
+    height = 460 - margin.top - margin.bottom,
+    halfWidth = (width - intervalWidth) / 2; // Width for each side
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+    
+    // Parse the Data
+d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/5_OneCatSevNumOrdered_wide.csv", function(data) {
+    
+    global_data = JSON.parse(JSON.stringify(data));
+    console.log(global_data);
+
+    // List of groups = header of the csv files
+    keys = data.columns.slice(1);
+
+
+    var leftData = data.slice(80, 100).map(function(d) {
+    d.year = +d.year + 20;
+    for (var key in d) {
+      if (key !== "year") {
+        d[key] = Math.round(Math.sqrt(+d[key]) / 30);
+      }
+    }
+    return d;
+  });
+
+  var rightData = data.slice(100, 120).map(function(d) {
+    d.year = +d.year;
+    for (var key in d) {
+      if (key !== "year") {
+        d[key] = Math.round(Math.sqrt(+d[key]) / 30);
+      }
+    }
+    return d;
+  });
+  
+
+    // Add Y axis (reversed to go from top to bottom)
+    var y = d3.scaleLinear()
+    .domain(d3.extent(leftData, function(d) { return d.year; }))
+    .range([ 0, height ]);
+
+    var years = leftData.map(d => d.year);
+    var tickValues = years.filter((year, i) => i % 2 === 0);
+
+    svg.append("g")
+    .call(d3.axisLeft(y).tickSize(-width).tickValues(tickValues)) // 修改这里
+    .select(".domain").remove();
+    svg.selectAll(".tick line").attr("stroke", "#b8b8b8")
+
+  // color palette
+  var color = d3.scaleOrdinal()
+    .domain(keys)
+    .range(d3.schemeDark2);
+
+  // create a tooltip
+  var Tooltip = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", -10)
+    .style("opacity", 0)
+    .style("font-size", 17)
+  
+
+  // Function to process and draw streamgraph for one side
+function drawStreamgraph(data, xAxisTranslate, side, selected=null) {
+    console.log('selected', selected);
+
+    svg.selectAll(".myArea" + side)
+        .remove();
+    // X and area generators for left side
+    var context = {};
+    keys.forEach(function(key) {
+        context[key] = {};
+        data.forEach(function(d) {
+            var year = d.year;
+            var value = Math.round(d[key]);
+            var details = [];
+            for (var i = 0; i < value; i++) {
+                details.push({
+                    name: key + '->' + (i + 1),
+                    citation_context: null,
+                    extends_prob: Math.random(),
+                    source: key,
+                    target: (i + 1).toString()
+                });
+            }
+            context[key][year] = details;
+        });
+    });
+
+    var xScale = d3.scaleLinear()
+        .domain([0, d3.max(data, function(d) {
+        return d3.sum(keys, function(key) { return d[key]; });
+        })])
+        .range(side =='l'? [halfWidth, 0]: [halfWidth + intervalWidth, width]);
+
+    var areaGenerator = d3.area()
+        .curve(d3.curveBasis)
+        .y(function(d) { return y(d.data.year); })
+        .x0(function(d) { return xScale(d[0]); })
+        .x1(function(d) { return xScale(d[1]); });
+
+    console.log(data);
+    let sortedKeys = keys;
+    if (selected) {
+        sortedKeys = keys.filter(function(key) { return key != keys[selected]; });
+        sortedKeys.unshift(keys[selected]);
+    }
+    console.log('sortedKeys', sortedKeys);
+    var stackedData = d3.stack().keys(sortedKeys)(data);
+    
+    var mouseover = function(d) {
+        if(activeArea) return;
+        Tooltip.style("opacity", 1)
+        d3.selectAll(".myAreal, .myArear").style("opacity", .2)
+        d3.select(this)
+        .style("stroke", "black")
+        .style("opacity", 1)
+    }
+    var mousemove = function(d, i) {
+        var grp = sortedKeys[i];
+        var year = y.invert(d3.mouse(this)[1]).toFixed(0);
+        var value = d3.sum(stackedData[i], function(layer) {
+            return layer.data.year === +year ? (layer[1] - layer[0]) : 0;
+        }).toFixed(2);
+
+        Tooltip.text(`${grp}, ${side}, Year: ${year}, Value: ${value}`);
+    }
+    var mouseleave = function(d) {
+            if(activeArea) return;
+            Tooltip.style("opacity", 0)
+            d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none")
+        }
+    var clickArea = function(d, i) {
+        if (activeArea === side && i == 0) {
+            // 取消高亮
+            activeArea = null;
+            Tooltip.style("opacity", 0);
+            // d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none");
+            // 移除点阵和连线
+            svg.selectAll(".dot, .line").remove();
+            drawStreamgraph(data, xAxisTranslate, side);
+        } else if(activeArea === null) {
+            activeArea = side;
+            drawStreamgraph(data, xAxisTranslate, side, selected=i);
+        }
+    }
+
+
+    // Show the areas
+    svg
+        .selectAll(".myArea" + side)
+        .data(stackedData)
+        .enter()
+        .append("path")
+        .attr("class", d=>`myArea${side} myArea${side}T${keys.indexOf(d.key)}`)
+        .style("fill", function(d) { return color(d.key); })
+        .attr("d", areaGenerator)
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave)
+        .on("click", clickArea);
+
+    // Add X axis
+    svg.append("g")
+        .attr("transform", xAxisTranslate)
+        .call(d3.axisBottom(xScale))
+        .select(".domain").remove();
+    
+    if (selected!==null) {
+        d3.selectAll(".myAreal, .myArear").style("opacity", .2);
+        d3.selectAll(`.myArea${side}T${selected}`)
+            .style("stroke", "black")
+            .style("opacity", 1);
+        // 显示点阵和连线
+
+        let selectedKey = keys[selected];
+        var contextData = context[selectedKey];
+        console.log('contextData', contextData);
+        for (var year in contextData) {
+            var details = contextData[year];
+            var value = stackedData[0].find(function(layer) {
+                return layer.data.year === +year;
+            });
+            var yPosition = y(+year);
+            // 计算每个点的x坐标，使其在 (0, maxXPosition) 内均匀分布
+            var xPositions = details.map((d, i) => xScale(i * value[1] / details.length));
+            
+            // 绘制点
+            svg.selectAll(".dot-" + year)
+                .data(details)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", (d, i) => xPositions[i])
+                .attr("cy", yPosition)
+                .attr("r", 1)
+                .style("fill", "red");
+
+            // 绘制连线
+            var groups = d3.nest()
+                .key(function(d) { return d.name.split('->')[0]; })
+                .entries(details);
+
+            groups.forEach(function(group) {
+                var points = group.values.map((d, i) => [xPositions[i], yPosition]);
+                svg.append("path")
+                    .datum(points)
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 0.5)
+                    .attr("d", d3.line()
+                        .x(function(d) { return d[0]; })
+                        .y(function(d) { return d[1]; })
+                    );
+            });
+        }
+    }
+    }
+
+    // Draw the streamgraphs
+    drawStreamgraph(leftData, "translate(0," + height + ")", "l");
+    drawStreamgraph(rightData, "translate(" + (halfWidth + intervalWidth) + "," + height + ")", "r");
+
+});
+</script>

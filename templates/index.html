@@ -281,10 +281,10 @@
                 
                 <div id="control" style="z-index: 9;">
                     Year Grid:
-                    <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="updateYearGrid(this.value)" 
+                    <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="render()" 
                         style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -10px;">    
                     Focus Edge Weight:
-                    <input type="range" id="alphaSlider" min="1" max="20" value="10" step="1" onchange="updateAlpha(this.value)" 
+                    <input type="range" id="alphaSlider" min="1" max="20" value="10" step="1" onchange="render()" 
                         style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -20px;">    
                     Edge Bundling:
                     <select id="edge-bundling" class="form-select" name="edge-bundling" style="margin-left: -10px;">
@@ -337,18 +337,19 @@
                     </div>
                 </div> -->
 
-                <div id="draw-area" style="display: grid; height: 85vh; grid-template-rows: 80% 20%; position: relative;">
-                    <div id="mainsvg" style="background-color: #fbfbfb; grid-row: 1;"></div>
+                <div id="draw-area" style="display: grid; height: 85vh; grid-template-rows: 85% 15%; position: relative;">
+                    <div id="mainsvg" style="grid-row: 1;"></div>
                     <div id="originsvg" style="display:none; grid-row: 1;"></div>
-                    <div id="tagcloud" style="background-color: #dee9f4; grid-row: 2;"></div>
+                    <div id="tagcloud" style="grid-row: 2;"></div>
                     <div id="yearSlider" class="noUi-target vertical-slider" style="display: none; margin-left:80%; position: absolute; right: 0; top: 0; height: 100%; width: 15%;"></div>
                     
                     <div id="TopicPrism" style="display: none; grid-row: 1;">
-                        <div id="prism-container">
+                        <div id="prism-container" style="width: 100%;">
                             <div id="prism">
                                 <div class="center-marker"></div>
                             </div>
                         </div>
+                        <div id="prism-detail" style="height: 100%; width: 100%;"></div>
                         <button id="toggle-rotation" style="position: absolute; top: 40px; left:20px;">Stop Rotating</button>
                         <button id="show-detail" style="position: absolute; top: 40px; left:140px;">Show Detail</button>
                     </div>
@@ -543,7 +544,6 @@ function buildCurvedPath(points) {
 $(function () {
     /* 系统说明图片状态：0为前端没有图片，1为前端有且正在展示图片 */
     image_status = false;
-    origin_svg_status = false;
     image_data = "";
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
@@ -562,6 +562,7 @@ $(function () {
     // $("#field-level option[value='2']").text(1);
     $("#topic-map-graph").hide();
     $("#TTM-graph").hide();
+    $('#prism-detail').hide();
     
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
@@ -618,7 +619,6 @@ $(function () {
                 vizContext = vc;
                 d3.json(`/src/json/${fieldType}/authors/${authorID}.json`).then(data => {
                     authorData = data;
-                    loadGlobalData();
                     // console.log('authorData', JSON.parse(JSON.stringify(authorData)));
                     // $("#node-num").text(data['nodes'].length);
                     // $("#edge-num").text(data['edges'].length);
@@ -679,16 +679,8 @@ $("#info").click(function() {
 });
 
 $("#show-originsvg").click(function() {
-    if (!origin_svg_status) {
-        $("#mainsvg").hide();
-        $("#originsvg").show();
-    }
-    else {
-        $("#mainsvg").show();
-        $("#originsvg").hide();
-    }
-    loadAndRender();
-    origin_svg_status = !origin_svg_status;
+    isOriginSvg = !isOriginSvg;
+    render();
 });
 </script>
 </body>

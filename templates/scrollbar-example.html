@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Scroll Bar</title>
+    <style>
+        .scroll-segment:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <svg width="800" height="200"></svg>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="script.js"></script>
+</body>
+<script>
+
+const svg = d3.select("svg");
+const width = 800;
+const barWidth = width / 10;
+const height = 200;
+const scrollHeight = 50;
+const segmentColors = ["#FFCCCC", "#FF9999", "#FF6666", "#FF3333", "#FF0000"];
+
+// Draw the end bars
+const endBarWidth = 20;
+const endBarHeight = 70;
+const trapezoidWidth = barWidth - endBarWidth;
+const trapezoidHeight = 80;
+const radius = 10; // 圆角半径
+
+console.log(barWidth, trapezoidWidth)
+
+const gradientDefinitions = svg.append("defs");
+
+// Create gradient for each segment
+segmentColors.forEach((color, i) => {
+    const gradient = gradientDefinitions.append("linearGradient")
+        .attr("id", `gradient${i}`)
+        .attr("x1", "0%")
+        .attr("x2", "0%")
+        .attr("y1", "0%")
+        .attr("y2", "100%");
+    
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("style", `stop-color:${color};stop-opacity:1`);
+
+    gradient.append("stop")
+        .attr("offset", "50%")
+        .attr("style", `stop-color:white;stop-opacity:1`);
+
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("style", `stop-color:${color};stop-opacity:1`);
+});
+
+// Draw the scroll bar segments
+const segmentWidth = (width - barWidth * 2) / 5; // Adjust width to fit end bars
+svg.selectAll(".scroll-segment")
+    .data(segmentColors)
+    .enter()
+    .append("rect")
+    .attr("class", "scroll-segment")
+    .attr("x", (d, i) => barWidth + i * segmentWidth)
+    .attr("y", (height - scrollHeight) / 2)
+    .attr("width", segmentWidth)
+    .attr("height", scrollHeight)
+    // .attr("rx", 10)
+    // .attr("ry", 10)
+    .attr("fill", (d, i) => `url(#gradient${i})`)
+    .on("mouseover", function () {
+        d3.select(this).attr("opacity", 0.8);
+    })
+    .on("mouseout", function () {
+        d3.select(this).attr("opacity", 1);
+    });
+
+
+
+const createEndBarGradient = (id) => {
+    const gradient = gradientDefinitions.append("linearGradient")
+        .attr("id", id)
+        .attr("x1", "0%")
+        .attr("x2", "100%")
+        .attr("y1", "0%")
+        .attr("y2", "100%");
+
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("style", "stop-color:#D2B48C;stop-opacity:1");
+
+    gradient.append("stop")
+        .attr("offset", "50%")
+        .attr("style", "stop-color:#8B4513;stop-opacity:1");
+
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("style", "stop-color:#D2B48C;stop-opacity:1");
+};
+
+createEndBarGradient("leftBarGradient");
+createEndBarGradient("rightBarGradient");
+
+// Left trapezoid
+svg.append("path")
+    .attr("d", `
+        M${0},${(height - trapezoidHeight) / 2 + radius}
+        A${radius},${radius} 0 0 1 ${radius},${(height - trapezoidHeight) / 2}
+        L${trapezoidWidth},${(height - trapezoidHeight) / 2 + trapezoidHeight / 4}
+        L${trapezoidWidth},${(height + trapezoidHeight) / 2 - trapezoidHeight / 4}
+        L${radius},${(height + trapezoidHeight) / 2}
+        A${radius},${radius} 0 0 1 ${0},${(height + trapezoidHeight) / 2 - radius}
+        Z
+    `)
+    .attr("fill", "url(#leftBarGradient)");
+
+// Left end bar
+svg.append("rect")
+    .attr("x", trapezoidWidth)
+    .attr("y", (height - endBarHeight) / 2)
+    .attr("width", endBarWidth)
+    .attr("height", endBarHeight)
+    .attr("rx", 10)
+    .attr("ry", 10)
+    .attr("fill", "url(#leftBarGradient)");
+
+// Right end bar
+svg.append("rect")
+    .attr("x", width - barWidth)
+    .attr("y", (height - endBarHeight) / 2)
+    .attr("width", endBarWidth)
+    .attr("height", endBarHeight)
+    .attr("rx", 10)
+    .attr("ry", 10)
+    .attr("fill", "url(#rightBarGradient)");
+
+// Right trapezoid
+svg.append("path")
+    .attr("d", `
+        M${width},${(height - trapezoidHeight) / 2 + radius}
+        A${radius},${radius} 0 0 0 ${width - radius},${(height - trapezoidHeight) / 2}
+        L${width - trapezoidWidth},${(height - trapezoidHeight) / 2 + trapezoidHeight / 4}
+        L${width - trapezoidWidth},${(height + trapezoidHeight) / 2 - trapezoidHeight / 4}
+        L${width - radius},${(height + trapezoidHeight) / 2}
+        A${radius},${radius} 0 0 0 ${width},${(height + trapezoidHeight) / 2 - radius}
+        Z
+    `)
+    .attr("fill", "url(#rightBarGradient)");
+
+
+
+
+</script>
+</html>

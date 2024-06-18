@@ -3,6 +3,8 @@ window.onload = checkScreenSize;
 // global variable (STopic == null)
 let global_nodes, global_edges, global_paper_field, minYear, maxYear, global_colors;
 let paperID2topic = {};
+let global_keywords = {};
+let isOriginSvg = false;
 
 // subgraph variable (global / subgraph, the graph to render)
 
@@ -16,7 +18,7 @@ let paperID2year = {};
 let dot = '';
 let edgeBundling = 6;
 let context_edge_weight = 3;
-let prismRadius = 800;
+let prismRadius = 600;
 
 let viz, vizContext, config, visType, authorData;
 
@@ -33,22 +35,65 @@ let highlighted = [];
 let TTM = {}, TTMEdges = {};   // topicTransitionMatrix
 let arrangement = [], adjacentMatrix;
 let originalCost, bestCost;
-let bbox_padding_x=10, bbox_padding_y=100;
+let bbox_padding_x=0, bbox_padding_y=50;
+// let bbox_padding_x=10, bbox_padding_y=100;
 let yearGrid = 2, alpha = 10;
 let virtualOpacity = 0.1;
 let topicOpacity = 0.25;
 let maxOpacity = 0.8;
+
+let isDetail = false;
+let highlightOpacity = 0.8;
 let polygenView = false;
+let currentIndex = -1;
+let prismScale = 0.8;
 
 // 在函数外部缓存选择结果
-let defaultOpacity = 0.8;
+let defaultOpacity = 0.9;
 let chord_arcs = d3.selectAll(".chord-arc");
 let chord_ribbons = d3.selectAll(".chord-ribbon");
+let index2chord_element = {};
+
+let activeArea=null;
+let Tooltip;
 
 const tanh = x => Math.tanh(x);
 const sech2 = x => 1 / (Math.cosh(x) ** 2);
 const inverse = r => Math.sign(r) * Math.acosh(0.5 * r * r + 1);
 let hyperbolicTransform = x => (tanh(inverse(x) * coverage) + 1) / 2
+
+function update_chord_element() {
+    chord_arcs = d3.selectAll(".chord-arc");
+    chord_ribbons = d3.selectAll(".chord-ribbon");
+    index2chord_element = {};
+    chord_arcs.each(function() {
+        const element = d3.select(this);
+        const classes = element.attr("class").split(" ");
+        classes.forEach(cls => {
+            if (cls.startsWith('chord-arc-')) {
+                const index = cls.split('-').pop();
+                if (!index2chord_element[index]) {
+                    index2chord_element[index] = [];
+                }
+                index2chord_element[index].push(element);
+            }
+        });
+    });
+    
+    chord_ribbons.each(function() {
+        const element = d3.select(this);
+        const classes = element.attr("class").split(" ");
+        classes.forEach(cls => {
+            if (cls.startsWith('chord-ribbon-from-') || cls.startsWith('chord-ribbon-to-')) {
+                const index = cls.split('-').pop();
+                if (!index2chord_element[index]) {
+                    index2chord_element[index] = [];
+                }
+                index2chord_element[index].push(element);
+            }
+        });
+    });
+}
 
 function guidence() {
     if (!localStorage.getItem('guidanceShown')) {
@@ -84,16 +129,6 @@ function addAllListeners() {
             .attr("r", d => Math.sqrt(d.num) * 10 * topic_r);
         $("#topic-label").text(topic_r);
     });
-
-    $("#yearGridSlider").change(function () {
-        yearGrid = $("#yearGridSlider").val();
-        loadAndRender()
-    })
-
-    $("#alphaSlider").change(function () {
-        alpha = $("#alphaSlider").val();
-        loadAndRender()
-    })
 
     $("#vis-type").change(updateVisType);
 
@@ -152,7 +187,7 @@ function addAllListeners() {
 
     $("#edge-bundling").on('change', function() {
         edgeBundling = parseInt(this.value);
-        loadAndRender();
+        render();
     })
     
 
@@ -255,7 +290,7 @@ function onFullscreenChange() {
     checkScreenSize();
 
     $("#selector, #node-info, #node-info-blank, #up-line, #down-line, #edge-info").hide();
-    loadAndRender();
+    render();
     draw_tagcloud();
     visual_topics();
     
@@ -555,7 +590,7 @@ function draw_tagcloud(min=0, max=Infinity) {
             reset_tag();
             tip.hide(d);
             highlight_tag(d.id);
-            loadAndRender();
+            render();
         })
 
     words.selectAll("text")
@@ -630,16 +665,29 @@ function draw_chord() {
 
     let svgElement = init_chord(polygenView);
     bindSVG(svgElement, "#chord-content");
+    update_chord_element();
 }
 
+function highlight_arc_with_cash(index, oldIndex) {
+    // 有缓存的方法，能够节约一半的时间 
+    console.log('highlight arc', index);
+    if (index2chord_element[oldIndex]) {
+        index2chord_element[oldIndex].forEach(element => element.style("opacity", defaultOpacity / 3));
+    }
+    if (index2chord_element[index]) {
+        index2chord_element[index].forEach(element => element.style("opacity", 1));
+    }
+}
+    
 function highlight_arc(index) {
-    chord_arcs.transition().style("opacity", defaultOpacity / 2);
-    chord_ribbons.transition().style("opacity", defaultOpacity / 2);
+    chord_arcs.style("opacity", defaultOpacity / 3);
+    chord_ribbons.style("opacity", defaultOpacity / 3);
 
-    chord_arcs.filter(`.chord-arc-${index}`).transition().style("opacity", 1);
-    chord_ribbons.filter(`.chord-ribbon-from-${index}`).transition().style("opacity", 1);
-    chord_ribbons.filter(`.chord-ribbon-to-${index}`).transition().style("opacity", 1);
+    chord_arcs.filter(`.chord-arc-${index}`).style("opacity", 1);
+    chord_ribbons.filter(`.chord-ribbon-from-${index}`).style("opacity", 1);
+    chord_ribbons.filter(`.chord-ribbon-to-${index}`).style("opacity", 1);
 }
+
 
 function init_chord(isPolygenView=false) {
     // 创建一个无主的SVG元素
@@ -721,23 +769,28 @@ function init_chord(isPolygenView=false) {
     function highlight_ribbon(d) {
         const sourceIndex = d.source.index;
         const targetIndex = d.target.index;
-        // 将所有元素透明度设为默认值的一半
-        chord_arcs.transition().style("opacity", defaultOpacity / 2);
-        chord_ribbons.transition().style("opacity", defaultOpacity / 2);
+        // 将所有元素透明度设为默认值的一半 .transition()
+        chord_arcs.style("opacity", defaultOpacity / 3);
+        chord_ribbons.style("opacity", defaultOpacity / 3);
     
         // 高亮特定元素
         chord_arcs.filter(`.chord-arc-${sourceIndex}, .chord-arc-${targetIndex}`)
-            .transition()
             .style("opacity", 1);
         chord_ribbons.filter(`.chord-ribbon-${sourceIndex}-${targetIndex}`)
-            .transition()
             .style("opacity", 1);
     }
     
     function mouseout() {
         // 将所有元素的透明度恢复为默认值
-        chord_arcs.transition().style("opacity", defaultOpacity);
-        chord_ribbons.transition().style("opacity", defaultOpacity);
+        if (currentIndex != -1) {
+            chord_arcs.style("opacity", defaultOpacity / 3);
+            chord_ribbons.style("opacity", defaultOpacity / 3);
+            chord_arcs.filter(`.chord-arc-${currentIndex}`).style("opacity", 1);
+            chord_ribbons.filter(`.chord-ribbon-from-${currentIndex}, .chord-ribbon-to-${currentIndex}`).style("opacity", 1);
+        } else {
+            chord_arcs.style("opacity", defaultOpacity);
+            chord_ribbons.style("opacity", defaultOpacity);
+        }
     }
 
     if (isPolygenView) {
@@ -800,7 +853,7 @@ function init_chord(isPolygenView=false) {
                     let c = colors[ix];
                     return hsvToColor([c.h, c.s, c.v], 0.8)
                 })
-                .on("mouseover", highlight_arc(ix))
+                .on("mouseover", d=>highlight_arc(ix))
                 .on("mouseout", mouseout);
             
             svg.append("path")
@@ -816,11 +869,9 @@ function init_chord(isPolygenView=false) {
                     .startAngle(chunk.splitAngle - 0.003)
                     .endAngle(chunk.splitAngle + 0.003)
                 )
-                .on("mouseover", highlight_arc(ix))
+                .on("mouseover", d=>highlight_arc(ix))
                 .on("mouseout", mouseout);
         });
-        chord_arcs = d3.selectAll(".chord-arc");
-        chord_ribbons = d3.selectAll(".chord-ribbon");
     } else {
         const group = svg.append("g")
             .selectAll("g")
@@ -880,8 +931,6 @@ function init_chord(isPolygenView=false) {
     }
 
     // 每次生成新的SVG元素时，我们都需要更新选择器
-    chord_arcs = d3.selectAll(".chord-arc");
-    chord_ribbons = d3.selectAll(".chord-ribbon");
     return svgElement;
 }
 
@@ -1014,7 +1063,15 @@ function init_graph(graph) {
         .attr('ry', d => d.ry)
         .style("fill", d => topic2color(d.topic))
         .attr('id', d => d.id)
-        .attr('class', 'paper')
+        .attr('class', d => {
+            let c = `paper paper-${d.id}`;
+            global_paper_field.forEach(field => {
+                if (hasTopic(d, field.id)) {
+                    c += ` paper-t${field.id}`;
+                }
+            })
+            return c;
+        })
         .style("stroke", d => updateOutlineColor(d.isKeyPaper, d.citationCount))
         .style('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount))
         .on('mouseover', function (d) {
@@ -1082,7 +1139,7 @@ function init_graph(graph) {
             .attr('id', selectorById(edge.name))
             .on('mouseover', function () {
                 mouseoverEdge(edge.name);
-                tip.show(edge);
+                tip.show({name: edge.name});
             })
             .on('click', function () {
                 highlight_edge(edge.name);
@@ -1090,7 +1147,7 @@ function init_graph(graph) {
             })
             .on('mouseout', function () {
                 mouseoutEdge(edge.name);
-                tip.hide(edge);
+                tip.hide({name: edge.name});
             });
             
         if (!edge.polygon) {
@@ -1171,21 +1228,415 @@ function draw_context(graph) {
             }
         }
     }
+    console.log('context l/r', context_l, context_r);
 
     let totalSize_l = Object.values(context_l).reduce((acc, val) => acc + val.total, 0);
     let totalSize_r = Object.values(context_r).reduce((acc, val) => acc + val.total, 0);
+    let width_l = totalSize_l * totalWidth / (totalSize_l + totalSize_r);
+    let width_r = totalSize_r * totalWidth / (totalSize_l + totalSize_r);
 
-    draw_context_bar(graph, context_l, totalSize_l * totalWidth / (totalSize_l + totalSize_r), 'l');
-    draw_context_bar(graph, context_r, totalSize_r * totalWidth / (totalSize_l + totalSize_r), 'r');
+    // draw_context_bar(graph, context_l, totalSize_l * totalWidth / (totalSize_l + totalSize_r), 'l');
+    // draw_context_bar(graph, context_r, totalSize_r * totalWidth / (totalSize_l + totalSize_r), 'r');
+    
+    let g = graph['g'];
+    let lx = bbox.x - bbox_padding_x;
+    let rx = bbox.x + bbox.width + bbox_padding_x;
 
+    var y = d3.scaleLinear()
+        .domain([minYear, maxYear])
+        .range([ graph['id2attr']['l' + minYear].y, graph['id2attr']['l' + maxYear].y]);
+
+    // minYear, maxYear
+    var years = d3.range(minYear, maxYear + 1);
+    var tickValues = years.filter((year, i) => i % yearGrid === 0);
+    
+    g.append("g")
+        .call(d3.axisLeft(y).tickSize(-totalWidth * 2).tickValues(tickValues))
+        .select(".domain").remove();
+    g.selectAll(".tick line")
+        .attr("stroke", "#b8b8b8")
+        .attr("transform", `translate(${-width_l},0)`);
+    // font
+    g.selectAll(".tick text")
+        .attr("x", rx + width_r + 20)
+        .attr("dy", 10)
+        .attr('font-family', 'Archivo Narrow')
+        .style("font-size", 36);
+
+    let barHeight = Math.sqrt(bbox.width * bbox.height) / 20;
+    let barWidth = bbox.width + barHeight * 2;
+
+    Tooltip = g
+        .append("text")
+        .attr("x", lx)
+        .attr("y",  bbox.y - bbox_padding_y - barHeight)
+        .attr('font-family', 'Archivo Narrow')
+        .style("opacity", 0)
+        .style("font-size", 48)
+
+    drawStreamgraph(g, context_l, y, [lx, lx - width_l], 'l');
+    drawStreamgraph(g, context_r, y, [rx, rx + width_r], 'r');
+    draw_scrollbar(g, context_l, [lx - barHeight, bbox.y - barHeight], barWidth, barHeight, 'l');
+    draw_scrollbar(g, context_r, [lx - barHeight, bbox.y + bbox.height], barWidth, barHeight, 'r');
+}
+
+function mouseoverFlux(dir, topic, context) {
+    if(activeArea) return;
+    Tooltip.style("opacity", 1);
+    let t = global_paper_field.find(field => field.id == topic);
+    Tooltip.text(`${t.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[topic].total}`);
+    d3.selectAll(".myAreal, .myArear").style("opacity", .2)
+    d3.select(`.myArea${dir}T${topic}`)
+        .style("stroke", "black")
+        .style("opacity", 1)
+    d3.selectAll(".scroll-segmentl .scroll-segmentr" ).style("opacity", .2)
+    d3.select(`.scroll-segment${dir}T${topic}`).style("opacity", 1)
+}
+
+function mouseleaveFlux() {
+    if(activeArea) return;
+    Tooltip.style("opacity", 0)
+    d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none")
+    d3.selectAll(".scroll-segmentl .scroll-segmentr" ).style("opacity", 1)
+}
+
+function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
+    console.log('dir', dir, 'selected', selected);
+
+    svg.selectAll(".myArea" + dir)
+        .remove();
+
+    let keys = Object.entries(context)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(entry => entry[0]);
+    keys = JSON.parse(JSON.stringify(keys));
+        let data = {};
+    keys.forEach(function(key) {
+        let details = context[key];
+        for (var year in details) {
+            if (year == 'total') continue;
+            if (data[year] == undefined) data[year] = {};
+            data[year][key] = details[year].length;
+        }
+    })
+    // console.log('dataMap', JSON.parse(JSON.stringify(data)));
+    data = Object.keys(data).map(function(year) {
+        return {
+            year: +year,
+            ...data[year]
+        };
+    });
+
+    const years = data.map(d => d.year);
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    const dataKeys = Object.keys(data[0]).filter(key => key !== 'year');
+    // 创建具有所有键和值为 0 的新对象
+    const createZeroData = (year) => {
+        let zeroData = { year: year };
+        dataKeys.forEach(key => {
+            zeroData[key] = 0;
+        });
+        return zeroData;
+    };
+    // 添加最小年份-1 和最大年份+1 的数据
+    data.unshift(createZeroData(minYear - 1));
+    data.push(createZeroData(maxYear + 1));
+    
+
+    var xScale = d3.scaleLinear()
+        .domain([0, d3.max(data, function(d) {
+        return d3.sum(keys, function(key) { return d[key]; });
+        })])
+        .range(xRange);
+
+    var areaGenerator = d3.area()
+        .curve(d3.curveBasis)
+        .y(function(d) { return y(d.data.year); })
+        .x0(function(d) { return xScale(d[0]); })
+        .x1(function(d) { return xScale(d[1]); });
+
+    console.log('data', data);
+    let sortedKeys = JSON.parse(JSON.stringify(keys));
+    if (selected) {
+        sortedKeys = sortedKeys.filter(function(key) { return key != keys[selected]; });
+        sortedKeys.unshift(keys[selected]);
+    }
+    console.log('sortedKeys', sortedKeys);
+    var stackedData = d3.stack().keys(sortedKeys)(data);
+    
+    
+    var clickArea = function(d, i) {
+        if (activeArea === dir && i == 0) {
+            // 取消高亮
+            activeArea = null;
+            Tooltip.style("opacity", 0);
+            // d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none");
+            // 移除点阵和连线
+            svg.selectAll(".dot, .line").remove();
+            drawStreamgraph(svg, context, y, xRange, dir);
+        } else if(activeArea === null) {
+            activeArea = dir;
+            drawStreamgraph(svg, context, y, xRange, dir, selected=i);
+        }
+    }
+
+    var mousemove = function(d, i) {
+        var grp = sortedKeys[i];
+        var year = y.invert(d3.mouse(this)[1]).toFixed(0);
+        if (dir == 'l' && year % yearGrid == 0 || dir == 'r' && year % yearGrid == yearGrid-1 || year == minYear || year == maxYear) {
+            var value = d3.sum(stackedData[i], function(layer) {
+                return layer.data.year === +year ? (layer[1] - layer[0]) : 0;
+            }).toFixed(0);
+            let topic = global_paper_field.find(field => field.id == grp);
+            Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[grp].total}, Year: ${year}, Value: ${value}`);
+        }
+    }
+
+    // Show the areas
+    svg.selectAll(".myArea" + dir)
+        .data(stackedData)
+        .enter()
+        .append("path")
+        .attr("class", d=>`myArea${dir} myArea${dir}T${d.key}`)
+        .style("fill", d=>topic2color(d.key))
+        .attr("d", areaGenerator)
+        .on("mouseover", d=>mouseoverFlux(dir, d.key, context))
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleaveFlux)
+        .on("click", clickArea);
+
+    // Add X axis
+    svg.append("g")
+        // .attr("transform", translate)
+        .call(d3.axisBottom(xScale))
+        .select(".domain").remove();
+    
+    if (selected!==null) {
+        d3.selectAll(".myAreal, .myArear").style("opacity", .2);
+        d3.selectAll(`.myArea${dir}T${keys[selected]}`)
+            .style("stroke", "black")
+            .style("opacity", 1);
+        // 显示点阵和连线
+
+        let selectedKey = keys[selected];
+        var contextData = context[selectedKey];
+        console.log('contextData', contextData);
+        for (var year in contextData) {
+            if(year == 'total') continue;
+            var details = contextData[year];
+            var value = stackedData[0].find(function(layer) {
+                return layer.data.year === +year;
+            });
+            var yPosition = y(+year);
+            // 计算每个点的x坐标，使其在 (0, maxXPosition) 内均匀分布
+            var xPositions = details.map((d, i) => xScale(i * value[1] / details.length));
+            
+            // 绘制点
+            svg.selectAll(".dot-" + year)
+                .data(details)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", (d, i) => xPositions[i])
+                .attr("cy", yPosition)
+                .attr("r", 5)
+                .style("fill", "red");
+
+            // 绘制连线
+            var groups = d3.nest()
+                .key(function(d) { return d.name.split('->')[0]; })
+                .entries(details);
+
+            groups.forEach(function(group) {
+                var points = group.values.map((d, i) => [xPositions[i], yPosition]);
+                svg.append("path")
+                    .datum(points)
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 3)
+                    .attr("d", d3.line()
+                        .x(function(d) { return d[0]; })
+                        .y(function(d) { return d[1]; })
+                    );
+            });
+        }
+    }
+}
+
+function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
+    // scroll的宽和高
+    // const width = 800;
+    // const height = 50;
+    let currentContext = JSON.parse(JSON.stringify(context));
+    let keys = Object.entries(currentContext)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(entry => entry[0]);
+    // 根据total排序，如果是右边的scrollbar，按照total降序排列
+    if (dir == 'l') {
+        keys = keys.reverse();
+    } 
+    const barWidth = width / 5;
+    let segmentColors = [],  segmentPositionX = [], segmentWidth = [];
+    let startX = 0;
+    let totalSize = Object.values(currentContext).reduce((acc, val) => acc + val.total, 0);
+    keys.forEach(function(key) {
+        let c = topic2color(key);
+        segmentColors.push(hsvToColor([c.h, 0.4, 1]));
+        segmentPositionX.push(startX);
+        segmentWidth.push(width * currentContext[key].total / totalSize);
+        startX += width * currentContext[key].total / totalSize;
+    });
+
+    // Draw the end bars
+    const endBarWidth = barWidth / 6;
+    const endBarHeight = height * 2;
+    const triangleHeight = height * 1.5;
+    const radius = 10; // 圆角半径
+
+    // console.log(barWidth, barWidth)
+    console.log('context', currentContext, segmentColors);
+
+    const gradientDefinitions = svg.append("defs");
+    // Create gradient for each segment
+    segmentColors.forEach((color, i) => {
+        const gradient = gradientDefinitions.append("linearGradient")
+            .attr("id", `gradient${dir}${i}`)
+            .attr("x1", "0%")
+            .attr("x2", "0%")
+            .attr("y1", "0%")
+            .attr("y2", "100%");
+        
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("style", `stop-color:${color};stop-opacity:1`);
+
+        gradient.append("stop")
+            .attr("offset", "50%")
+            .attr("style", `stop-color:white;stop-opacity:1`);
+
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("style", `stop-color:${color};stop-opacity:1`);
+    });
+
+    svg
+        .selectAll(".scroll-segment" + dir)
+        .data(segmentColors)
+        .enter()
+        .append("rect")
+        .attr("class", (d, i) => `scroll-segment${dir} scroll-segment${dir}T${keys[i]}`)
+        .attr("x", (d, i) => startPoint[0] + segmentPositionX[i])
+        .attr("y", startPoint[1])
+        .attr("width", (d, i) => segmentWidth[i])
+        .attr("height", height)
+        // .attr("rx", 10)
+        // .attr("ry", 10)
+        .attr("fill", (d, i) => `url(#gradient${dir}${i})`)
+        .on("mouseover", function () {
+            d3.select(this).attr("opacity", 0.8);
+        })
+        .on("mouseout", function () {
+            d3.select(this).attr("opacity", 1);
+        })
+        .on("mouseover", (d, i) => mouseoverFlux(dir, keys[i], context))
+        .on("mouseleave", mouseleaveFlux)
+
+
+
+    const createEndBarGradient = (id) => {
+        const gradient = gradientDefinitions.append("linearGradient")
+            .attr("id", id)
+            .attr("x1", "0%")
+            .attr("x2", "100%")
+            .attr("y1", "0%")
+            .attr("y2", "100%");
+
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("style", "stop-color:#D2B48C;stop-opacity:1");
+
+        gradient.append("stop")
+            .attr("offset", "50%")
+            .attr("style", "stop-color:#8B4513;stop-opacity:1");
+
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("style", "stop-color:#D2B48C;stop-opacity:1");
+    };
+
+    createEndBarGradient("leftBarGradient");
+    createEndBarGradient("rightBarGradient");
+
+    // Left trapezoid
+    let centerHeight = startPoint[1] + height / 2;
+    svg.append("path")
+        .attr("d", `
+            M${0},${centerHeight - triangleHeight/2 + radius}
+            A${radius},${radius} 0 0 1 ${radius},${centerHeight - triangleHeight/2}
+            L${barWidth},${centerHeight}
+            L${radius},${centerHeight + triangleHeight/2}
+            A${radius},${radius} 0 0 1 ${0},${centerHeight + triangleHeight/2 - radius}
+            Z
+        `)
+        .attr("fill", "url(#leftBarGradient)")
+        .attr('transform', `translate(${startPoint[0] - barWidth}, 0)`);
+
+    // Right trapezoid
+    svg.append("path")
+        .attr("d", `
+            M${width},${centerHeight - triangleHeight/2 + radius}
+            A${radius},${radius} 0 0 0 ${width - radius},${centerHeight - triangleHeight/2}
+            L${width - barWidth},${centerHeight}
+            L${width - radius},${centerHeight + triangleHeight/2}
+            A${radius},${radius} 0 0 0 ${width},${centerHeight + triangleHeight/2 - radius}
+            Z
+        `)
+        .attr("fill", "url(#rightBarGradient)")
+        .attr('transform', `translate(${startPoint[0] + barWidth}, 0)`);
+
+    // Left end bar
+    svg.append("rect")
+        .attr("x", startPoint[0] - endBarWidth)
+        .attr("y", centerHeight - endBarHeight/2)
+        .attr("width", endBarWidth)
+        .attr("height", endBarHeight)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .attr("fill", "url(#leftBarGradient)");
+
+    svg.append("ellipse")
+        .attr("cx", startPoint[0] - endBarWidth - endBarWidth / 4)
+        .attr("cy", centerHeight)
+        .attr("rx", endBarWidth / 4)
+        .attr("ry", endBarHeight / 4)
+        .attr("fill", "url(#leftBarGradient)");
+
+    // Right end bar
+    svg.append("rect")
+        .attr("x", startPoint[0] + width)
+        .attr("y", centerHeight - endBarHeight/2)
+        .attr("width", endBarWidth)
+        .attr("height", endBarHeight)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .attr("fill", "url(#rightBarGradient)");
+
+    svg.append("ellipse")
+        .attr("cx", startPoint[0] + width + endBarWidth + endBarWidth / 4)
+        .attr("cy", centerHeight)
+        .attr("rx", endBarWidth / 4)
+        .attr("ry", endBarHeight / 4)
+        .attr("fill", "url(#rightBarGradient)");
 }
 
 function draw_context_bar(graph, context, width, dir='l') {
     let sorted_keys = Object.entries(context).sort((a, b) => b[1].total - a[1].total).map(entry => entry[0]);
     console.log('context for', dir,  context);
     let totalSize = sorted_keys.reduce((acc, key) => acc + context[key].total, 0);
+    let bbox = graph['bbox'];
     let g = graph['g'];
-    let bbox = g.node().getBBox();
 
     const squareSize = 50; // 正方形大小
     let processedData = [];
@@ -1253,15 +1704,9 @@ function draw_context_bar(graph, context, width, dir='l') {
             topicPaths[topicID].R = M - (bbox.x + bbox.width + bbox_padding_x);
         }
 
-        let y = bbox.y - bbox_padding_y - squareSize;
-        // 先添加右侧点
-        topicPaths[topicID].push([M, y - squareSize]); // 右上
-        topicPaths[topicID].push([M, y + squareSize]); // 右下
-        
-        // 然后添加左侧点
-        topicPaths[topicID].unshift([m, y - squareSize]); // 左上
-        topicPaths[topicID].unshift([m, y + squareSize]); // 左下
-        
+        let y = bbox.y - bbox_padding_y;
+        topicPaths[topicID].push([M, y]); 
+        topicPaths[topicID].unshift([m, y]); 
 
         Object.keys(context[topicID]).forEach(year => {
             if (year === 'total') return true;
@@ -1278,8 +1723,8 @@ function draw_context_bar(graph, context, width, dir='l') {
 
     console.log('topicPaths', topicPaths);
 
-    let center = dir == 'l'? [bbox.x - bbox_padding_x, bbox.y - bbox_padding_y - 2 * squareSize]
-                            : [bbox.x + bbox.width + bbox_padding_x, bbox.y - bbox_padding_y - 2 * squareSize];
+    let center = dir == 'l'? [bbox.x - bbox_padding_x, bbox.y - bbox_padding_y]
+                            : [bbox.x + bbox.width + bbox_padding_x, bbox.y - bbox_padding_y];
     let suffix = dir=='l'? 'o': 'i';
     let resuffix  = dir=='l'? 'i': 'o';
 
@@ -1310,6 +1755,8 @@ function draw_context_bar(graph, context, width, dir='l') {
                 d3.select(this).attr('cursor', 'pointer');
             })
             .on('mouseout', reset_field);
+
+        let field = global_paper_field.find(d => d.id == topicID);
         
         g.append("path")
               .datum(topicPaths[topicID])
@@ -1319,48 +1766,52 @@ function draw_context_bar(graph, context, width, dir='l') {
               .attr("d", d=> arcGenerator(d))
               .attr("transform", `translate(${center[0]}, ${center[1]})  scale(1, 0.5)`)
               .on('mouseover', function() {
-                let field = global_paper_field.find(d => d.id == topicID);
                 highlight_field(topicID);
-                tip.show({name: field.name + '\n' + context[topicID].total});
+                tip.show({name: field.name + ':\n' + context[topicID].total});
                 d3.select(this).attr('cursor', 'pointer');
             })
             .on('mouseout', reset_field);
             
+        let y = (topicPaths[topicID].r + topicPaths[topicID].R) / 4;
         g.append("text")
-            .attr("x", (topicPaths[topicID].M + topicPaths[topicID].m) / 2)
-            .attr("y", center[1] + squareSize)
+            .attr("x", center[0])
+            .attr("y", center[1] - y)
             .attr("text-anchor", "middle")
+            // 垂直居中
+            .attr("dominant-baseline", "middle")
             .attr("font-family", "Archivo Narrow")
-            .attr("font-size", Math.sqrt(context[topicID].total) * 10)
+            .attr("font-size", Math.sqrt(context[topicID].total) * 20)
             .attr("class", "context-text context-text_" + topicID)
-            .text(topicID + suffix)
+            // 逆时针旋转45度
+            // .attr("transform", `rotate(-45, ${x}, ${center[1]})`)
+            .text(field.shortName)
             .attr("pointer-events", "none");
     });
 
     g.append("rect")
-        .attr("x", dir =='l'? center[0]: center[0] - totalSize  * squareSize / 4)
+        .attr("x", dir =='l'? center[0]: center[0] - width)
         .attr("y", center[1])
-        .attr("width", totalSize  * squareSize / 4)
-        .attr("height", squareSize * 2)
+        .attr("width", width)
+        .attr("height", squareSize)
         .attr("fill", topic2color(STopic))
         .attr("fill-opacity", topicOpacity)
         .attr("class", "context-polygon context-polygon_" + STopic)
         .on('mouseover', function() {
-            let field = global_paper_field.find(d => d.id == STopic);
             highlight_field(STopic);
-            tip.show({name: field.name + '\n' + totalSize});
+            tip.show({name: (dir=='l'? 'Influx': 'Efflux') + ':\n' + totalSize});
             d3.select(this).attr('cursor', 'pointer');
         })
         .on('mouseout', reset_field);
 
     g.append("text")
-        .attr("x", dir == 'l'? center[0] + totalSize  * squareSize / 8: center[0] - totalSize  * squareSize / 8)
-        .attr("y", center[1] + squareSize)
+        .attr("x", dir == 'l'? center[0] + width / 2: center[0] - width / 2)
+        .attr("y", center[1] + squareSize/2)
         .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
         .attr("font-family", "Archivo Narrow")
         .attr("font-size", Math.sqrt(totalSize) * 10)
         .attr("class", "context-text context-text_" + STopic)
-        .text(STopic + resuffix) // dir=='l'? STopic + '→': '→' + STopic
+        .text(dir=='l'? 'Influx': 'Efflux') // dir=='l'? STopic + '→': '→' + STopic
         .attr("pointer-events", "none");
 
     // 绘制方块
@@ -1486,6 +1937,7 @@ function draw_context_edges(graph) {
 function draw_bbox(graph) {
     let g = graph['g'];
     let bbox = g.node().getBBox();
+    graph['bbox'] = bbox;
 
     const defs = g.append('defs');
     const filter = defs.append('filter')
@@ -1764,8 +2216,8 @@ function bindSVG(svgElement, elementId) {
     let wasHidden = $(ele).is(':hidden');
     if (wasHidden) $(ele).show();
     // 获取容器尺寸
-    let svgWidth = ele.getBoundingClientRect().width;
-    let svgHeight = ele.getBoundingClientRect().height;
+    let svgWidth = ele.getBoundingClientRect().width || $(elementId).width();
+    let svgHeight = ele.getBoundingClientRect().height || $(elementId).height();
     console.log('svg size', svgWidth, svgHeight, elementId)
     
     if (wasHidden) $(ele).hide();
@@ -2049,6 +2501,22 @@ function loadGlobalData() {
     // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
     rangeSlider.noUiSlider.set([min_num, max_num+1]);
     let maxNum = Math.max(...global_paper_field.map(d=>d.num));
+
+    console.log('global_paper_field parse complete', JSON.parse(JSON.stringify(global_paper_field)));
+    let time = new Date().getTime();
+    let all_documents = global_nodes.map(d=>[d.name,d.name,d.name, d.abstract].join(' '));
+    let text = all_documents.join(' ');
+    let keywords = global_paper_field.map(d=>d.name).join('_').split('_');
+    global_keywords = countKeywords(text, keywords);
+    // global_paper_field.forEach(d=>d.name=sortTopicsBy(d.name, global_keywords))
+    global_paper_field.forEach(d=> {
+        d.text = global_nodes.filter(node => hasTopic(node, d.id)).map(d => [d.name,d.name,d.name, d.abstract].join(' ')).join(' ');
+        d.tfidf = calculateTFIDF(d.text, d.name.split('_'), all_documents);
+        d.name = sortTopicsBy(d.name, d.tfidf);
+    })
+    console.log('calculateTFIDF complete', new Date().getTime()-time);
+
+
     let colors = generateRainbowColors(global_paper_field.length);
     global_colors = {}
     global_paper_field.forEach((topic, i)=>{
@@ -2061,7 +2529,7 @@ function loadGlobalData() {
         topic.color = colors[i];
         global_colors[topic.id] = colors[i];
     })
-    console.log('global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
+    console.log('global_paper_field sort complete', JSON.parse(JSON.stringify(global_paper_field)));
 
     generateTTM();
     arrangement = simulatedAnnealing(TTM);
@@ -2073,6 +2541,101 @@ function loadGlobalData() {
     global_paper_field.forEach(d => {
         loadTopicGraph(d.id);
     })
+}
+
+function countKeywords(text, keywords) {
+    // 初始化一个对象来存储关键词的计数
+    const keywordCount = {};
+    
+    // 将所有关键词初始化为0
+    keywords.forEach(keyword => {
+        keywordCount[keyword] = 0;
+    });
+
+    // 将输入的文本转换为小写并分割为单词数组
+    const words = text.toLowerCase().split(/\W+/);
+
+    // 遍历单词数组，统计每个关键词的出现次数
+    words.forEach(word => {
+        if (keywordCount.hasOwnProperty(word)) {
+            keywordCount[word]++;
+        }
+    });
+
+    return keywordCount;
+}
+
+function calculateTFIDF(text, keywords, allDocuments) {
+    // 初始化一个对象来存储关键词的TF-IDF值
+    const tfidfValues = {};
+    
+    // 初始化一个对象来存储关键词的计数
+    const keywordCount = {};
+    keywords.forEach(keyword => {
+        keywordCount[keyword] = 0;
+    });
+
+    // 将输入的文本转换为小写并分割为单词数组
+    const words = text.toLowerCase().split(/\W+/);
+    const totalWords = words.length;
+
+    // 计算TF（词频）
+    words.forEach(word => {
+        if (keywordCount.hasOwnProperty(word)) {
+            keywordCount[word]++;
+        }
+    });
+
+    const tfValues = {};
+    keywords.forEach(keyword => {
+        tfValues[keyword] = keywordCount[keyword] / totalWords;
+    });
+
+    // 计算每个文档中包含的关键词集合，用于计算IDF
+    const docContainsKeyword = {};
+    keywords.forEach(keyword => {
+        docContainsKeyword[keyword] = 0;
+    });
+
+    allDocuments.forEach(doc => {
+        // type doc is Set?
+        if (typeof doc === 'string') doc = new Set(doc.toLowerCase().split(/\W+/));
+        keywords.forEach(keyword => {
+            if (doc.has(keyword)) {
+                docContainsKeyword[keyword]++;
+            }
+        });
+    });
+
+    // 计算IDF（逆文档频率）
+    const documentCount = allDocuments.length;
+    const idfValues = {};
+    keywords.forEach(keyword => {
+        idfValues[keyword] = Math.log(documentCount / (docContainsKeyword[keyword] + 1));
+    });
+
+    // 计算TF-IDF
+    keywords.forEach(keyword => {
+        tfidfValues[keyword] = tfValues[keyword] * idfValues[keyword];
+    });
+
+    return tfidfValues;
+}
+
+
+function sortTopicsBy(topics, keywordCount) {
+    // 将话题字符串分割为单词数组
+    const topicArray = topics.split('_');
+    
+    // 根据关键词计数进行排序
+    topicArray.sort((a, b) => {
+        const countA = keywordCount[a] || 0;
+        const countB = keywordCount[b] || 0;
+        return countB - countA; // 降序排列
+    });
+
+    // 将排序后的数组重新拼接成字符串
+    return topicArray.join('_');
 }
 
 function generateRainbowColors(numColors) {
@@ -2258,6 +2821,20 @@ function showPopup(topic) {
     draw_context(graph);
 }
 
+function showDetail(topic) {
+    STopic = topic;
+
+    let graph = topic2graph[STopic];
+    console.log('current graph:', graph);
+        
+    init_graph(graph);
+    // bindSVGToElement(graph, 'svgElement', "#originsvg");
+    bindSVGToElement(graph, 'svg', "#prism-detail");
+    console.log('context', graph)
+    draw_bbox(graph);
+    draw_context(graph);
+}
+
 function drawTopicPrism() {
     const prism = document.getElementById('prism');
     const container = document.getElementById('prism-container');
@@ -2266,16 +2843,15 @@ function drawTopicPrism() {
     let rotationAngleY = 0;
     let rotationAngleX = -20;
     let isMouseDown = false;
-    let scale = 0.5;
-    let highlightOpacity = 0.8;
+    currentIndex = 0;
     // prism.style.transform = `scale(${scale})`
     
     // container.style
-    let height = container.offsetHeight;
+    let prismHeight = container.offsetHeight;
     const prismWidth = container.offsetWidth;
     const style = window.getComputedStyle(container);
     let perspectiveDistance = parseFloat(style.perspective);
-    prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg)`;
+    prism.style.transform = `scale(${prismScale}) rotateX(${rotationAngleX}deg)`;
 
     // const topics = [
     //   { name: "Topic 1", size: 120 },
@@ -2292,7 +2868,6 @@ function drawTopicPrism() {
     const rects = [];
     const topicRanges = [];
     let rotateInterval;
-    let currentIndex = -1;
 
     topics.forEach((topic, i) => {
         console.log('prism topic', topic)
@@ -2314,7 +2889,7 @@ function drawTopicPrism() {
 
         let graph = topic2graph[topic.id];
         graph['width'] = width / 72;    // 英寸转为pt
-        graph['height'] = height / 72;
+        graph['height'] = prismHeight / 72;
         init_graph(graph);
         let svgElement = graph['svg'];
         console.log(graph);
@@ -2327,29 +2902,27 @@ function drawTopicPrism() {
             .attr("x", -width / 2)
             .attr("y", 0)
             .attr("width", width)
-            .attr("height", height)
-            .attr("fill", topic2color(graph['topic'], sat=0.1))
-            .attr("fill-opacity", highlightOpacity / 2)
+            .attr("height", prismHeight)
+            .attr("fill", topic2color(graph['topic'], sat=0.2))
+            .attr("stroke", topic2color(graph['topic'], sat=0.8))
+            .attr("fill-opacity", highlightOpacity / 3)
             .on("mouseover", function() {
                 d3.select(this).attr("fill-opacity", highlightOpacity);
                 tip.show(topic);
             })
             .on("mouseout", function() {
                 if (Math.abs(rotationAngleX) < 80 && currentIndex != i)
-                    d3.select(this).attr("fill-opacity", highlightOpacity / 2);
+                    d3.select(this).attr("fill-opacity", highlightOpacity / 3);
                 tip.hide();
-            })
-            // .on("click", function() {
-            //     showPopup(topic);
-            // });
+            });
 
         svg.append("text")
             .attr("x", 0)
-            .attr("y", height / 15 - (i % 2) * height / 30)
+            .attr("y", prismHeight / 15 - (i % 2) * prismHeight / 30)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "middle")
             .style("font-family", "Archivo Narrow")
-            .attr("font-size", Math.sqrt(width) * 2 + "px")
+            .attr("font-size", Math.sqrt(width) * 1.5 + "px")
             .attr("fill", "black")
             .text(topic.shortName);
 
@@ -2358,7 +2931,7 @@ function drawTopicPrism() {
             .attr("x", -width / 2)
             .attr("y", 0)
             .attr("width", width)
-            .attr("height", height)
+            .attr("height", prismHeight)
             .attr("viewBox", graph['viewBox']) // 设置 viewBox
             .attr("transform", graph['transform'])
             .attr('id', `nestedSvg-${topic.id}`);; // 设置 transform
@@ -2384,7 +2957,7 @@ function drawTopicPrism() {
     svgWrapper = d3.select("#prism").append("div")
         .attr("id", `svg-wrapper-chord`)
         .attr("class", "svg-wrapper")
-        .style("transform", `rotateX(90deg) translateZ(${height/2}px) rotateZ(180deg) translate(${prismWidth/2}px, ${height/2}px)`);
+        .style("transform", `rotateX(90deg) translateZ(${prismHeight/2}px) rotateZ(180deg) translate(${prismWidth/2}px, ${prismHeight/2}px)`);
 
     const svg = svgWrapper.append("svg")
         .style("overflow", "visible")
@@ -2396,6 +2969,7 @@ function drawTopicPrism() {
     }).each(function() {
         svg.node().appendChild(this);
     });
+    update_chord_element();
 
 
     function updateOpacity() {
@@ -2405,7 +2979,7 @@ function drawTopicPrism() {
             return;
         } else {
             if (currentIndex == -1)
-                rects.forEach(rect => rect.attr("fill-opacity", highlightOpacity / 2));
+                rects.forEach(rect => rect.attr("fill-opacity", highlightOpacity / 3));
         }
 
         const activeAngle = (720 - rotationAngleY) % 360;
@@ -2419,10 +2993,12 @@ function drawTopicPrism() {
         }
 
         if (newIndex !== currentIndex) {
-            highlight_arc(newIndex);
+            console.time('highlight_arc');
+            highlight_arc_with_cash(newIndex, currentIndex);
+            console.timeEnd('highlight_arc');
 
             if (currentIndex !== -1) {
-                rects[currentIndex].attr("fill-opacity", highlightOpacity / 2);
+                rects[currentIndex].attr("fill-opacity", highlightOpacity / 3);
             }
             if (newIndex !== -1) {
                 rects[newIndex].attr("fill-opacity", highlightOpacity);
@@ -2432,33 +3008,68 @@ function drawTopicPrism() {
         }
     }
 
+    let lastTime = 0;
+
+    function rotate(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const elapsed = timestamp - lastTime;
+    
+        if (isRotating && elapsed > 1000 / 30) { // 控制旋转速度，每秒30帧
+            rotationAngleY -= 0.3;
+            if (rotationAngleY <= 0) rotationAngleY += 360;
+            prism.style.transform = `scale(${prismScale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`; // 保持缩小状态
+            updateOpacity();
+            lastTime = timestamp;
+        }
+        
+        if (isRotating) {
+            requestAnimationFrame(rotate);
+        }
+    }
+    
     function startRotation() {
-        rotateInterval = setInterval(() => {
-          rotationAngleY -= 0.3; // 控制旋转速度
-          if(rotationAngleY <= 0) rotationAngleY += 360;
-          prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`; // 保持缩小状态
-          updateOpacity()
-        }, 1000 / 30); // 每秒60帧
-      }
+        chord_arcs.style("opacity", defaultOpacity / 3);
+        chord_ribbons.style("opacity", defaultOpacity / 3);
+        isRotating = true;
+        requestAnimationFrame(rotate);
+    }
+    
+    // function startRotation() {
+    //     rotateInterval = setInterval(() => {
+    //       rotationAngleY -= 0.3; // 控制旋转速度
+    //       if(rotationAngleY <= 0) rotationAngleY += 360;
+    //       prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`; // 保持缩小状态
+    //       updateOpacity()
+    //     }, 1000 / 30); // 每秒60帧
+    //   }
   
-      function stopRotation() {
-        clearInterval(rotateInterval);
-      }
+    //   function stopRotation() {
+    //     clearInterval(rotateInterval);
+    //   }
   
       document.getElementById('toggle-rotation').addEventListener('click', function() {
         isRotating = !isRotating;
         this.textContent = isRotating ? 'Stop Rotating' : 'Start Rotating';
         if (isRotating) {
           startRotation();
-        } else {
-          stopRotation();
         }
       });
 
     document.getElementById('show-detail').addEventListener('click', function() {
         const topic = topics[currentIndex];
-        if (topic) {
-            showPopup(topic);
+        if (topic == undefined) {
+            alert('No topic selected!');
+            return;
+        }
+        isDetail = !isDetail;
+        this.textContent = isDetail? 'Hide Detail': 'Show Detail';
+        if (isDetail) {
+            $("#prism-detail").show();
+            $("#prism-container").hide();
+            showDetail(topic.id);
+        } else {
+            $("#prism-detail").hide();
+            $("#prism-container").show();
         }
     });
 
@@ -2480,7 +3091,7 @@ function drawTopicPrism() {
         rotationAngleX -= deltaY / 5;
         rotationAngleX = Math.max(-90, Math.min(90, rotationAngleX));
         requestAnimationFrame(() => {
-            prism.style.transform = `scale(${scale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`;
+            prism.style.transform = `scale(${prismScale}) rotateX(${rotationAngleX}deg) rotateY(${rotationAngleY}deg)`;
             updateOpacity()
         });
     }
@@ -2495,6 +3106,13 @@ function drawTopicPrism() {
 }
 
 function loadAndRender() {
+    loadGlobalData();
+    render();
+}
+
+function render() {
+    yearGrid = $("#yearGridSlider").val();
+    alpha = $("#alphaSlider").val();
 
     if (visType==9) {
         $("#mainsvg").hide();
@@ -2503,9 +3121,14 @@ function loadAndRender() {
 
         drawTopicPrism();
     } else {
-        $("#mainsvg").show();
-        $("#originsvg").hide();
         $("#TopicPrism").hide();
+        if (isOriginSvg) {
+            $("#mainsvg").hide();
+            $("#originsvg").show();
+        } else {
+            $("#mainsvg").show();
+            $("#originsvg").hide();
+        }
 
         let graph = topic2graph[STopic];
         console.log('current graph:', graph);
@@ -2595,6 +3218,9 @@ function highlight_field(topic_id) {
     // tip.show(d);
     // d3.select(that).attr('cursor', 'pointer');
     // highlight_topic_forceChart(topic_id);
+
+    d3.selectAll('.paper').style('opacity', virtualOpacity);
+    d3.selectAll(`.paper-t${topic_id}`).style('opacity', 1);
     
     // =========================context-polygen=========================
     d3.selectAll(".context-polygon_" + topic_id)
@@ -2783,6 +3409,8 @@ function reset_field(d) {
     if (image_status == 1)  return;
     reset_tag();
 
+    d3.selectAll('.paper').style('opacity', 1);
+
     d3.selectAll(".context-polygon")
         .style("fill-opacity", topicOpacity);
     d3.selectAll(".context-ellipse")
@@ -2941,7 +3569,7 @@ function drawTTM() {
         // .attr('transform', 'rotate(-90)');
 }
 
-function highlight_node(id, draw_hypertree=true, show_node_info=true) {   // 输入：当前node的 id
+function highlight_node(id, show_node_info=true) {   // 输入：当前node的 id
     // if (image_switch == 0)  return;
     if (visType == 7) return;
     reset_node();
@@ -2950,7 +3578,10 @@ function highlight_node(id, draw_hypertree=true, show_node_info=true) {   // 输
     // 仅仅显示当前所选topic的extend_ids
     extend_ids = get_extend_ids(id, topic2graph[STopic]);
 
-    if (draw_hypertree) draw_hyper_tree(id);
+    // if (draw_hypertree) draw_hyper_tree(id);
+
+    d3.selectAll('.paper').style('opacity', virtualOpacity);
+    d3.selectAll(`.paper-${id}`).style('opacity', 1);
     
     d3.selectAll('.link').style('opacity', 0);
     d3.selectAll(`.link_${id}`).style('opacity', 1);
@@ -3009,6 +3640,8 @@ function reset_node(reset_info=false) {
         
     d3.selectAll('.link')
         .style("opacity", 1);
+
+    d3.selectAll('.paper').style('opacity', 1);
 
     g.selectAll('.edge-path')
         .style("stroke", d=> d.color)
@@ -3176,7 +3809,7 @@ function updateOutlineThickness(isKeyPaper, citationCount) {
 
 function updateVisType() {
     visType = $("#vis-type").val();
-    loadAndRender();
+    render();
 }
 
 
