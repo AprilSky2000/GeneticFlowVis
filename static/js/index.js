@@ -689,7 +689,7 @@ function highlight_arc(index) {
 }
 
 
-function init_chord(isPolygenView=false) {
+function init_chord(isPolygenView=false, drawRibbon=true) {
     // 创建一个无主的SVG元素
     let width = prismRadius * 2;
     let height = width;
@@ -826,6 +826,7 @@ function init_chord(isPolygenView=false) {
             .attr("fill", "white");
         
         // 应用蒙版到chords
+        if (drawRibbon)
         svg.append("g")
             .attr("fill-opacity", defaultOpacity)
             .selectAll("path")
@@ -912,7 +913,8 @@ function init_chord(isPolygenView=false) {
             .attr('class', d => 'chord-arc chord-arc-' + d.index)
             .on("mouseover", d=> highlight_arc(d.index))
             .on("mouseout", mouseout);
-
+        
+        if (drawRibbon)
         svg.append("g")
             .attr("opacity", defaultOpacity)
             .selectAll("path")
@@ -1249,22 +1251,25 @@ function draw_context(graph) {
     // minYear, maxYear
     var years = d3.range(minYear, maxYear + 1);
     var tickValues = years.filter((year, i) => i % yearGrid === 0);
-    
+
+    let barHeight = Math.sqrt(bbox.width * bbox.height) / 20;
+    let barWidth = bbox.width + barHeight * 2;
+    let streamSize = barHeight * 2 + barWidth / 5;
+
     g.append("g")
-        .call(d3.axisLeft(y).tickSize(-totalWidth * 2).tickValues(tickValues))
+        .call(d3.axisLeft(y).tickSize(- totalWidth - streamSize * 2).tickValues(tickValues))
         .select(".domain").remove();
     g.selectAll(".tick line")
         .attr("stroke", "#b8b8b8")
-        .attr("transform", `translate(${-width_l},0)`);
+        // .attr("transform", `translate(${-width_l},0)`);
+        .attr("transform", `translate(${-streamSize + barHeight},0)`);
     // font
     g.selectAll(".tick text")
         .attr("x", rx + width_r + 20)
         .attr("dy", 10)
         .attr('font-family', 'Archivo Narrow')
-        .style("font-size", 36);
-
-    let barHeight = Math.sqrt(bbox.width * bbox.height) / 20;
-    let barWidth = bbox.width + barHeight * 2;
+        .style("font-size", 36)
+        // .attr("transform", `translate(${barHeight},0)`);
 
     Tooltip = g
         .append("text")
@@ -1273,31 +1278,33 @@ function draw_context(graph) {
         .attr('font-family', 'Archivo Narrow')
         .style("opacity", 0)
         .style("font-size", 48)
-
-    drawStreamgraph(g, context_l, y, [lx, lx - width_l], 'l');
-    drawStreamgraph(g, context_r, y, [rx, rx + width_r], 'r');
+    
+    drawStreamgraph(g, context_l, y, [lx, lx - streamSize], 'l'); // [lx, lx - width_l]
+    drawStreamgraph(g, context_r, y, [rx, rx + streamSize], 'r'); // [rx, rx + width_r]
     draw_scrollbar(g, context_l, [lx - barHeight, bbox.y - barHeight], barWidth, barHeight, 'l');
     draw_scrollbar(g, context_r, [lx - barHeight, bbox.y + bbox.height], barWidth, barHeight, 'r');
 }
 
-function mouseoverFlux(dir, topic, context) {
+function mouseoverFlux(dir, topic_id, context) {
     if(activeArea) return;
     Tooltip.style("opacity", 1);
-    let t = global_paper_field.find(field => field.id == topic);
-    Tooltip.text(`${t.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[topic].total}`);
+    let topic = global_paper_field.find(field => field.id == topic_id);
+    Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[topic_id].total}`);
     d3.selectAll(".myAreal, .myArear").style("opacity", .2)
-    d3.select(`.myArea${dir}T${topic}`)
+    d3.select(`.myArea${dir}T${topic_id}`)
         .style("stroke", "black")
         .style("opacity", 1)
-    d3.selectAll(".scroll-segmentl .scroll-segmentr" ).style("opacity", .2)
-    d3.select(`.scroll-segment${dir}T${topic}`).style("opacity", 1)
+    d3.selectAll(".scroll-segmentl, .scroll-segmentr" ).style("opacity", .2)
+    d3.select(`.scroll-segment${dir}T${topic_id}`).style("opacity", 1)
+
+    highlightContextEdge(topic_id, dir);
 }
 
 function mouseleaveFlux() {
     if(activeArea) return;
     Tooltip.style("opacity", 0)
     d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none")
-    d3.selectAll(".scroll-segmentl .scroll-segmentr" ).style("opacity", 1)
+    d3.selectAll(".scroll-segmentl, .scroll-segmentr" ).style("opacity", 1)
 }
 
 function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
@@ -1373,7 +1380,7 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
             Tooltip.style("opacity", 0);
             // d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none");
             // 移除点阵和连线
-            svg.selectAll(".dot, .line").remove();
+            svg.selectAll(".paperIcon").remove();
             drawStreamgraph(svg, context, y, xRange, dir);
         } else if(activeArea === null) {
             activeArea = dir;
@@ -1430,37 +1437,46 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
             });
             var yPosition = y(+year);
             // 计算每个点的x坐标，使其在 (0, maxXPosition) 内均匀分布
-            var xPositions = details.map((d, i) => xScale(i * value[1] / details.length));
-            
-            // 绘制点
-            svg.selectAll(".dot-" + year)
-                .data(details)
-                .enter()
-                .append("circle")
-                .attr("class", "dot")
-                .attr("cx", (d, i) => xPositions[i])
-                .attr("cy", yPosition)
-                .attr("r", 5)
-                .style("fill", "red");
-
-            // 绘制连线
-            var groups = d3.nest()
-                .key(function(d) { return d.name.split('->')[0]; })
-                .entries(details);
-
-            groups.forEach(function(group) {
-                var points = group.values.map((d, i) => [xPositions[i], yPosition]);
-                svg.append("path")
-                    .datum(points)
-                    .attr("class", "line")
-                    .attr("fill", "none")
-                    .attr("stroke", "blue")
-                    .attr("stroke-width", 3)
-                    .attr("d", d3.line()
-                        .x(function(d) { return d[0]; })
-                        .y(function(d) { return d[1]; })
-                    );
+            let papers = {}
+            details.forEach(d=>{
+                let paper = dir=='l'? d.source: d.target
+                papers[paper] = papers[paper] === undefined? 1: papers[paper] + 1;
+            })
+            // sort by value
+            papers = Object.entries(papers).sort((a, b) => b[1] - a[1]);
+            let sqrtSize = papers.map(d=>Math.sqrt(d[1])).reduce((acc, val) => acc + val, 0);
+            let size = 0;
+            var xPositions = papers.map(d => {
+                size += Math.sqrt(d[1]) / 2; 
+                let ret = xScale(value[1] * size / sqrtSize);
+                size += Math.sqrt(d[1]) / 2;
+                return ret;
             });
+            console.log('papers', year, value, sqrtSize, papers, xScale(0), xPositions);
+            
+            // 绘制图标
+            svg.selectAll(`.paperIcon${year}`)
+                .data(papers)
+                .enter()
+                .append("text")
+                .attr("class", `paperIcon paperIcon${year}`)
+                .attr("x", (d, i) => xPositions[i])
+                .attr("y", yPosition)
+                .attr("font-family", "FontAwesome")
+                .attr("font-size", d => `${Math.sqrt(d[1]) * 24}px`) // 根据需要调整图标大小
+                .attr("fill", "red")
+                .text("\uf02d") // Font Awesome书本图标的Unicode
+                .on("mouseover", function(d) {
+                    d3.select(this).attr("fill", "white"); // 悬浮时反色
+                    tip.show({name: global_nodes.find(n=>n.id==d[0]).name + ' ' + d[1]});
+                    // cursor
+                    d3.select(this).attr('cursor', 'pointer');
+                })
+                .on("mouseout", function() {
+                    d3.select(this).attr("fill", "red"); // 恢复原色
+                    tip.hide();
+                })
+                .on("click", d=>highlight_node(d[0]))
         }
     }
 }
@@ -1490,10 +1506,11 @@ function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
     });
 
     // Draw the end bars
-    const endBarWidth = barWidth / 6;
+    const endBarWidth = barWidth / 5;
     const endBarHeight = height * 2;
     const triangleHeight = height * 1.5;
-    const radius = 10; // 圆角半径
+    let radius = triangleHeight / 2;
+    let rectRadius = 10;
 
     // console.log(barWidth, barWidth)
     console.log('context', currentContext, segmentColors);
@@ -1521,8 +1538,7 @@ function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
             .attr("style", `stop-color:${color};stop-opacity:1`);
     });
 
-    svg
-        .selectAll(".scroll-segment" + dir)
+    svg.selectAll(".scroll-segment" + dir)
         .data(segmentColors)
         .enter()
         .append("rect")
@@ -1552,18 +1568,26 @@ function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
             .attr("x2", "100%")
             .attr("y1", "0%")
             .attr("y2", "100%");
-
+    
         gradient.append("stop")
             .attr("offset", "0%")
-            .attr("style", "stop-color:#D2B48C;stop-opacity:1");
-
+            .attr("style", "stop-color:#8B4513;stop-opacity:1"); // 左侧暗部
+    
+        gradient.append("stop")
+            .attr("offset", "25%")
+            .attr("style", "stop-color:#A0522D;stop-opacity:1"); // 左侧过渡
+    
         gradient.append("stop")
             .attr("offset", "50%")
-            .attr("style", "stop-color:#8B4513;stop-opacity:1");
-
+            .attr("style", "stop-color:#CD853F;stop-opacity:1"); // 中间亮部（哑光效果）
+    
+        gradient.append("stop")
+            .attr("offset", "75%")
+            .attr("style", "stop-color:#A0522D;stop-opacity:1"); // 右侧过渡
+    
         gradient.append("stop")
             .attr("offset", "100%")
-            .attr("style", "stop-color:#D2B48C;stop-opacity:1");
+            .attr("style", "stop-color:#8B4513;stop-opacity:1"); // 右侧暗部
     };
 
     createEndBarGradient("leftBarGradient");
@@ -1602,15 +1626,17 @@ function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
         .attr("y", centerHeight - endBarHeight/2)
         .attr("width", endBarWidth)
         .attr("height", endBarHeight)
-        .attr("rx", 10)
-        .attr("ry", 10)
+        .attr("rx", rectRadius)
+        .attr("ry", rectRadius)
         .attr("fill", "url(#leftBarGradient)");
 
-    svg.append("ellipse")
-        .attr("cx", startPoint[0] - endBarWidth - endBarWidth / 4)
-        .attr("cy", centerHeight)
-        .attr("rx", endBarWidth / 4)
-        .attr("ry", endBarHeight / 4)
+    svg.append("rect")
+    .attr("x", startPoint[0] - endBarWidth - endBarWidth / 4)
+    .attr("y", centerHeight - height / 2)
+    .attr("width", endBarWidth / 4)
+    .attr("height", height)
+    .attr("rx", rectRadius)
+    .attr("ry", rectRadius)
         .attr("fill", "url(#leftBarGradient)");
 
     // Right end bar
@@ -1619,15 +1645,17 @@ function draw_scrollbar(svg, context, startPoint, width, height, dir='l') {
         .attr("y", centerHeight - endBarHeight/2)
         .attr("width", endBarWidth)
         .attr("height", endBarHeight)
-        .attr("rx", 10)
-        .attr("ry", 10)
+        .attr("rx", rectRadius)
+        .attr("ry", rectRadius)
         .attr("fill", "url(#rightBarGradient)");
 
-    svg.append("ellipse")
-        .attr("cx", startPoint[0] + width + endBarWidth + endBarWidth / 4)
-        .attr("cy", centerHeight)
-        .attr("rx", endBarWidth / 4)
-        .attr("ry", endBarHeight / 4)
+    svg.append("rect")
+        .attr("x", startPoint[0] + width + endBarWidth)
+        .attr("y", centerHeight - height/2)
+        .attr("width", endBarWidth / 4)
+        .attr("height", height)
+        .attr("rx", rectRadius)
+        .attr("ry", rectRadius)
         .attr("fill", "url(#rightBarGradient)");
 }
 
@@ -2958,8 +2986,7 @@ function drawTopicPrism() {
         .attr("id", `svg-wrapper-chord`)
         .attr("class", "svg-wrapper")
         .style("transform", `rotateX(90deg) translateZ(${prismHeight/2}px) rotateZ(180deg) translate(${prismWidth/2}px, ${prismHeight/2}px)`);
-
-    const svg = svgWrapper.append("svg")
+    let svg = svgWrapper.append("svg")
         .style("overflow", "visible")
         .attr('id', `svg-chord`);
 
@@ -2969,7 +2996,23 @@ function drawTopicPrism() {
     }).each(function() {
         svg.node().appendChild(this);
     });
+
+    // 底部加一个一样的边框
+    svgWrapper = d3.select("#prism").append("div")
+        .attr("id", `svg-wrapper-chord-bottom`)
+        .attr("class", "svg-wrapper")
+        .style("transform", `rotateX(90deg) translateZ(${-prismHeight/2}px) rotateZ(180deg) translate(${prismWidth/2}px, ${prismHeight/2}px)`);
+    svg = svgWrapper.append("svg")
+        .style("overflow", "visible")
+        .attr('id', `svg-chord-bottom`);
+    svgElement = init_chord(true, false);
+    d3.select(svgElement).selectAll('*').filter(function() {
+        return this.parentNode === svgElement;
+    }).each(function() {
+        svg.node().appendChild(this);
+    });
     update_chord_element();
+
 
 
     function updateOpacity() {
@@ -3269,14 +3312,18 @@ function highlight_field(topic_id) {
 
     // $("#mainsvg").attr("style", "background-color: #FAFAFA;");
     // 在 Stopic 面上展示所有highlight 的 edge
-    if (STopic != null) {
-        Object.entries(topic2graph[STopic]['combinedContextEdges']).forEach(([key, value]) => {
+    highlightContextEdge(topic_id);
+}
+
+function highlightContextEdge(topic_id, dir=null) {
+    if (STopic == null) return;
+    Object.entries(topic2graph[STopic]['combinedContextEdges']).forEach(([key, value]) => {
+        if (dir == null || dir == 'l' && key[0] == 'l' || dir == 'r' && key[0] != 'l') {
             if (Object.keys(value.topics).includes(topic_id)) {
                 mouseoverEdge(key, width=value.topics[topic_id] * context_edge_weight, color=topic2color(topic_id));
             }
-        })
-    }
-    
+        }
+    })
 }
 
 function hsvToColor(color, sat=0.4) {
