@@ -7,13 +7,27 @@ import pandas as pd
 config = json.load(open('config.json', 'r'))
 
 # 读取papers信息
-fields = config.keys()
+# fields = config.keys()
+fields = ['graphdrawing']
 
 for field in fields:
     print(field)
     cfg = config[field]
     if field == 'default':
         continue
+
+    if cfg['type'] == 'Domain':
+        path = f'../csv/domain/{field}/'
+        df = pd.read_csv(path + 'papers.csv', dtype={'paperID': str})
+        authors = set()
+        for i in range(len(df)):
+            authors.update(df['authorsName'][i].split(', '))
+        cfg['papers'] = len(df)
+        cfg['authors'] = len(authors)
+        cfg['topic'] = len(open(path + 'field_leaves.csv', 'r').readlines()) - 1
+        cfg['links'] = len(open(path + 'links.csv', 'r').readlines()) - 1
+        continue
+
     path = f'../csv/{field}/'
 
     if not os.path.exists(path):

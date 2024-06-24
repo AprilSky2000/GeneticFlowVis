@@ -72,9 +72,9 @@
                         <td style="width: 13%;">only show core papers</td>
                         <td style="width: 13%;">only show extend citations</td>
                         <td style="width: 13%;">topic similarity threshold</td>
+                        <td style="width: 10%;">year grid</td>
                         <!-- <td style="width: 13%; font-size: 13px !important;">year grid</td> -->
                         <td >node outline color</td>
-                        <td >node outline thickness</td>
                         <td >node fill color</td>
                         <td >visualization type</td>
                         <td >node max width</td>
@@ -111,6 +111,12 @@
                             <span id="topic-value" style="color: #333; font-size:12px">≥0.5 prob.</span>
                         </td>
                         <td>
+                            <span style="font-size:12px;">1</span>
+                            <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="render()" 
+                                style="max-width: 140px;display: inline-block;">
+                            <span style="font-size:12px;">5</span>
+                        </td>
+                        <td>
                             <select id="outline-color" class="form-select" name="outlineColor">
                                 <option value="2">paper citation</option>
                                 <option value="1">core paper prob</option>
@@ -120,19 +126,6 @@
                                 $("#outline-color").change(function() {
                                     d3.selectAll('.paper').data(nodes)
                                         .attr('stroke', d => updateOutlineColor(d.isKeyPaper, d.citationCount));
-                                });
-                            </script>
-                        </td>
-                        <td>
-                            <select id="outline-thickness" class="form-select" name="outlineThickness">
-                                <option value="2">paper citation</option>
-                                <option value="1">core paper prob</option>
-                                <option value="0">none</option>
-                            </select>
-                            <script type="text/javascript">
-                                $("#outline-thickness").change(function() {
-                                    d3.selectAll('.paper').data(nodes)
-                                        .attr('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount));
                                 });
                             </script>
                         </td>
@@ -280,9 +273,6 @@
                 <div id="tag-tooltip" class="tooltip"></div>
                 
                 <div id="control" style="z-index: 9;">
-                    Year Grid:
-                    <input type="range" id="yearGridSlider" min="1" max="5" value="2" step="1" onchange="render()" 
-                        style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -10px;">    
                     Focus Edge Weight:
                     <input type="range" id="alphaSlider" min="1" max="20" value="10" step="1" onchange="render()" 
                         style="max-width: 140px;display: inline-block;margin-right: 10px;margin-left: -20px;">    
@@ -548,16 +538,19 @@ $(function () {
     const authorID = "{{ authorID }}";
     name = "{{ name }}";
     fields = {{ fields|safe }};
-    const fieldType = "{{ fieldType }}";
+    fieldType = "{{ fieldType }}";
     paperCount = "{{ paperCount }}";
-    field_roots = fields[0];
-    field_roots.forEach(element => {
-        element[2] = String(element[2]);
-    });
-    fields = fields[1];
+
+    
+    lastTopicID = Math.max(...fields.map(d => d[0])) + 1;
+    let fields_dic = {}
     fields.push([
-        fields.length,9999,'Others',0,0,240,0.316,1,0
+        lastTopicID,9999,'Others',0,0,240,0.316,1,0
     ])
+    fields.forEach(d => {
+        fields_dic[d[0]] = d
+    });
+    fields = fields_dic;
     // $("#field-level option[value='1']").remove();
     // $("#field-level option[value='2']").text(1);
     $("#topic-map-graph").hide();
@@ -566,10 +559,11 @@ $(function () {
     
     d3.json(`/src/config.json`).then(data => {
         config =  data['default'];
-        if (fieldType in data) {
-            Object.assign(config, data[fieldType])
+        let fieldName = fieldType == 'domain'? authorID: fieldType;
+        if (fieldName in data) {
+            Object.assign(config, data[fieldName])
         }
-        const fieldlabel = data[fieldType].name;
+        const fieldlabel = data[fieldName].name;
         imgHeight = $("img").css("height");
         $("#field").css("height", imgHeight);
         $("#field").css("line-height", imgHeight);
@@ -629,7 +623,6 @@ $(function () {
                     drawYears();
                     loadAndRender();
                     drawTTM();
-                    draw_tagcloud();
                     visual_topics();
                     updateSider();
 

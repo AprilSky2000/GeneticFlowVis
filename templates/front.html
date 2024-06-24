@@ -28,6 +28,10 @@
 					<div class="category-header" onclick="toggleCategory('category2')">Scholars by Award</div>
 					<div class="category-content" id="category2"></div>
 				</div>
+				<div class="category">
+					<div class="category-header" onclick="toggleCategory('category3')">Domain Evolution</div>
+					<div class="category-content" id="category3"></div>
+				</div>
 			</div>
 			<br />
 			<br />
@@ -88,11 +92,13 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 		function createList(data) {
 			const container1 = $('#category1');
 			const container2 = $('#category2');
+			const container3 = $('#category3');
 
 			for (const key in data) {
 				const item = data[key];
 				const info = item['papers'] ? `${int2str(item.authors)} authors / ${int2str(item.topic)} topic<br>${int2str(item.papers)} papers / ${int2str(item.links)} links` : 'unavailable';
-				const link = $('<a>').attr('href', `search?field=${key}`)
+				let url = item["type"] == 'Domain'? `index?field=domain&id=${key}` : `search?field=${key}`;
+				const link = $('<a>').attr('href', url)
 									 .addClass('custom-button')
 									 .html(`<i class="${item.icon}"></i> ${item.name} <br> 
 									 		<p style="font-size: 13px; color: #777; margin: 0;">${info}</p>`)
@@ -100,6 +106,7 @@ and see our <a href="reference">KDD/VIS/NeurIPS 2023 papers</a> for more details
 				switch (item["type"]) {
 					case "CS Subfield": container1.append(link); break;
 					case "Top Scholar": container2.append(link); break;
+					case "Domain": container3.append(link); break;
 				}
 			}
 		}

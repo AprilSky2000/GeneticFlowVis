@@ -155,15 +155,15 @@ function addAllListeners() {
     });
 
     nodeSlider.noUiSlider.on("change", function () {
-        $("#node-value").text("≥" + nodeSlider.noUiSlider.get() + " prob.");
+        $("#node-value").text("≥" + nodeSlider.noUiSlider.get());
         loadAndRender();
     });
     edgeSlider.noUiSlider.on("change", function () {
-        $("#edge-value").text("≥" + edgeSlider.noUiSlider.get() + " prob.");
+        $("#edge-value").text("≥" + edgeSlider.noUiSlider.get());
         loadAndRender();
     });
     topicSlider.noUiSlider.on("change", function () {
-        $("#topic-value").text("≥" + topicSlider.noUiSlider.get() + " prob.");
+        $("#topic-value").text("≥" + topicSlider.noUiSlider.get());
         loadAndRender();
     });
 
@@ -472,7 +472,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
     let minFontSize = 8;
 
     for (const d of sortedData) {
-        let ratio = Math.cbrt(d.num / sortedData[0].num);
+        let ratio = Math.sqrt(d.size / sortedData[0].size);
         if (ratio * maxFontSize < minFontSize) {
             ratio = minFontSize / maxFontSize;
         }
@@ -481,6 +481,7 @@ function calculateWordPosition(sortedData, maxFontSize) {
         let opacity = ratio * 0.8 + 0.1;
         // let width = size * shortName.length * 0.5;
         let width = textSize(d.shortName, size).width * 0.88;
+        // let width = d.shortName.length * size * 0.4;
         if (currentLineWidth + width > svgWidth) {
             if (currentLine.length == 0) return null
             for (const word of currentLine) {
@@ -538,8 +539,8 @@ function draw_tagcloud(min=0, max=Infinity) {
     svg.call(tip);
 
 
-    let paper_field_filter = global_paper_field.filter(item => item.num >= min && item.num <= max);
-    const sortedData = paper_field_filter.sort((a, b) => b.num - a.num);
+    let paper_field_filter = global_paper_field.filter(item => item.size >= min && item.size <= max);
+    const sortedData = paper_field_filter.sort((a, b) => b.size - a.size);
 
     // console.log('draw tag cloud', sortedData, min, max)
 
@@ -1075,7 +1076,7 @@ function init_graph(graph) {
             return c;
         })
         .style("stroke", d => updateOutlineColor(d.isKeyPaper, d.citationCount))
-        .style('stroke-width', d => updateOutlineThickness(d.isKeyPaper, d.citationCount))
+        .style('stroke-width', d => d.citationCount >= 50? 5: 0)
         .on('mouseover', function (d) {
             d3.select(this).attr('cursor', 'pointer');
             tip.show(d);
@@ -1180,6 +1181,52 @@ function init_graph(graph) {
     });
 
     graph['svg'] = svgElement;
+    if (graph['topic'] == null) {
+        // 添加背景坐标轴
+        let bbox = {};
+        bbox.x = parseFloat(graph['viewBox'].split(' ')[0]);
+        bbox.width = parseFloat(graph['viewBox'].split(' ')[2]);
+        console.log('draw axis', bbox)
+
+        var y = d3.scaleLinear()
+        .domain([minYear, maxYear])
+        .range([ graph['id2attr']['year' + minYear].y, graph['id2attr']['year' + maxYear].y]);
+
+        var years = d3.range(minYear, maxYear + 1);
+        var tickValues = years.filter((year, i) => i % yearGrid === 0);
+        let streamSize = bbox.width / 3;
+
+        Tooltip = g
+            .append("text")
+            .attr("x", bbox.x + bbox.width + 80)
+            .attr("y",  y(minYear))
+            .attr('font-family', 'Archivo Narrow')
+            .style("opacity", 0)
+            .style("font-size", 48)
+        g.append("g")
+            .call(d3.axisLeft(y).tickSize(- bbox.width - streamSize).tickValues(tickValues))
+            .select(".domain").remove();
+        g.selectAll(".tick line")
+            .attr("stroke", "#b8b8b8")
+            // .attr("transform", `translate(${bbox.width},0)`);
+        
+        g.selectAll(".tick text")
+            .attr("x", bbox.x + bbox.width + 60)
+            .attr("dy", 10)
+            .attr('font-family', 'Archivo Narrow')
+            .style("font-size", 36)
+
+        let context = {};
+        graph['nodes'].forEach(d=>{
+            if (context[d.topic] == undefined) {
+                context[d.topic] = {"total": 0};
+                for (let year of years) context[d.topic][year] = [];
+            }
+            context[d.topic][d.year].push(d);
+            context[d.topic]["total"] += 1;
+        })
+        drawStreamgraph(g, context, y, [bbox.x + bbox.width + 80, bbox.x + bbox.width + streamSize], 'm');
+    }
 }
 
 function draw_context(graph) {
@@ -1265,7 +1312,7 @@ function draw_context(graph) {
         .attr("transform", `translate(${-streamSize + barHeight},0)`);
     // font
     g.selectAll(".tick text")
-        .attr("x", rx + width_r + 20)
+        .attr("x", rx + streamSize + 20)
         .attr("dy", 10)
         .attr('font-family', 'Archivo Narrow')
         .style("font-size", 36)
@@ -1289,8 +1336,8 @@ function mouseoverFlux(dir, topic_id, context) {
     if(activeArea) return;
     Tooltip.style("opacity", 1);
     let topic = global_paper_field.find(field => field.id == topic_id);
-    Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[topic_id].total}`);
-    d3.selectAll(".myAreal, .myArear").style("opacity", .2)
+    Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': (dir == 'm'? 'Total': 'Efflux')}: ${context[topic_id].total}`);
+    d3.selectAll(".myArea").style("opacity", .2)
     d3.select(`.myArea${dir}T${topic_id}`)
         .style("stroke", "black")
         .style("opacity", 1)
@@ -1303,7 +1350,7 @@ function mouseoverFlux(dir, topic_id, context) {
 function mouseleaveFlux() {
     if(activeArea) return;
     Tooltip.style("opacity", 0)
-    d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none")
+    d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")
     d3.selectAll(".scroll-segmentl, .scroll-segmentr" ).style("opacity", 1)
 }
 
@@ -1378,7 +1425,7 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
             // 取消高亮
             activeArea = null;
             Tooltip.style("opacity", 0);
-            // d3.selectAll(".myAreal, .myArear").style("opacity", 1).style("stroke", "none");
+            // d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none");
             // 移除点阵和连线
             svg.selectAll(".paperIcon").remove();
             drawStreamgraph(svg, context, y, xRange, dir);
@@ -1391,12 +1438,12 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
     var mousemove = function(d, i) {
         var grp = sortedKeys[i];
         var year = y.invert(d3.mouse(this)[1]).toFixed(0);
-        if (dir == 'l' && year % yearGrid == 0 || dir == 'r' && year % yearGrid == yearGrid-1 || year == minYear || year == maxYear) {
+        if (dir == 'l' && year % yearGrid == 0 || dir == 'r' && year % yearGrid == yearGrid-1 || year == minYear || year == maxYear || dir == 'm') {
             var value = d3.sum(stackedData[i], function(layer) {
                 return layer.data.year === +year ? (layer[1] - layer[0]) : 0;
             }).toFixed(0);
             let topic = global_paper_field.find(field => field.id == grp);
-            Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': 'Efflux'}, Total: ${context[grp].total}, Year: ${year}, Value: ${value}`);
+            Tooltip.text(`${topic.shortName}, ${dir=='l'?'Influx': (dir == 'm'? 'Total': 'Efflux')}: ${context[grp].total}, Year: ${year}, Value: ${value}`);
         }
     }
 
@@ -1405,7 +1452,7 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
         .data(stackedData)
         .enter()
         .append("path")
-        .attr("class", d=>`myArea${dir} myArea${dir}T${d.key}`)
+        .attr("class", d=>`myArea myArea${dir} myArea${dir}T${d.key}`)
         .style("fill", d=>topic2color(d.key))
         .attr("d", areaGenerator)
         .on("mouseover", d=>mouseoverFlux(dir, d.key, context))
@@ -1420,12 +1467,13 @@ function drawStreamgraph(svg, context, y, xRange, dir='l', selected=null) {
         .select(".domain").remove();
     
     if (selected!==null) {
-        d3.selectAll(".myAreal, .myArear").style("opacity", .2);
+        d3.selectAll(".myArea").style("opacity", .2);
         d3.selectAll(`.myArea${dir}T${keys[selected]}`)
             .style("stroke", "black")
             .style("opacity", 1);
         // 显示点阵和连线
 
+        if (dir == 'm') return;
         let selectedKey = keys[selected];
         var contextData = context[selectedKey];
         console.log('contextData', contextData);
@@ -2383,6 +2431,7 @@ function getEndPoint(d, type) {
 function loadGlobalData() {
     let filteredNodes = authorData['nodes'].filter(d => d.isKeyPaper >= nodeSlider.noUiSlider.get() && d.year > 1900);
     let filteredEdges = authorData['edges'].filter(d => d.extends_prob >= edgeSlider.noUiSlider.get());
+
     filteredNodes = JSON.parse(JSON.stringify(filteredNodes));
     filteredEdges = JSON.parse(JSON.stringify(filteredEdges));
 
@@ -2464,101 +2513,100 @@ function loadGlobalData() {
         return d;
     });
 
-    global_paper_field = [];    //该学者个人的field信息
+    global_paper_field = {};    //该学者个人的field信息
+    Object.values(fields).forEach(field => {
+        global_paper_field[field[0]] = {
+            id: field[0],
+            num: 0,
+            size: 0,
+            name: field[2],
+            x: parseFloat(field[3]),
+            y: parseFloat(field[4]),
+            label: parseInt(field[8])
+        }
+    });
+
     global_nodes.forEach(node => {
-        let topic = parseInt(node.topic);
-        let ix = global_paper_field.findIndex(d => d.id == topic);
-        if (ix == -1) {
-            // 如果没有统计，在paper_field中新建k-v
-            // num是直接对应话题的文章数，size是所有 TopicProb > threshold的文章数，需要在后面重新计算
-            global_paper_field.push({
-                id: topic,
-                num: 1,
-                name: fields[topic][2],
-                x: parseFloat(fields[topic][3]),
-                y: parseFloat(fields[topic][4]),
-                label: parseInt(fields[topic][8])
-            });
-        } else {
-            global_paper_field[ix].num += 1;
-        }
+        let topic = parseInt(node.topic || 0);
+        let topicDist = Object.keys(node.topicDist || {});
+
+        global_paper_field[topic].num += 1;
+        topicDist.forEach(field => {
+            if (hasTopic(node, field)) global_paper_field[field].size += 1;
+        });
     })
-    global_paper_field.sort(op('num'));
+    global_paper_field = Object.values(global_paper_field);
+    
+    global_paper_field.sort(op('size'));
     console.log('original global_paper_field', JSON.parse(JSON.stringify(global_paper_field)))
-    let total = global_paper_field.reduce((acc, cur) => acc + cur.num, 0);
-    let sum = 0;
-    let min_num = 2;    // 话题的最小值是2
-    let cnt = 0;
-    for (const d of global_paper_field) {
-        sum += d.num;
-        cnt += 1;
-        if (sum >= 0.95 * total || cnt >= 25 || d.num == min_num) {
-            min_num = d.num;
-            break;
-        }
-    }
-    // 注意逻辑：item.num >= min_num && item.id !== fields.length-1 会过滤others
-    global_paper_field = global_paper_field.filter(item => item.num >= min_num);
-    let topic = fields.length-1;
+    let minSize = Math.max(5, (global_paper_field[24] || {}).size);    // 话题的最小值是3
+    global_paper_field = global_paper_field.filter(item => item.size >= minSize);
+    let topic = Object.keys(fields)[Object.keys(fields).length - 1];
     let num = 0;
-    let global_topics = global_paper_field.map(d => d.id);
+    let global_topics = new Set(global_paper_field.map(d => d.id));
     global_nodes.forEach(d => {
-        if(!global_topics.includes(parseInt(d.topic))) {
+        let all_topics = new Set();
+        Object.keys(d.topicDist).forEach(topic => {
+            if (hasTopic(d, topic)) all_topics.add(parseInt(topic));
+        });
+        if(all_topics.intersection(global_topics).size == 0) {
             num += 1;
             d.topic = topic;
         }
         paperID2topic[d.id] = d.topic;
     });
+    if (num)
     global_paper_field.push({
-        id: topic,
+        id: parseInt(topic),
         num: num,
+        size: num,
         name: fields[topic][2],
         x: parseFloat(fields[topic][3]),
         y: parseFloat(fields[topic][4]),
         label: parseInt(fields[topic][8])
     })
-    
-    
-    let max_num = Math.max(...global_paper_field.map(d=>d.num));
-    rangeSlider.noUiSlider.updateOptions({
-        range: {
-            'min': min_num,
-            'max': max_num+1 // 'range' 'min' and 'max' cannot be equal.
-        }
-    });
-    // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
-    rangeSlider.noUiSlider.set([min_num, max_num+1]);
-    let maxNum = Math.max(...global_paper_field.map(d=>d.num));
-
     console.log('global_paper_field parse complete', JSON.parse(JSON.stringify(global_paper_field)));
-    let time = new Date().getTime();
-    let all_documents = global_nodes.map(d=>[d.name,d.name,d.name, d.abstract].join(' '));
-    let text = all_documents.join(' ');
-    let keywords = global_paper_field.map(d=>d.name).join('_').split('_');
-    global_keywords = countKeywords(text, keywords);
-    // global_paper_field.forEach(d=>d.name=sortTopicsBy(d.name, global_keywords))
-    global_paper_field.forEach(d=> {
-        d.text = global_nodes.filter(node => hasTopic(node, d.id)).map(d => [d.name,d.name,d.name, d.abstract].join(' ')).join(' ');
-        d.tfidf = calculateTFIDF(d.text, d.name.split('_'), all_documents);
-        d.name = sortTopicsBy(d.name, d.tfidf);
-    })
-    console.log('calculateTFIDF complete', new Date().getTime()-time);
+    
+    if (fieldType != 'domain') {
+        let time = new Date().getTime();
+        let all_documents = global_nodes.map(d=>[d.name,d.name,d.name, d.abstract].join(' '));
+        let all_documents_set = all_documents.map(doc => new Set(doc.toLowerCase().split(/\W+/)))
+        let text = all_documents.join(' ');
+        let keywords = global_paper_field.map(d=>d.name).join('_').split('_');
+        global_keywords = countKeywords(text, keywords);
+        // global_paper_field.forEach(d=>d.name=sortTopicsBy(d.name, global_keywords))
+        global_paper_field.forEach(d=> {
+            d.text = global_nodes.filter(node => hasTopic(node, d.id)).map(d => [d.name,d.name,d.name, d.abstract].join(' ')).join(' ');
+            d.tfidf = calculateTFIDF(d.text, d.name.split('_'), all_documents_set);
+            d.name = sortTopicsBy(d.name, d.tfidf);
+        })
+        console.log('calculateTFIDF complete', new Date().getTime()-time);
+    }
 
-
+    let sizes = global_paper_field.map(d=>d.size);
+    minSize = Math.min(...sizes);
+    maxSize = Math.max(...sizes);
     let colors = generateRainbowColors(global_paper_field.length);
     global_colors = {}
     global_paper_field.forEach((topic, i)=>{
-        let ratio = Math.cbrt(topic.num / maxNum);
         let shortName = topic.name.split("_").slice(0, 3).join(' ');
-        if (ratio < 0.5) {
+        if (topic.size / maxSize < 0.2) {
             shortName = topic.name.split("_").slice(0, 2).join(' ');
         }
         topic.shortName = shortName;
         topic.color = colors[i];
         global_colors[topic.id] = colors[i];
     })
-    console.log('global_paper_field sort complete', JSON.parse(JSON.stringify(global_paper_field)));
+    global_nodes.forEach(node => {
+        // 由于最高topic可能已经不在global_paper_field中，所以需要重新计算
+        let topics = [parseInt(node.topic), ...Object.keys(node.topicDist)];
+        topics = topics.filter(topic => global_paper_field.find(d => d.id == topic));
+        let topic = topics[0];
+        node.topic = topic;
+    })
 
+    console.log('global_paper_field sort complete', JSON.parse(JSON.stringify(global_paper_field)));
+    
     generateTTM();
     arrangement = simulatedAnnealing(TTM);
     adjacentMatrix = getAdjacentMatrix();
@@ -2569,6 +2617,15 @@ function loadGlobalData() {
     global_paper_field.forEach(d => {
         loadTopicGraph(d.id);
     })
+    
+    rangeSlider.noUiSlider.updateOptions({
+        range: {
+            'min': minSize,
+            'max': maxSize+1 // 'range' 'min' and 'max' cannot be equal.
+        }
+    });
+    // *IMPORTANT*: 更新滑块的值，确保滑块的值也更新，你需要同时设置 set 选项
+    rangeSlider.noUiSlider.set([minSize, maxSize+1]);
 }
 
 function countKeywords(text, keywords) {
@@ -2688,11 +2745,11 @@ function loadTopicGraph(STopic) {
 
     if (STopic !== null) {
         graph['nodes'] = graph['nodes'].filter(d => hasTopic(d, STopic));
-        global_paper_field.find(d => d.id == STopic).size = graph['nodes'].length;
-        if (graph['nodes'].length == 0) {
-            console.log('No node found in the selected topic', STopic);
-            return;
-        }
+        // global_paper_field.find(d => d.id == STopic).size = graph['nodes'].length;
+        // if (graph['nodes'].length == 0) {
+        //     console.log('No node found in the selected topic', STopic);
+        //     return;
+        // }
 
         nodeSet = new Set(graph['nodes'].map(node => node.id));
         graph['edges'] = graph['edges'].filter(edge => nodeSet.has(edge.source) && nodeSet.has(edge.target));
@@ -2750,7 +2807,7 @@ function loadTopicGraph(STopic) {
     
     graph['paper_field'] = [];    //该学者个人的field信息
     graph['nodes'].forEach(node => {
-        let topic = parseInt(node.topic);
+        let topic = node.topic;
         let ix = graph['paper_field'].findIndex(d => d.id == topic);
         if (ix == -1) {
             // 如果没有统计，在paper_field中新建k-v
@@ -2780,7 +2837,6 @@ function topic2color(topic, sat=undefined) {
     topic = parseInt(topic);
     let c = global_colors[topic];
     c = [c.h, c.s, c.v];
-    // let c = [parseFloat(fields[topic][5]), parseFloat(fields[topic][6]), parseInt(fields[topic][7])]
     ret= sat == undefined? hsvToColor(c): hsvToColor(c, sat);
     // console.log(ret)
     return ret;
@@ -3150,6 +3206,7 @@ function drawTopicPrism() {
 
 function loadAndRender() {
     loadGlobalData();
+    draw_tagcloud();
     render();
 }
 
@@ -3842,15 +3899,6 @@ function updateOutlineColor(isKeyPaper, citationCount) {
     if (citationCount < 50)   return 'black';
     else if (citationCount < 100) return 'DarkOrange';
     return 'red';
-}
-
-function updateOutlineThickness(isKeyPaper, citationCount) {
-    let outlineThicknessVal = $("#outline-thickness").val();
-    if (outlineThicknessVal == 0)  return 0;
-    if (outlineThicknessVal == 1)  return isKeyPaper >= 0.5? 10: (isKeyPaper >= 0.5? 5: 0);
-    
-    if (citationCount >= 50)   return 5;
-    return 0;
 }
 
 

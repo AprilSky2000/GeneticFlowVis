@@ -26,6 +26,7 @@ logger = logging.getLogger('log')
 
 version_df = pd.read_csv("csv/version.csv", sep=',')
 versionID = version_df.iloc[-1]['versionID']
+config = json.load(open('static/config.json', 'r'))
 
 authorID2fellow = defaultdict(str)
 fellow_df = pd.read_csv("csv/award_authors.csv", sep=',', dtype={'MAGID': str})
@@ -94,6 +95,57 @@ def load_author(field, authorID):
         papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0) 
     
     # papers_df.fillna('', inplace=True)
+    papers_df['topic'] = papers_df['topic'].astype(int)
+    papers_df = papers_df.where(papers_df.notnull(), None)
+    # drop unnamed columns
+    papers_df = papers_df.loc[:, ~papers_df.columns.str.contains('^Unnamed')]
+    papers_df = papers_df.rename(columns={
+        'authorsName': 'authors',
+        'paperID': 'id',
+        'title': 'name',
+    })
+    # papers_df = papers_df[['paperID', 'year', 'referenceCount', 'citationCount', 'survey', 'isKeyPaper', 'topic']]
+    
+    dic = {
+        'nodes': papers_df.to_dict(orient='records'),
+        'edges': edges
+    }
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, 'w') as f:
+        json.dump(dic, f, indent=4, sort_keys=True, ensure_ascii=False)
+
+
+def load_domain(name):
+    os.makedirs(f'static/json/domain/{name}', exist_ok=True)
+    filename = f'static/json/domain/authors/{name}.json'
+    if os.path.exists(filename):
+        return
+    edges = []
+    links_df = pd.read_csv(f'csv/domain/{name}/links.csv', dtype={'childrenID': str, 'parentID': str})
+    links_df['extendsProb'] = links_df['extendsProb'].replace('\\N', '0').astype(float)
+    links_df = links_df.where(links_df.notnull(), None)
+    for index, row in links_df.iterrows():
+        edges.append({
+            'source': row['parentID'],
+            'target': row['childrenID'],
+            'extends_prob': to_number(row['extendsProb']),
+            'citation_context': row['citationContext']
+        })
+
+    papers_df = pd.read_csv(f'csv/domain/{name}/papers.csv', dtype={'paperID': str,
+                'year': int, 'referenceCount': int, 'citationCount': int, 'isKeyPaper': float})
+    papers_df['survey'] = papers_df['title'].str.contains(r'survey|surveys', case=False, regex=True)
+    
+    distribution_file= f'static/json/domain/{name}/paperIDDistribution.json'
+    if not os.path.exists(distribution_file):
+        field_leaves = pd.read_csv(f"csv/domain/{name}/field_leaves.csv", sep=',')
+        simplifyTopicDistribution(f'domain/{name}', validTopics=['topic_' + str(ix) for ix in field_leaves['Topic']])
+    with open(distribution_file, 'r') as f:
+        paperID2topicDist = json.load(f)
+        
+    papers_df['topicDist'] = papers_df['paperID'].apply(lambda x: paperID2topicDist.get(x, {}))
+    papers_df['topic'] = papers_df['topicDist'].apply(lambda x: max(x.items(), key=operator.itemgetter(1))[0] if x else 0) 
     papers_df['topic'] = papers_df['topic'].astype(int)
     papers_df = papers_df.where(papers_df.notnull(), None)
     # drop unnamed columns
@@ -641,9 +693,12 @@ def topicflow(request):
         'fields': get_fields(field),
     })
 
-def simplifyTopicDistribution(field):
-    print(f"Loading data for field: {field}")
+def simplifyTopicDistribution(field, validTopics=None):
+    print(f"Loading TopicDistribution for field: {field}")
     df = pd.read_csv(f'csv/{field}/paperIDDistribution.csv', dtype={'paperID': str})
+    if validTopics is not None:
+        df = df[['paperID'] + validTopics]
+
     df.set_index('paperID', inplace=True)
     df.columns = df.columns.str.replace('topic_', '')
 
@@ -715,6 +770,16 @@ def index(request):
     fieldType = request.GET.get("field")
     authorID = request.GET.get("id")
     client_ip = get_client_ip(request)
+
+    if fieldType == 'domain':
+        logger.info("Request Parameters: [clientIP:%s] [field:%s] [name:%s]",
+                client_ip, fieldType, authorID)
+        load_domain(authorID)
+        return render(request, "index.html",
+                        {'authorID': authorID, 'name': authorID, 'paperCount': config[authorID]['papers'], 
+                         'citationCount': config[authorID]['links'],  'hIndex': 0, 
+                         'fields': pd.read_csv(f"csv/domain/{authorID}/field_leaves.csv", sep=',').values.tolist(), 'fieldType': fieldType})
+
     df = read_top_authors(fieldType)
     author = df[df["authorID"] == authorID]
     author = author.to_dict(orient='records')[0]
@@ -767,11 +832,9 @@ def get_fields(fieldType):
     path = f'csv/{fieldType}/'
     leaves_path = os.path.join(path, "field_leaves.csv")
     if os.path.exists(leaves_path) == False:
-        return [[],[[0,7406,"default",0,0,113.7,0.4438242822393499,1,1]]]
+        return [[0,7406,"default",0,0,113.7,0.4438242822393499,1,1]]
+    return pd.read_csv(leaves_path, sep=',').values.tolist()
 
-    roots = pd.read_csv(os.path.join(path, "field_roots.csv"), sep=',').values.tolist()
-    leaves = pd.read_csv(leaves_path, sep=',').values.tolist()
-    return [roots, leaves]
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

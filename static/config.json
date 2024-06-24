@@ -193,5 +193,16 @@
         "authors": 10532,
         "links": 173608,
         "topic": 91
+    },
+    "graphdrawing": {
+        "name": "Graph Drawing Conference",
+        "icon": "fa-solid fa-chart-area icon",
+        "type": "Domain",
+        "node_prob": 0.1,
+        "edge_prob": 0.7,
+        "papers": 1703,
+        "authors": 2120,
+        "links": 3128,
+        "topic": 28
     }
 }
